@@ -1,0 +1,43 @@
+{
+  "source": "a16z speedrun Talent Network, public listings (defense and space)",
+  "date": "2026-11-13",
+  "roles": 3419,
+  "companies": [
+    {
+      "name": "Anduril Industries",
+      "roles": 2541
+    },
+    {
+      "name": "Saronic Technologies",
+      "roles": 266
+    },
+    {
+      "name": "Astranis",
+      "roles": 180
+    },
+    {
+      "name": "Hadrian",
+      "roles": 167
+    },
+    {
+      "name": "Apex Space",
+      "roles": 135
+    },
+    {
+      "name": "Leonardo",
+      "roles": 66
+    },
+    {
+      "name": "Amentum",
+      "roles": 45
+    },
+    {
+      "name": "Draper",
+      "roles": 18
+    },
+    {
+      "name": "Observable Space",
+      "roles": 1
+    }
+  ]
+}
