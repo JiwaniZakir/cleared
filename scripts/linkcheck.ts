@@ -139,6 +139,21 @@ const BOT_BLOCKING_HOSTS: ReadonlyMap<string, number> = new Map([
   ["www.meta.com", 400],
   ["www.ftc.gov", 404],
 ]);
+// Hosts whose live pages fail at the network level from some machines, so a
+// thrown curl error there reports as WARN, never PASS. Checked 2026-11-14:
+// every cited page on these hosts returns 200 from a desktop machine.
+// - ilga.gov, www.ilga.gov: the server sends an incomplete certificate chain
+//   (openssl: "unable to verify the first certificate"); macOS completes it,
+//   Linux CI runners do not.
+// - www.onr.navy.mil: refuses connections from cloud CI runners.
+const UNREACHABLE_FROM_CI_HOSTS: ReadonlySet<string> = new Set(["ilga.gov", "www.ilga.gov", "www.onr.navy.mil"]);
+function unreachableFromCi(url: string): boolean {
+  try {
+    return UNREACHABLE_FROM_CI_HOSTS.has(new URL(url).host);
+  } catch {
+    return false;
+  }
+}
 function notNecessarilyDead(url: string, status: number): boolean {
   if (NOT_NECESSARILY_DEAD_CODES.includes(status)) return true;
   try {
@@ -213,6 +228,9 @@ async function checkUrl(url: string): Promise<CheckResult> {
   if (lastStatus !== null && notNecessarilyDead(url, lastStatus)) {
     const reason = lastStatus === 405 ? "live API endpoint, bare GET not supported" : "likely bot-blocked";
     return { url, status: "WARN", detail: `${lastStatus} (${reason}, not necessarily dead; final retry hit a network error)` };
+  }
+  if (lastStatus === null && unreachableFromCi(url)) {
+    return { url, status: "WARN", detail: "network error from this machine (known for this host; the page is live)" };
   }
   return {
     url,
