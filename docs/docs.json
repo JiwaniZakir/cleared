@@ -44,6 +44,10 @@
   "navbar": {
     "links": [
       {
+        "label": "Website",
+        "href": "https://trycleared.vercel.app"
+      },
+      {
         "label": "Playground",
         "href": "https://cleared-mcp.vercel.app/try"
       },

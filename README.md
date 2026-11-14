@@ -2,7 +2,7 @@
 
 A connector for the AI agent you already use. Add it to Grok Bot or Muse, and your agent finds defense-technology roles in the a16z speedrun Talent Network, checks each role's visa, export-control and clearance rules against what you tell it, and lets you try the work before you apply.
 
-**[Documentation](https://cleared-c13c54dd.mintlify.site)**
+**[Website](https://trycleared.vercel.app) · [Documentation](https://cleared-c13c54dd.mintlify.site)**
 
 ## Add it
 
