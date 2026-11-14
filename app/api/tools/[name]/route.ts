@@ -5,7 +5,7 @@ import { callTool, type ToolErrorCode } from "@/lib/tools/wrap";
 /**
  * The /try playground calls this route, which runs the EXACT same
  * lib/tools/* implementations as the MCP route via the same callTool
- * pipeline (spec §3.3) — no second copy of any tool's logic.
+ * pipeline — no second copy of any tool's logic.
  */
 
 const STATUS_BY_CODE: Record<ToolErrorCode, number> = {
@@ -14,6 +14,13 @@ const STATUS_BY_CODE: Record<ToolErrorCode, number> = {
   not_found: 404,
   upstream_error: 502,
   internal_error: 500,
+  // Pipeline codes. No registered tool returns them yet; slice S2
+  // adds bearer-token resolution to this route.
+  unauthenticated: 401,
+  forbidden: 403,
+  conflict: 409,
+  gate_blocked: 409,
+  rate_limited: 429,
 };
 
 const MAX_BODY_BYTES = 20_000;
@@ -23,7 +30,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ nam
   const def = getToolByName(name);
   if (!def) {
     return NextResponse.json(
-      // Never echo the requested name — round 9 sent an SSN as one (D-047).
+      // Never echo the requested name — a red-team test once sent an SSN as one.
       { ok: false, error: { code: "not_found", message: "Unknown tool. GET /api/tools lists the available tools." } },
       { status: 404 },
     );
@@ -60,7 +67,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ nam
   const def = getToolByName(name);
   if (!def) {
     return NextResponse.json(
-      // Never echo the requested name — round 9 sent an SSN as one (D-047).
+      // Never echo the requested name — a red-team test once sent an SSN as one.
       { ok: false, error: { code: "not_found", message: "Unknown tool. GET /api/tools lists the available tools." } },
       { status: 404 },
     );

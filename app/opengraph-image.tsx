@@ -2,14 +2,13 @@ import { ImageResponse } from "next/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "Clearance Lens — pursue defense-tech roles from inside your own agent.";
+export const alt = "cleared — pursue defense-tech roles from inside your own agent.";
 
 /**
  * Generated OG image (Next.js's special `opengraph-image` route convention).
  * On-brand but intentionally plain: wordmark + one line, no photography, no
- * mockup (Do-Don't #6 applies here too — this is the one surface where it'd
- * be tempting to fake a product screenshot). Colors are the dark-mode
- * neutral/accent tokens from research/R2-design-system.md §2.1, hardcoded
+ * mockup (this is the one surface where it'd be tempting to fake a product
+ * screenshot). Colors are the dark-mode neutral/accent design tokens, hardcoded
  * because this renders through Satori, outside the Tailwind/CSS pipeline.
  */
 export default function Image() {
@@ -40,7 +39,7 @@ export default function Image() {
           }}
         >
           <span style={{ color: "#418fe1" }}>⌁</span>
-          <span>Clearance Lens</span>
+          <span>cleared</span>
         </div>
         <div
           style={{

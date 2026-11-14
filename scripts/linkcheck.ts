@@ -1,13 +1,8 @@
 #!/usr/bin/env tsx
 /**
- * Link check (spec §5): every source URL across data/*.json, research/*.md,
- * SOURCES.md, the /sources page's own rows, and every URL a tool cites inline
- * (lib/tools/*.ts) must return 2xx/3xx. Run: pnpm linkcheck
- *
- * The last three were added after judging panel round 8 (DECISIONS.md D-042):
- * the checker originally scanned only data/ and research/, so URLs that live
- * only on the /sources page or in a tool's own `sources[]` — including the
- * a16z speedrun Talent Network itself — were never checked automatically.
+ * Link check: every source URL across data/*.json, SOURCES.md, the /sources
+ * page's own rows, and every URL a tool cites inline (lib/tools/*.ts) must
+ * return 2xx/3xx. Run: pnpm linkcheck
  *
  * Design notes:
  * - Shells out to `curl` per URL rather than using Node's native `fetch`.
@@ -20,8 +15,7 @@
  * not in the links. `curl` has no such issue and was verified directly
  * against the same URLs before this rewrite, so this is the trustworthy
  * version, not a convenience shortcut.
- * - 3xx counts as PASS (a redirect isn't a dead link) — matches the spec's
- *   own wording exactly.
+ * - 3xx counts as PASS (a redirect isn't a dead link).
  * - A real browser-like User-Agent is sent, because several cited sources
  *   (X/Twitter, Reddit, Blind, Glassdoor) are known to reject requests that
  *   look automated even when the page is genuinely live.
@@ -33,7 +27,10 @@
  *   evidence it's dead. 403/419/429/999 are well-established bot-blocking
  *   signatures (Glassdoor, W3C, npmjs, .mil sites, DOI redirectors all do
  *   this to non-browser clients). FAIL is reserved for 404/5xx/DNS-failure/
- *   timeout — an actually broken link.
+ *   timeout — an actually broken link — except for the few hosts listed in
+ *   BOT_BLOCKING_HOSTS below, each checked in a real browser.
+ * - Large files (PDFs) get a longer timeout: a 15 MB slide deck can take more
+ *   than 15 seconds to download under 4-way concurrency without being dead.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -44,16 +41,44 @@ const execFileAsync = promisify(execFile);
 
 const ROOT = process.cwd();
 const TIMEOUT_SECONDS = 15;
+/** For URLs whose path ends in .pdf: curl downloads the whole body, and some
+ *  cited PDFs are over 10 MB. Checked 2026-11-14: the 15 MB NISPPAC slides
+ *  (archives.gov) took 4.8 s alone but timed out at 15 s under concurrency. */
+const LARGE_FILE_TIMEOUT_SECONDS = 90;
 const CONCURRENCY = 4;
 
+function timeoutFor(url: string): number {
+  try {
+    return new URL(url).pathname.toLowerCase().endsWith(".pdf") ? LARGE_FILE_TIMEOUT_SECONDS : TIMEOUT_SECONDS;
+  } catch {
+    return TIMEOUT_SECONDS;
+  }
+}
+
 // Captures a URL up to the first character that's never part of one in these
-// documents (whitespace, quotes, markdown's closing `)`/`]`/backtick/`<`/`>`).
-const URL_RE = /https?:\/\/[^\s)"'\]<>`]+/g;
+// documents (whitespace, quotes, markdown's closing `]`/backtick/`<`/`>`). A
+// `)` is captured and trimmed afterwards, because some cited URLs contain
+// parentheses (".../Personnel_Vetting_QPR_(FY26-Q3).pdf"): stopping at the
+// first `)` checked a truncated URL instead of the real one.
+const URL_RE = /https?:\/\/[^\s"'\]<>`]+/g;
+
+/** Drops what closes the surrounding prose or markdown link rather than
+ *  belongs to the URL: trailing punctuation, and a trailing `)` only while
+ *  the URL has more `)` than `(`. */
+function trimUrl(raw: string): string {
+  let u = raw;
+  for (;;) {
+    const before = u;
+    u = u.replace(/[.,;:!?]+$/, "");
+    if (u.endsWith(")") && (u.match(/\)/g) ?? []).length > (u.match(/\(/g) ?? []).length) u = u.slice(0, -1);
+    if (u === before) return u;
+  }
+}
 
 function extractUrlsFromText(text: string): string[] {
   const matches = text.match(URL_RE) ?? [];
   return matches
-    .map((u) => u.replace(/[.,;:!?)]+$/, "")) // strip trailing prose punctuation
+    .map(trimUrl)
     .filter((u) => !u.includes("{") && !u.includes("}")); // template syntax (e.g. ".../{boardName}"), never a real resolvable link
 }
 
@@ -71,20 +96,7 @@ function collectUrls(): Map<string, Set<string>> {
     for (const url of extractUrlsFromText(text)) add(url, `data/${file}`);
   }
 
-  const researchDir = path.join(ROOT, "research");
-  const walk = (dir: string) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith(".md")) {
-        const text = fs.readFileSync(full, "utf8");
-        for (const url of extractUrlsFromText(text)) add(url, path.relative(ROOT, full));
-      }
-    }
-  };
-  if (fs.existsSync(researchDir)) walk(researchDir);
-
-  for (const rel of ["SOURCES.md", "app/sources/page.tsx"]) {
+  for (const rel of ["SOURCES.md", "lib/sources-rows.ts"]) {
     const full = path.join(ROOT, rel);
     if (fs.existsSync(full)) for (const url of extractUrlsFromText(fs.readFileSync(full, "utf8"))) add(url, rel);
   }
@@ -108,20 +120,29 @@ const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 const MAX_ATTEMPTS = 3;
 // 401/403/406/419/429/999: bot-blocking signatures (the site is live but
 // rejects automated requests). 405: a handful of cited URLs are literal MCP
-// endpoints (mcp.speedrun-talent-network.com/mcp, our own future
-// clearance-lens.vercel.app/mcp) that correctly reject a bare unauthenticated
+// endpoints (mcp.speedrun-talent-network.com/mcp, our own
+// cleared-mcp.vercel.app/mcp) that correctly reject a bare unauthenticated
 // GET per the MCP spec — 405 proves the endpoint is live and responding
 // correctly, not that the link is dead.
 const NOT_NECESSARILY_DEAD_CODES = [401, 403, 405, 406, 419, 429, 999];
-// Host-specific: www.meta.com answers a non-browser GET with 400 even for
-// live pages (verified 2026-11-12 — both cited Brand Resource Center URLs
-// return 200 in a real browser). Scoped to that host rather than treating
-// 400 as "not dead" everywhere, which would hide genuinely malformed links.
-const BOT_BLOCKING_400_HOSTS = new Set(["www.meta.com"]);
+// Host-specific codes a host sends to non-browser clients even for live
+// pages. Scoped to the host rather than treating the code as "not dead"
+// everywhere, which would hide genuinely broken links; these still report
+// as WARN, never PASS.
+// - www.meta.com answers 400 (checked 2026-11-12: both cited Brand Resource
+//   Center URLs return 200 in a real browser).
+// - www.ftc.gov answers 404 (checked 2026-11-14: both cited pages, the
+//   employers' consumer-report guide and the 1997 Weisberg advisory opinion,
+//   load in a real headed browser; a headless one gets an "abusive automated
+//   request" page).
+const BOT_BLOCKING_HOSTS: ReadonlyMap<string, number> = new Map([
+  ["www.meta.com", 400],
+  ["www.ftc.gov", 404],
+]);
 function notNecessarilyDead(url: string, status: number): boolean {
   if (NOT_NECESSARILY_DEAD_CODES.includes(status)) return true;
   try {
-    return status === 400 && BOT_BLOCKING_400_HOSTS.has(new URL(url).host);
+    return BOT_BLOCKING_HOSTS.get(new URL(url).host) === status;
   } catch {
     return false;
   }
@@ -132,7 +153,7 @@ async function curlOnce(url: string): Promise<number> {
     "-sS",
     "-L", // follow redirects, matching "3xx counts as pass" by reporting the final hop's status
     "-m",
-    String(TIMEOUT_SECONDS),
+    String(timeoutFor(url)),
     "-o",
     "/dev/null",
     "-w",
@@ -216,7 +237,7 @@ async function runWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T)
 async function main() {
   const urlMap = collectUrls();
   const urls = [...urlMap.keys()].filter((u) => !u.includes(".invalid"));
-  console.log(`Checking ${urls.length} unique URLs across data/ and research/ (via curl, ${CONCURRENCY}-way concurrent)...\n`);
+  console.log(`Checking ${urls.length} unique cited URLs (via curl, ${CONCURRENCY}-way concurrent)...\n`);
 
   const results = await runWithConcurrency(urls, CONCURRENCY, checkUrl);
 

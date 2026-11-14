@@ -17,8 +17,7 @@ const STEPS = [
 ] as const;
 
 /**
- * The core privacy mental model, in three steps (research/R2-design-system.md
- * §5's `/` wireframe). Kept deliberately short and simple here — `/privacy`
+ * The core privacy mental model, in three steps. Kept deliberately short and simple here — `/privacy`
  * (built separately) is the detailed version of the same three claims.
  */
 export function HowItWorks() {

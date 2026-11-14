@@ -10,6 +10,9 @@ export const RuleCategorySchema = z.enum([
   "reciprocity",
   "continuous-vetting",
   "verification-tech",
+  // Background checks, adverse action, fair-chance timing, Form I-9,
+  // E-Verify, offer contingencies and confidentiality agreements.
+  "pre-employment",
 ]);
 
 export const RuleEntrySchema = z.object({
@@ -20,11 +23,11 @@ export const RuleEntrySchema = z.object({
   keyPoints: z.array(z.string()),
   sources: z.array(SourceRefSchema).min(1),
   // Optional, additional natural-language synonyms a user/agent might
-  // reasonably try that don't appear in id/title/category — found live via
-  // the spec §6 judging panel round 6: "green_card", "lpr", and "permanent
-  // resident clearance" all missed itar-us-person even though that rule's
-  // own summary directly answers them, because explain_rule's matching was
-  // exact-keyword over id/title/category only.
+  // reasonably try that don't appear in id/title/category: "green_card",
+  // "lpr", and "permanent resident clearance" once all missed
+  // itar-us-person even though that rule's own summary directly answers
+  // them, because explain_rule's matching was exact-keyword over
+  // id/title/category only.
   keywords: z.array(z.string()).optional(),
 });
 export type RuleEntry = z.infer<typeof RuleEntrySchema>;
@@ -35,8 +38,7 @@ const RulesFileSchema = z.object({
 });
 
 // Fail fast at import time, not at request time, if the data file doesn't
-// match its own contract — see data/rules.json for the tripwire placeholder
-// this validates against until research/R4 lands.
+// match its own contract.
 const parsed = RulesFileSchema.parse(rulesJson);
 
 export const RULES: RuleEntry[] = parsed.rules;
@@ -44,8 +46,7 @@ export const RULES_LAST_VERIFIED: string = parsed.lastVerified;
 
 // Collapses -/_/whitespace runs to a single "-" so "continuous_vetting",
 // "continuous vetting", and the real id "continuous-vetting" all normalize
-// identically — found live via the spec §6 judging panel round 4: the
-// tool's own input description suggests "continuous_vetting" (underscore)
+// identically: the tool's own input description suggests "continuous_vetting" (underscore)
 // as an example keyword, but the real id uses a dash, and a plain
 // lowercase-only comparison treated them as different strings.
 function normalizeTopicKey(s: string): string {
@@ -62,7 +63,7 @@ export function findRule(topic: string): RuleEntry | undefined {
   const byKeyword = RULES.find((r) => r.keywords?.some((k) => normalizeTopicKey(k) === normalized));
   if (byKeyword) return byKeyword;
   // Match by category, but only when it uniquely identifies one rule —
-  // also found live via round 4: the description's other example keyword,
+  // the description's other example keyword,
   // "reciprocity," is a *category* value (several rules can share one),
   // not a rule id, so the id-only matcher above never found it either.
   // Several categories here (e.g. "clearance-process") have multiple

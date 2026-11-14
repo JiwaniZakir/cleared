@@ -3,12 +3,11 @@ import companiesJson from "@/data/companies.json";
 
 /**
  * Hand-curated, per-company published hiring criteria — deliberately starts
- * EMPTY ({}), which is the honest default state for almost every company
- * (spec hard constraint #4: "If a company has no published criteria, return
- * gaps and no fit read"). An entry may only be added here if every criterion
+ * EMPTY ({}), which is the honest default state for almost every company:
+ * if a company has no published criteria, the tool returns gaps and no fit
+ * read. An entry may only be added here if every criterion
  * carries a real source URL to the company's OWN published material and a
- * stated job-relevance reason — never a "culture fit" guess. See PLAN.md /
- * BLOCKERS.md for curation as a roadmap item, not a build-blocker.
+ * stated job-relevance reason — never a "culture fit" guess.
  */
 const CriterionSchema = z.object({
   criterion: z.string(),

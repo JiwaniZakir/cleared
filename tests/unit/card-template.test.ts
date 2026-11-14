@@ -9,7 +9,7 @@ const FIELDS: CardTemplateField[] = [
 ];
 const TEMPLATE = "# Intro card — Engineer at Acme\n\n**Headline:** {{headline}}\n**Highlights:**\n{{highlights}}\n**Notes:** {{notes}}\n\nInterested in: [Engineer](https://example.com/jobs/1)";
 
-describe("fillCardTemplate (D-047: the values never leave the user's side)", () => {
+describe("fillCardTemplate (the values never leave the user's side)", () => {
   it("fills text and list fields, and drops a field the user left blank", () => {
     const md = fillCardTemplate(TEMPLATE, FIELDS, { headline: "Backend engineer", highlights: ["Shipped RTOS firmware", "Rust"] });
     expect(md).toContain("**Headline:** Backend engineer");

@@ -9,10 +9,9 @@ import { Input, Select } from "@/components/ui/input";
 import { SourceCitationChip } from "@/components/source-citation-chip";
 
 /**
- * The 4 category buckets from research/R2-design-system.md §5's `/sources`
- * wireframe. "Hiring compliance & bias law" is only ever passed in by
- * app/sources/page.tsx when research/jit/bias-compliance-law.md has
- * actually landed — this component never invents a category with no rows.
+ * The 4 category buckets on `/sources`. "Hiring compliance & bias law" is
+ * only ever passed in by lib/sources-rows.ts when it has rows — this
+ * component never invents a category with no rows.
  */
 export const DISPLAY_CATEGORIES = [
   "ITAR & export control",
@@ -30,8 +29,7 @@ export interface SourceRow {
   title: string;
   url: string;
   lastVerified?: string;
-  /** The specific citation/rule id shown as a small mono tag (R2 §5's
-   * wireframe row shape) — e.g. a rule's own id from rules-data.ts, a
+  /** The specific citation/rule id shown as a small mono tag — e.g. a rule's own id from rules-data.ts, a
    * modifier id from timelines-data.ts, or a short citation code. */
   tag: string;
   category: DisplayCategory;
@@ -42,11 +40,10 @@ function categoryKey(category: DisplayCategory): string {
 }
 
 /**
- * Searchable/filterable, Accordion-grouped source list (R2 §5's `/sources`
- * wireframe; Do/Don't #2 — this page is explicitly allowed to be dense and
- * table-like, unlike the rest of the site). All data prep (pulling from
+ * Searchable/filterable, Accordion-grouped source list. This page is
+ * deliberately dense and table-like, unlike the rest of the site. All data prep (pulling from
  * lib/rules-data.ts / lib/timelines-data.ts, deduping, categorizing) happens
- * in app/sources/page.tsx; this component only renders the `rows` it's given.
+ * in lib/sources-rows.ts; this component only renders the `rows` it's given.
  */
 export function SourcesTable({ rows }: { rows: SourceRow[] }) {
   const [query, setQuery] = React.useState("");
@@ -95,7 +92,7 @@ export function SourcesTable({ rows }: { rows: SourceRow[] }) {
 
   return (
     <div>
-      {/* sr-only <h2> — found via Lighthouse (DECISIONS.md): Radix's
+      {/* sr-only <h2> — found via Lighthouse: Radix's
           AccordionHeader always renders a bare <h3> (this version has no
           level-override prop), and this table is the only thing after the
           page's single <h1>, so every group's h3 was an invalid h1->h3
@@ -208,6 +205,7 @@ export function SourcesTable({ rows }: { rows: SourceRow[] }) {
                         <SourceCitationChip
                           expanded
                           source={{ title: row.title, url: row.url, lastVerified: row.lastVerified }}
+                          missingDateLabel="no checked date"
                           className="min-w-0 flex-1 flex-col items-start justify-start gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                         />
                       </div>

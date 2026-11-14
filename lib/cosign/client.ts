@@ -4,9 +4,9 @@
  * directly before writing this, not assumed from secondary coverage) — no
  * scraping, no OAuth, no private "cosign"/endorsement/"would hire" data,
  * which that same spec documents as sitting behind a separate OAuth-gated
- * member MCP this product deliberately does not integrate (see DECISIONS.md
- * D-035/D-036: a referral/ranking mechanism built on that private data was
- * explicitly declined on hard-constraint and legal grounds).
+ * member MCP this product deliberately does not integrate (a referral/
+ * ranking mechanism built on that private data was declined on legal
+ * grounds and because no tool here ranks people).
  *
  * Important, confirmed-live constraint this client works around: unlike
  * GitHub/GitLab, Cosign's public API has NO endpoint to fetch one profile by

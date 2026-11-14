@@ -27,11 +27,10 @@ describe("matchesClearanceFilter", () => {
     );
   });
 
-  // Regression for DECISIONS.md (judging panel round 5): a UK posting's
-  // generic "Security Clearance" mention (clearance_required_unspecified --
-  // the UK has its own, different vetting system) matched a "secret" filter
-  // query as if it meant the US DoD Secret clearance this product is
-  // entirely about.
+  // Regression: a UK posting's generic "Security Clearance" mention
+  // (clearance_required_unspecified -- the UK has its own, different vetting
+  // system) matched a "secret" filter query as if it meant the US DoD Secret
+  // clearance this product is entirely about.
   it("the generic unspecified fallback does NOT match 'secret' for a non-US-located role", () => {
     expect(
       matchesClearanceFilter(

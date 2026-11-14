@@ -1,0 +1,1831 @@
+{
+  "about": "The 38 steps from requisition to day one, from the project's recruiting-process research (checked 2026-11-13). r12Step, r12Class and whoMustAct are copied from that research's step table; productDoes describes cleared as designed, built slice by slice (see slices). Information, not legal advice.",
+  "checked": "2026-11-13",
+  "classes": [
+    {
+      "id": "AGENT",
+      "label": "Your agent can do it",
+      "means": "An agent can do it fully, within rules a person set once."
+    },
+    {
+      "id": "PREP+SIGN",
+      "label": "Your agent prepares; a person decides or signs",
+      "means": "An agent can prepare it; a person must decide, sign or send."
+    },
+    {
+      "id": "NAMED ROLE",
+      "label": "A named person must do it",
+      "means": "Only a specific human role may do it."
+    },
+    {
+      "id": "GOV ONLY",
+      "label": "Only the government does it",
+      "means": "Nobody outside government may do it."
+    }
+  ],
+  "whyPerson": {
+    "decision": "Decisions about people stay with people: the law attaches the duty to the employer's decision, and cleared never rejects anyone automatically.",
+    "signature": "Signatures and certifications are personal: only the person they belong to can give them.",
+    "designated_role": "The law gives this job to a designated role, so the product leaves it to that person.",
+    "government": "Only the government can grant this; the company applies and waits.",
+    "independent": "The law asks for someone independent of the employer and of the tool."
+  },
+  "stages": [
+    {
+      "id": "open-role",
+      "title": "Open the role",
+      "whatHappens": "The company decides what the job is, what access to controlled technology or classified information it needs, and what it pays, and posts it. In cleared a role is opened from the company's live a16z speedrun Talent Network posting; the posting itself stays the company's.",
+      "appliesTo": "Every role",
+      "firstStep": 1,
+      "lastStep": 5
+    },
+    {
+      "id": "applications",
+      "title": "Applications",
+      "whatHappens": "Candidates apply, usually through their own AI agent. Before anything is collected they see the privacy notice and the AI-use notice, choose AI-assisted or human-only review, and answer only the eligibility questions the posting itself calls for.",
+      "appliesTo": "Every role",
+      "firstStep": 6,
+      "lastStep": 8
+    },
+    {
+      "id": "screening",
+      "title": "Screening",
+      "whatHappens": "The evidence each candidate sent is checked against each requirement in the posting, and candidates are ordered. A person decides who moves forward; nobody is rejected automatically.",
+      "appliesTo": "Every role",
+      "firstStep": 9,
+      "lastStep": 10
+    },
+    {
+      "id": "interviews",
+      "title": "Work samples and interviews",
+      "whatHappens": "Candidates who move forward do a short work sample, if the role uses one, and structured interviews. Interviewers rate on their own before they see anyone else's ratings.",
+      "appliesTo": "Every role",
+      "firstStep": 11,
+      "lastStep": 12
+    },
+    {
+      "id": "offer",
+      "title": "Decision and offer",
+      "whatHappens": "The hiring manager decides. The company sends a written conditional offer (an offer that depends on stated conditions, such as a background check) and the candidate accepts or declines it in writing. Many later steps may only start after this point.",
+      "appliesTo": "Every role",
+      "firstStep": 13,
+      "lastStep": 14
+    },
+    {
+      "id": "background-check",
+      "title": "Background check",
+      "whatHappens": "After the conditional offer, the company orders a background check from a background-check company; the first one cleared connects to is Checkr. The candidate gives their personal details and consent on Checkr's own pages. A named person at the company reviews the report in Checkr's dashboard and either proceeds or starts the adverse-action steps.",
+      "appliesTo": "Every role that uses a background check",
+      "firstStep": 15,
+      "lastStep": 21
+    },
+    {
+      "id": "export-control",
+      "title": "Export control",
+      "whatHappens": "For a role that works with export-controlled technology, the export-compliance lead confirms after the offer whether the new hire is a U.S. person, and whether an export licence is needed before access. This is kept apart from Form I-9.",
+      "appliesTo": "Roles that touch export-controlled technology (ITAR or EAR)",
+      "firstStep": 22,
+      "lastStep": 25
+    },
+    {
+      "id": "clearance",
+      "title": "Security clearance",
+      "whatHappens": "For a role that needs a security clearance, the Facility Security Officer verifies an existing clearance or starts a new one after the candidate has accepted the offer in writing. The government decides eligibility. Nothing here touches government clearance systems through cleared.",
+      "appliesTo": "Roles that need clearance eligibility or an active clearance",
+      "firstStep": 26,
+      "lastStep": 29
+    },
+    {
+      "id": "onboarding",
+      "title": "Before and on day one",
+      "whatHappens": "Agreements, Form I-9, E-Verify where it applies, payroll and the state new-hire report, required trainings, and the extra steps for interns and students on STEM OPT.",
+      "appliesTo": "Every hire; some items only where stated",
+      "firstStep": 30,
+      "lastStep": 37
+    },
+    {
+      "id": "records",
+      "title": "Records",
+      "whatHappens": "Hiring records are kept for the time the law requires, then deleted, unless a legal hold stops it.",
+      "appliesTo": "Every role",
+      "firstStep": 38,
+      "lastStep": 38
+    }
+  ],
+  "terms": [
+    {
+      "term": "Agent",
+      "means": "The AI assistant a person already uses (for example Grok Bot or Muse), connected to cleared. Each person's agent acts only for that person.",
+      "source": null
+    },
+    {
+      "term": "Consumer report",
+      "means": "A background check bought from a background-check company (a \"consumer reporting agency\") and used for a hiring decision.",
+      "source": "ftc-employers"
+    },
+    {
+      "term": "FCRA",
+      "means": "The Fair Credit Reporting Act, the federal law on how employers get and use consumer reports.",
+      "source": "fcra-1681b"
+    },
+    {
+      "term": "Conditional offer",
+      "means": "A job offer that depends on conditions met after it is made, such as a satisfactory background check.",
+      "source": "usc-41-4714"
+    },
+    {
+      "term": "Fair-chance law",
+      "means": "A state or city law (also called ban-the-box) that delays criminal-history checks until after a conditional offer and adds steps before rejecting someone for a conviction.",
+      "source": "crd-fair-chance"
+    },
+    {
+      "term": "Adverse action",
+      "means": "Any decision against a candidate, such as not hiring them or withdrawing an offer, based on a consumer report.",
+      "source": "ftc-employers"
+    },
+    {
+      "term": "Business day",
+      "means": "In this guide, Monday to Friday, not counting U.S. federal holidays.",
+      "source": null
+    },
+    {
+      "term": "Export-controlled technology",
+      "means": "Goods, software and technical data whose release is restricted by the International Traffic in Arms Regulations (ITAR) or the Export Administration Regulations (EAR).",
+      "source": "doj-export"
+    },
+    {
+      "term": "U.S. person",
+      "means": "Under export rules: a U.S. citizen or national, lawful permanent resident, refugee or asylee.",
+      "source": "doj-export"
+    },
+    {
+      "term": "Deemed export",
+      "means": "Releasing controlled technical data to a foreign person inside the U.S.; it counts as an export to that person's countries.",
+      "source": "cfr-22-120-50"
+    },
+    {
+      "term": "FSO",
+      "means": "The Facility Security Officer: the company's security officer, who handles employees' clearances, for example checking proof of citizenship and reviewing the SF-86.",
+      "source": "cfr-117-10"
+    },
+    {
+      "term": "Facility clearance",
+      "means": "The company's own clearance to work on classified contracts; an employee's access cannot exceed its level.",
+      "source": "cfr-117-10"
+    },
+    {
+      "term": "SF-86 and SF 312",
+      "means": "Government forms: the SF-86 is the clearance questionnaire the candidate completes; the SF 312 is the nondisclosure agreement signed before classified access.",
+      "source": "cfr-117-10"
+    },
+    {
+      "term": "Form I-9",
+      "means": "The federal form every employer completes for every hire to verify identity and permission to work.",
+      "source": "uscis-i9"
+    },
+    {
+      "term": "E-Verify",
+      "means": "The federal online system that checks a new hire's Form I-9 information against Department of Homeland Security and Social Security records.",
+      "source": "everify-tnc"
+    },
+    {
+      "term": "STEM OPT",
+      "means": "A 24-month extension of practical training for F-1 students whose degree is on the STEM list; their employers have extra duties.",
+      "source": "cfr-214-2"
+    }
+  ],
+  "sources": {
+    "cfr-117-10": {
+      "title": "32 CFR § 117.10 — Eligibility for access to classified information (eCFR)",
+      "url": "https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.10",
+      "checked": "2026-11-13"
+    },
+    "cfr-117-12": {
+      "title": "32 CFR § 117.12 — Security training and briefings (eCFR)",
+      "url": "https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.12",
+      "checked": "2026-11-13"
+    },
+    "cfr-22-120-50": {
+      "title": "22 CFR § 120.50 — Export, including deemed export (Cornell LII)",
+      "url": "https://www.law.cornell.edu/cfr/text/22/120.50",
+      "checked": "2026-11-13"
+    },
+    "cal-lab-432-3": {
+      "title": "California Labor Code § 432.3 — Pay scale in postings; salary history",
+      "url": "https://california.public.law/codes/labor_code_section_432.3",
+      "checked": "2026-11-13"
+    },
+    "doj-export": {
+      "title": "DOJ Civil Rights Division (IER) — Employer Fact Sheet on export control laws (rev. March 2024)",
+      "url": "https://www.justice.gov/crt/media/1287536/dl",
+      "checked": "2026-11-13"
+    },
+    "crd-fair-chance": {
+      "title": "California Civil Rights Department — Criminal History and Employment fact sheet (June 2025)",
+      "url": "https://calcivilrights.ca.gov/wp-content/uploads/sites/32/2025/07/Fair-Chance-Act-Factsheet_English.pdf",
+      "checked": "2026-11-13"
+    },
+    "nyc-aedt": {
+      "title": "NYC DCWP — Automated Employment Decision Tools (Local Law 144)",
+      "url": "https://www.nyc.gov/site/dca/about/automated-employment-decision-tools.page",
+      "checked": "2026-11-13"
+    },
+    "cfr-1602-14": {
+      "title": "29 CFR § 1602.14 — Preservation of employment records (eCFR)",
+      "url": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XIV/part-1602/subpart-C/section-1602.14",
+      "checked": "2026-11-13"
+    },
+    "ccr-7012": {
+      "title": "11 CCR § 7012 — Notice at collection (CCPA regulations, effective 2026-01-01, CPPA)",
+      "url": "https://cppa.ca.gov/regulations/pdf/ccpa_statute_eff_20260101.pdf",
+      "checked": "2026-11-13"
+    },
+    "ada-12112": {
+      "title": "42 U.S.C. § 12112 — ADA: accommodation; medical inquiries before and after an offer (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/42/12112",
+      "checked": "2026-11-13"
+    },
+    "ina-1324b": {
+      "title": "8 U.S.C. § 1324b — Unfair immigration-related employment practices (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/8/1324b",
+      "checked": "2026-11-13"
+    },
+    "title-vii": {
+      "title": "Title VII disparate-impact doctrine, 42 U.S.C. § 2000e-2(k) (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/42/2000e-2",
+      "checked": "2026-11-11"
+    },
+    "fcra-1681b": {
+      "title": "15 U.S.C. § 1681b — Conditions for employment use of consumer reports (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/15/1681b",
+      "checked": "2026-11-13"
+    },
+    "fcra-1681m": {
+      "title": "15 U.S.C. § 1681m — Adverse action notice (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/15/1681m",
+      "checked": "2026-11-13"
+    },
+    "ftc-employers": {
+      "title": "FTC — Using Consumer Reports: What Employers Need to Know",
+      "url": "https://www.ftc.gov/business-guidance/resources/using-consumer-reports-what-employers-need-know",
+      "checked": "2026-11-13"
+    },
+    "ftc-weisberg": {
+      "title": "FTC staff — Advisory Opinion to Weisberg (June 27, 1997)",
+      "url": "https://www.ftc.gov/legal-library/browse/advisory-opinions/advisory-opinion-weisberg-06-27-97",
+      "checked": "2026-11-13"
+    },
+    "usc-41-4714": {
+      "title": "41 U.S.C. § 4714 — Fair Chance Act, civilian contractors (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/41/4714",
+      "checked": "2026-11-13"
+    },
+    "usc-10-4657": {
+      "title": "10 U.S.C. § 4657 — Fair Chance Act, defense contractors (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/10/4657",
+      "checked": "2026-11-13"
+    },
+    "nyc-fair-chance": {
+      "title": "NYC Commission on Human Rights — Fair Chance Act legal guidance",
+      "url": "https://www.nyc.gov/site/cchr/law/fair-chance-act.page",
+      "checked": "2026-11-13"
+    },
+    "il-2-103-1": {
+      "title": "775 ILCS 5/2-103.1 — Illinois: conviction record and interactive assessment",
+      "url": "https://ilga.gov/documents/legislation/ilcs/documents/077500050K2-103.1.htm",
+      "checked": "2026-11-13"
+    },
+    "trade-csl": {
+      "title": "International Trade Administration — Consolidated Screening List",
+      "url": "https://www.trade.gov/consolidated-screening-list",
+      "checked": "2026-11-13"
+    },
+    "dtsa-1833": {
+      "title": "18 U.S.C. § 1833(b) — Defend Trade Secrets Act immunity notice (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/18/1833",
+      "checked": "2026-11-13"
+    },
+    "cal-lab-2870": {
+      "title": "California Labor Code § 2870 — Limits on invention assignment",
+      "url": "https://california.public.law/codes/labor_code_section_2870",
+      "checked": "2026-11-13"
+    },
+    "cal-lab-2872": {
+      "title": "California Labor Code § 2872 — Written notice of the § 2870 limit",
+      "url": "https://california.public.law/codes/labor_code_section_2872",
+      "checked": "2026-11-13"
+    },
+    "cfr-274a-2": {
+      "title": "8 CFR § 274a.2 — Form I-9 timing and retention (eCFR)",
+      "url": "https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-274a/subpart-A/section-274a.2",
+      "checked": "2026-11-13"
+    },
+    "uscis-i9": {
+      "title": "USCIS — Form I-9, Employment Eligibility Verification",
+      "url": "https://www.uscis.gov/i-9",
+      "checked": "2026-11-13"
+    },
+    "far-52-222-54": {
+      "title": "FAR 52.222-54 — Employment Eligibility Verification (Jan 2025)",
+      "url": "https://www.acquisition.gov/far/52.222-54",
+      "checked": "2026-11-13"
+    },
+    "cfr-214-2": {
+      "title": "8 CFR § 214.2(f)(10)(ii)(C) — STEM OPT employer duties (eCFR)",
+      "url": "https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-214/section-214.2",
+      "checked": "2026-11-13"
+    },
+    "everify-tnc": {
+      "title": "E-Verify — Tentative Nonconfirmations (Mismatches)",
+      "url": "https://www.e-verify.gov/employers/verification-process/tentative-nonconfirmations-mismatches",
+      "checked": "2026-11-13"
+    },
+    "usc-42-653a": {
+      "title": "42 U.S.C. § 653a — State new-hire reporting (Cornell LII)",
+      "url": "https://www.law.cornell.edu/uscode/text/42/653a",
+      "checked": "2026-11-13"
+    },
+    "dol-fs71": {
+      "title": "U.S. Department of Labor — Fact Sheet #71: Internship Programs Under the FLSA (Jan 2018)",
+      "url": "https://www.dol.gov/agencies/whd/fact-sheets/71-flsa-internships",
+      "checked": "2026-11-13"
+    },
+    "cal-gov-12946": {
+      "title": "California Government Code § 12946 — Four-year record retention",
+      "url": "https://california.public.law/codes/government_code_section_12946",
+      "checked": "2026-11-13"
+    },
+    "checkr-candidate": {
+      "title": "Checkr API — Create a new Candidate (email is the only required field with Invitations)",
+      "url": "https://docs.checkr.com/apis/openapi/candidates/createcandidate",
+      "checked": "2026-11-13"
+    },
+    "checkr-adverse": {
+      "title": "Checkr API — Create a new Adverse Action (post-adverse notice defaults to 7 days)",
+      "url": "https://docs.checkr.com/apis/openapi/adverse-actions/createadverseaction",
+      "checked": "2026-11-13"
+    }
+  },
+  "steps": [
+    {
+      "n": 1,
+      "id": "classify-access",
+      "stage": "open-role",
+      "title": "Classify the role's access",
+      "detail": "Decide whether the job touches export-controlled technology (and under which rules: the ITAR or the EAR), needs eligibility for a security clearance, or needs an active clearance on day one.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Export-compliance lead and FSO, with the hiring manager",
+      "namedRole": "Export-compliance lead and Facility Security Officer (FSO), with the hiring manager",
+      "productRoles": [
+        "export_lead",
+        "security_officer"
+      ],
+      "whyPerson": "designated_role",
+      "record": "A written access classification for the role, with its job-related requirements",
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10(a)(1)(i), (a)(5)"
+        },
+        {
+          "source": "cfr-22-120-50",
+          "cite": "22 CFR 120.50(a)(2)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "itar-us-person",
+      "productDoes": "Proposes an access class from the posting's own signals when the role is opened; the role cannot open until the security officer or export lead confirms it.",
+      "slices": [
+        "S4"
+      ],
+      "r12Step": "Classify the role's access (none / export-controlled / clearance-eligible / active clearance) and the technology's regime"
+    },
+    {
+      "n": 2,
+      "id": "confirm-facility-clearance",
+      "stage": "open-role",
+      "title": "Confirm the facility clearance covers the role",
+      "detail": "For a cleared role, the FSO confirms the company's facility clearance (its own clearance to work on classified contracts) is at a level that covers the role, and that a classified contract makes access essential.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "FSO",
+      "namedRole": "Facility Security Officer (FSO)",
+      "productRoles": [
+        "security_officer"
+      ],
+      "whyPerson": "designated_role",
+      "record": "The FSO's confirmation",
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10(a)(1)(i), (a)(1)(iii)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "fcl-sponsorship",
+      "productDoes": "Has the security officer confirm each role's access class before the role opens. It does not check the facility clearance itself.",
+      "slices": [
+        "S4"
+      ],
+      "r12Step": "Confirm FCL covers the role and access is essential to a classified contract"
+    },
+    {
+      "n": 3,
+      "id": "set-pay-range",
+      "stage": "open-role",
+      "title": "Set the pay range",
+      "detail": "Decide a good-faith pay range and describe the benefits, for the posting.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Hiring manager",
+      "namedRole": "Hiring manager",
+      "productRoles": [
+        "decider"
+      ],
+      "whyPerson": "decision",
+      "record": "Pay range and benefits on the posting",
+      "basis": [
+        {
+          "source": "cal-lab-432-3",
+          "cite": "California Labor Code § 432.3(c)(3), (m)(1)"
+        }
+      ],
+      "basisNote": "Pay-transparency laws differ by state; California, Washington and New York State were confirmed from primary sources, and others only from secondary trackers. A practical rule: a good-faith range and a general benefits description on every posting meets each of those laws.",
+      "ruleTopic": null,
+      "productDoes": "Copies the posting's pay fields into the role's record when the role is opened. The range itself is set on the posting.",
+      "slices": [
+        "S4"
+      ],
+      "r12Step": "Set the pay range"
+    },
+    {
+      "n": 4,
+      "id": "draft-posting",
+      "stage": "open-role",
+      "title": "Write the job posting",
+      "detail": "The posting gives the pay range, states citizenship or export requirements only in lawful words, avoids anything that shuts out people with records, and carries the AI-use notice if an AI tool is used.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Recruiter approves",
+      "namedRole": "Recruiter",
+      "productRoles": [
+        "recruiter"
+      ],
+      "whyPerson": "decision",
+      "record": "Posting text",
+      "basis": [
+        {
+          "source": "doj-export",
+          "cite": "DOJ fact sheet, best practices"
+        },
+        {
+          "source": "crd-fair-chance",
+          "cite": "CRD fact sheet, \"Before a job offer\""
+        },
+        {
+          "source": "nyc-aedt",
+          "cite": "NYC Local Law 144 notice"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "export-determination-after-offer",
+      "productDoes": "Does not write the posting: the role comes from the company's live speedrun posting. When the role is opened it gives the AI-use notice text to put on the posting and careers page.",
+      "slices": [
+        "S4"
+      ],
+      "r12Step": "Draft the posting (pay, citizenship/export wording, fair-chance-safe language, AI notice if used)"
+    },
+    {
+      "n": 5,
+      "id": "publish-posting",
+      "stage": "open-role",
+      "title": "Publish the posting and keep its record",
+      "detail": "Publish the posting and keep its text and dates.",
+      "class": "AGENT",
+      "r12Class": "AGENT",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [],
+      "whyPerson": null,
+      "record": "Posting text and dates",
+      "basis": [
+        {
+          "source": "cfr-1602-14",
+          "cite": "29 CFR 1602.14"
+        }
+      ],
+      "basisNote": "A five-year rule for Illinois posting records is reported only by secondary sources; not confirmed.",
+      "ruleTopic": null,
+      "productDoes": "Saves the posting's text, pay, location and published date when the role is opened.",
+      "slices": [
+        "S4"
+      ],
+      "r12Step": "Publish and track the posting; keep posting records"
+    },
+    {
+      "n": 6,
+      "id": "notices-and-applications",
+      "stage": "applications",
+      "title": "Give the notices and collect applications",
+      "detail": "Show the privacy notice and the AI-use notice at or before the point of collection, then take applications. In New York City an AI tool may only be used after a bias audit within the past year and a notice given at least 10 business days before use.",
+      "class": "AGENT",
+      "r12Class": "AGENT",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [],
+      "whyPerson": null,
+      "record": "Application record; notice versions shown and acknowledged",
+      "basis": [
+        {
+          "source": "ccr-7012",
+          "cite": "11 CCR § 7012(a), (c)"
+        },
+        {
+          "source": "nyc-aedt",
+          "cite": "Local Law 144; notice 10 business days before use"
+        },
+        {
+          "source": "cfr-1602-14",
+          "cite": "29 CFR 1602.14"
+        },
+        {
+          "source": "cal-gov-12946",
+          "cite": "Gov. Code § 12946"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "The candidate's agent gets both notices in full with the application form; the application is refused unless the current versions were acknowledged and the candidate chose AI-assisted or human-only review. The receipt email repeats the AI-use notice. For a New York City role, AI evaluation stays off until the notice and audit dates are recorded.",
+      "slices": [
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "r12Step": "Deliver privacy notice at collection and AI-use notices; collect applications"
+    },
+    {
+      "n": 7,
+      "id": "accommodations",
+      "stage": "applications",
+      "title": "Handle accommodation requests",
+      "detail": "A candidate may ask for a reasonable accommodation at any point. A person works it out with them.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "HR or the hiring manager (interactive process)",
+      "namedRole": "HR or the hiring manager",
+      "productRoles": [
+        "recruiter"
+      ],
+      "whyPerson": "decision",
+      "record": "Accommodation request and how it was handled",
+      "basis": [
+        {
+          "source": "ada-12112",
+          "cite": "42 U.S.C. § 12112(b)(5)(A)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "Lets the candidate ask at application or later; creates a task for the recruiter and pauses every deadline on that application until a recruiter records it was handled. It stores only that a request was made, never health information.",
+      "slices": [
+        "S5"
+      ],
+      "r12Step": "Handle accommodation requests"
+    },
+    {
+      "n": 8,
+      "id": "eligibility-questions",
+      "stage": "applications",
+      "title": "Ask only lawful eligibility questions",
+      "detail": "Ask about work authorisation, U.S.-person status for export-controlled roles, and citizenship and clearance status for cleared roles, only where the posting states the requirement and only in lawful words. No documents before an offer, and no criminal-history, medical or SF-86-style questions.",
+      "class": "AGENT",
+      "r12Class": "AGENT",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [],
+      "whyPerson": null,
+      "record": "The candidate's answers, as signed statements",
+      "basis": [
+        {
+          "source": "ina-1324b",
+          "cite": "8 U.S.C. § 1324b(a)(1)-(2)"
+        },
+        {
+          "source": "doj-export",
+          "cite": "DOJ fact sheet"
+        },
+        {
+          "source": "ada-12112",
+          "cite": "42 U.S.C. § 12112(d)(2)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "clearance-citizenship",
+      "productDoes": "Asks only the questions for the signals the posting states, in lawful wording; answers are shown only to that employer. The pool of anonymous interest no longer asks citizenship at all.",
+      "slices": [
+        "S4",
+        "S15a"
+      ],
+      "r12Step": "Eligibility questions (work authorisation, U.S. person for type A, citizenship and clearance status for B/C)"
+    },
+    {
+      "n": 9,
+      "id": "screen-and-rank",
+      "stage": "screening",
+      "title": "Screen and order candidates",
+      "detail": "Check each candidate's evidence against the posting's job-related requirements and order them. A person decides who moves forward.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Recruiter or hiring manager decides who advances",
+      "namedRole": "Recruiter or hiring manager",
+      "productRoles": [
+        "recruiter",
+        "decider"
+      ],
+      "whyPerson": "decision",
+      "record": "For each candidate: the evidence, each judgment and its quoted basis, the order shown, and who decided and why",
+      "basis": [
+        {
+          "source": "title-vii",
+          "cite": "42 U.S.C. § 2000e-2(k)"
+        },
+        {
+          "source": "ada-12112",
+          "cite": "42 U.S.C. § 12112(d)(2)"
+        },
+        {
+          "source": "cfr-1602-14",
+          "cite": "29 CFR 1602.14"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "An AI model, or a person if the candidate chose human-only review, labels how well each piece of evidence shows each requirement, quoting the candidate's words; software orders candidates and explains each position. Your agent can propose who advances; the decision takes effect only when the recruiter or hiring manager confirms it on the web.",
+      "slices": [
+        "S6",
+        "S7",
+        "S10"
+      ],
+      "r12Step": "Screen and rank against job-related requirements"
+    },
+    {
+      "n": 10,
+      "id": "bias-audit",
+      "stage": "screening",
+      "title": "Bias audit of the AI tool (New York City)",
+      "detail": "Where New York City's law applies, an independent auditor checks the tool for bias within the year before it is used, and a summary is published.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Independent auditor commissioned by the employer (vendor may supply data, §7)",
+      "namedRole": "Independent auditor commissioned by the employer",
+      "productRoles": [
+        "admin",
+        "decider"
+      ],
+      "whyPerson": "independent",
+      "record": "Audit summary and date",
+      "basis": [
+        {
+          "source": "nyc-aedt",
+          "cite": "Local Law 144: audit within one year of use"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "Exports a per-role record of every AI judgment and human override, and computes selection-rate and impact-ratio reports from totals the employer enters. It cannot run the audit itself, because it holds no demographic data; for a New York City role it keeps AI evaluation off until the audit date is recorded.",
+      "slices": [
+        "S6",
+        "S14"
+      ],
+      "r12Step": "Bias audit of the ranking tool (where NYC LL144 applies)"
+    },
+    {
+      "n": 11,
+      "id": "schedule-interviews",
+      "stage": "interviews",
+      "title": "Schedule interviews",
+      "detail": "Offer interview times and confirm one.",
+      "class": "AGENT",
+      "r12Class": "AGENT",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [],
+      "whyPerson": null,
+      "record": "Interview times",
+      "basis": [],
+      "basisNote": "No legal rule; this is scheduling.",
+      "ruleTopic": null,
+      "productDoes": "Your agent sends up to five time slots; the candidate's agent picks one; your agent puts it in calendars and sends the meeting link.",
+      "slices": [
+        "S9"
+      ],
+      "r12Step": "Schedule interviews"
+    },
+    {
+      "n": 12,
+      "id": "interviews-and-work-samples",
+      "stage": "interviews",
+      "title": "Run work samples and interviews",
+      "detail": "Use a short work sample, if the role has one, and structured, job-related interview questions. No questions about health, family, religion or national origin, and none of the SF-86's personal topics.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Interviewers",
+      "namedRole": "Interviewers",
+      "productRoles": [
+        "interviewer"
+      ],
+      "whyPerson": "decision",
+      "record": "Interview guide, ratings and notes; work-sample grades",
+      "basis": [
+        {
+          "source": "ada-12112",
+          "cite": "42 U.S.C. § 12112(d)(2)"
+        },
+        {
+          "source": "title-vii",
+          "cite": "42 U.S.C. § 2000e-2(k)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "Issues the work-sample brief and its rubric, grades the submission against it for a person to review, generates the interview guide from the posting, and records each interviewer's ratings, hidden from other interviewers until their own are in.",
+      "slices": [
+        "S8",
+        "S9"
+      ],
+      "r12Step": "Conduct interviews and work samples"
+    },
+    {
+      "n": 13,
+      "id": "hiring-decision",
+      "stage": "offer",
+      "title": "Make the hiring decision",
+      "detail": "The hiring manager decides whom to offer the job.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Hiring manager",
+      "namedRole": "Hiring manager",
+      "productRoles": [
+        "decider"
+      ],
+      "whyPerson": "decision",
+      "record": "The decision, who made it and the reasons",
+      "basis": [
+        {
+          "source": "cfr-1602-14",
+          "cite": "29 CFR 1602.14"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "Shows the evidence, judgments, grades, ratings and ranking explanation on a confirmation page; the offer decision exists only once the hiring manager confirms it there, signed in.",
+      "slices": [
+        "S10"
+      ],
+      "r12Step": "Hiring decision"
+    },
+    {
+      "n": 14,
+      "id": "conditional-offer",
+      "stage": "offer",
+      "title": "Send the written conditional offer",
+      "detail": "An officer authorised to sign offers sends a written offer listing its conditions (contingencies); the candidate accepts in writing. The written offer is what lets the background check start; the candidate's written acceptance is what lets a clearance request start.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Authorised officer signs; candidate accepts in writing",
+      "namedRole": "An officer authorised to sign offers; the candidate accepts",
+      "productRoles": [
+        "recruiter",
+        "decider",
+        "candidate"
+      ],
+      "whyPerson": "signature",
+      "record": "Signed offer letter and the candidate's written acceptance",
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10(f)"
+        },
+        {
+          "source": "ada-12112",
+          "cite": "42 U.S.C. § 12112(d)(3)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "offer-contingencies",
+      "productDoes": "Records the start date, expiry, contingencies (checked against the role's access class) and the date the written offer went out; the candidate accepts or declines on the web, which is stored as their written statement. The letter itself goes through your own e-signature tool; cleared stores no offer-letter text or pay.",
+      "slices": [
+        "S11"
+      ],
+      "r12Step": "Offer letter with contingencies"
+    },
+    {
+      "n": 15,
+      "id": "background-check-account",
+      "stage": "background-check",
+      "title": "Open the background-check account",
+      "detail": "A company officer opens the account with the background-check company, passes its business checks, and certifies the company's permissible purpose and FCRA compliance.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Company officer (credentialing with the provider)",
+      "namedRole": "A company officer",
+      "productRoles": [
+        "admin"
+      ],
+      "whyPerson": "signature",
+      "record": "The provider's end-user certification",
+      "basis": [
+        {
+          "source": "fcra-1681b",
+          "cite": "15 U.S.C. § 1681b(b)(1)(A)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "fcra-background-check",
+      "productDoes": "Connects the company's own Checkr account through Checkr's partner sign-in, and shows its status. Credentialing and the certification stay between the company and Checkr.",
+      "slices": [
+        "S12"
+      ],
+      "r12Step": "Open the background-check account and certify permissible purpose"
+    },
+    {
+      "n": 16,
+      "id": "order-background-check",
+      "stage": "background-check",
+      "title": "Order the check after the conditional offer",
+      "detail": "Order the check only after a written conditional offer is recorded.",
+      "class": "AGENT",
+      "r12Class": "AGENT",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [
+        "recruiter",
+        "decider"
+      ],
+      "whyPerson": null,
+      "record": "Background-check order (invitation)",
+      "basis": [
+        {
+          "source": "usc-41-4714",
+          "cite": "41 U.S.C. § 4714(a)"
+        },
+        {
+          "source": "usc-10-4657",
+          "cite": "10 U.S.C. § 4657(a)"
+        },
+        {
+          "source": "crd-fair-chance",
+          "cite": "CRD fact sheet"
+        },
+        {
+          "source": "nyc-fair-chance",
+          "cite": "NYC Fair Chance Act guidance"
+        },
+        {
+          "source": "checkr-candidate",
+          "cite": "Create Candidate"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "fair-chance-timing",
+      "productDoes": "Your agent orders it; the product refuses until a written conditional offer that lists a background-check contingency is recorded. It sends Checkr only the candidate's email, a reference id, the package and the work location.",
+      "slices": [
+        "S12"
+      ],
+      "r12Step": "Order the check after the written conditional offer (invitation flow)"
+    },
+    {
+      "n": 17,
+      "id": "candidate-authorisation",
+      "stage": "background-check",
+      "title": "Candidate's notice and permission",
+      "detail": "The candidate reads the stand-alone FCRA notice and gives written permission, on the background-check company's own pages.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "The candidate",
+      "namedRole": "The candidate",
+      "productRoles": [
+        "candidate"
+      ],
+      "whyPerson": "signature",
+      "record": "The FCRA disclosure and the candidate's signed authorisation (held by the provider)",
+      "basis": [
+        {
+          "source": "fcra-1681b",
+          "cite": "15 U.S.C. § 1681b(b)(2)(A)"
+        },
+        {
+          "source": "ftc-employers",
+          "cite": "FTC, \"Before You Get a Consumer Report\""
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "fcra-background-check",
+      "productDoes": "Checkr emails the candidate a link; the product tracks only whether the invitation was completed. The candidate's Social Security number, date of birth and address history go to Checkr, never to cleared.",
+      "slices": [
+        "S12"
+      ],
+      "r12Step": "Candidate's FCRA authorisation"
+    },
+    {
+      "n": 18,
+      "id": "track-background-check",
+      "stage": "background-check",
+      "title": "Track the check",
+      "detail": "Follow the check until the report is complete.",
+      "class": "AGENT",
+      "r12Class": "AGENT",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [],
+      "whyPerson": null,
+      "record": "Status history",
+      "basis": [],
+      "basisNote": "No legal rule; status tracking. The report's contents are never stored.",
+      "ruleTopic": null,
+      "productDoes": "Receives Checkr's status events and stores the status and expected date only, never report contents; tells the hiring manager when the report is ready to review in Checkr's dashboard.",
+      "slices": [
+        "S12"
+      ],
+      "r12Step": "Track status"
+    },
+    {
+      "n": 19,
+      "id": "review-report",
+      "stage": "background-check",
+      "title": "Review the report",
+      "detail": "A named person reviews the report against written, job-related criteria. Where a fair-chance law applies and something on the report is a concern, they do an individual assessment before deciding.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Named employer reviewer (in the provider's dashboard)",
+      "namedRole": "A named reviewer at the company (the hiring manager)",
+      "productRoles": [
+        "decider"
+      ],
+      "whyPerson": "decision",
+      "record": "Assessment notes (kept with the provider or the company)",
+      "basis": [
+        {
+          "source": "crd-fair-chance",
+          "cite": "CRD fact sheet, individualized assessment"
+        },
+        {
+          "source": "nyc-fair-chance",
+          "cite": "Fair Chance Analysis"
+        },
+        {
+          "source": "il-2-103-1",
+          "cite": "775 ILCS 5/2-103.1(B)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "fair-chance-timing",
+      "productDoes": "Links to the report in Checkr's dashboard. The hiring manager confirms on the web either that they reviewed it and the company proceeds, or that adverse action starts. cleared never sees the report.",
+      "slices": [
+        "S12"
+      ],
+      "r12Step": "Review the report; individual assessment where a fair-chance law applies"
+    },
+    {
+      "n": 20,
+      "id": "pre-adverse-notice",
+      "stage": "background-check",
+      "title": "Pre-adverse action notice",
+      "detail": "Before acting on the report, give the candidate a copy of it and \"A Summary of Your Rights Under the Fair Credit Reporting Act\", plus the fair-chance notice where the work location requires one. Then wait.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Employer reviewer decides; the provider or employer sends",
+      "namedRole": "The hiring manager decides; the notice is sent by Checkr or by the company",
+      "productRoles": [
+        "decider"
+      ],
+      "whyPerson": "decision",
+      "record": "Pre-adverse letter with the report and summary, and proof of delivery",
+      "basis": [
+        {
+          "source": "fcra-1681b",
+          "cite": "15 U.S.C. § 1681b(b)(3)(A)"
+        },
+        {
+          "source": "ftc-employers",
+          "cite": "FTC, \"Before You Take an Adverse Action\""
+        },
+        {
+          "source": "crd-fair-chance",
+          "cite": "CRD fact sheet, preliminary notice"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "fcra-adverse-action",
+      "productDoes": "Your agent can propose it; the hiring manager confirms on the web, choosing whether Checkr or the company sends it. The page lists what the notice must contain. The product then sets the earliest date a final notice is allowed.",
+      "slices": [
+        "S12"
+      ],
+      "r12Step": "Pre-adverse notice with report copy, Summary of Rights and fair-chance notice"
+    },
+    {
+      "n": 21,
+      "id": "final-adverse-notice",
+      "stage": "background-check",
+      "title": "Final adverse-action notice, or proceed",
+      "detail": "After at least five business days (ten if the candidate disputes the report), either proceed with the hire or send the adverse-action notice.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Employer reviewer",
+      "namedRole": "The hiring manager",
+      "productRoles": [
+        "decider"
+      ],
+      "whyPerson": "decision",
+      "record": "Adverse-action letter",
+      "basis": [
+        {
+          "source": "fcra-1681m",
+          "cite": "15 U.S.C. § 1681m(a)"
+        },
+        {
+          "source": "ftc-weisberg",
+          "cite": "five business days \"appears reasonable\""
+        },
+        {
+          "source": "crd-fair-chance",
+          "cite": "CRD fact sheet"
+        },
+        {
+          "source": "il-2-103-1",
+          "cite": "775 ILCS 5/2-103.1(C)(2)"
+        },
+        {
+          "source": "checkr-adverse",
+          "cite": "post-adverse default"
+        }
+      ],
+      "basisNote": "Checkr schedules its own post-adverse notice 7 days after the pre-adverse notice by default; the company must turn that off or align it with the waiting period.",
+      "ruleTopic": "fcra-adverse-action",
+      "productDoes": "Refuses the final notice before the earliest allowed date (Monday to Friday, U.S. federal holidays excluded); the hiring manager confirms it on the web. A Checkr post-adverse event that arrives early is flagged.",
+      "slices": [
+        "S12"
+      ],
+      "r12Step": "Final adverse-action notice (or proceed)"
+    },
+    {
+      "n": 22,
+      "id": "us-person-determination",
+      "stage": "export-control",
+      "title": "Confirm U.S.-person status (export-controlled roles)",
+      "detail": "After the offer, the export-compliance lead confirms whether the new hire is a U.S. person and, if not, whether a licence is needed before any access, separately from Form I-9.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Export-compliance lead / empowered official",
+      "namedRole": "Export-compliance lead (the empowered official for an ITAR registrant)",
+      "productRoles": [
+        "export_lead"
+      ],
+      "whyPerson": "designated_role",
+      "record": "U.S.-person determination, kept apart from the I-9",
+      "basis": [
+        {
+          "source": "doj-export",
+          "cite": "DOJ fact sheet"
+        },
+        {
+          "source": "cfr-22-120-50",
+          "cite": "22 CFR 120.50(a)(2), (b)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "export-determination-after-offer",
+      "productDoes": "Creates the item when the offer is accepted, owned by the export lead, who alone sees and records its outcome; it is never combined with the I-9 items.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "U.S.-person determination for type (A) roles; licence decision"
+    },
+    {
+      "n": 23,
+      "id": "export-licence",
+      "stage": "export-control",
+      "title": "Export licence, where needed",
+      "detail": "If the new hire is not a U.S. person, the company applies for any licence before releasing controlled technical data.",
+      "class": "GOV ONLY",
+      "r12Class": "GOV ONLY (application by the empowered official)",
+      "whoMustAct": "DDTC or BIS decides",
+      "namedRole": "The State Department (DDTC) or the Commerce Department (BIS) decides; the empowered official applies",
+      "productRoles": [
+        "export_lead"
+      ],
+      "whyPerson": "government",
+      "record": "Licence application and decision",
+      "basis": [
+        {
+          "source": "doj-export",
+          "cite": "authorisation from State (DDTC) or Commerce (BIS)"
+        },
+        {
+          "source": "cfr-22-120-50",
+          "cite": "22 CFR 120.50(b)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "export-determination-after-offer",
+      "productDoes": "Tracks the outcome the export lead records (licence required, licence obtained).",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Export licence or exemption"
+    },
+    {
+      "n": 24,
+      "id": "restricted-party-screening",
+      "stage": "export-control",
+      "title": "Restricted-party screening",
+      "detail": "Check the new hire's name against the Consolidated Screening List; a person resolves any possible match.",
+      "class": "AGENT",
+      "r12Class": "AGENT, with PREP+SIGN on any match",
+      "whoMustAct": "Export-compliance lead resolves possible matches",
+      "namedRole": "Export-compliance lead",
+      "productRoles": [
+        "export_lead"
+      ],
+      "whyPerson": null,
+      "record": "Screening result",
+      "basis": [
+        {
+          "source": "trade-csl",
+          "cite": "Consolidated Screening List"
+        }
+      ],
+      "basisNote": "Screening a new hire is common practice; the list's own page states no rule about employees.",
+      "ruleTopic": "export-determination-after-offer",
+      "productDoes": "Tracks it as an item owned by the export lead, with outcomes no match, match resolved and match blocking.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Restricted-party screening (Consolidated Screening List)"
+    },
+    {
+      "n": 25,
+      "id": "form-i129-export-certification",
+      "stage": "export-control",
+      "title": "Form I-129 export certification (H-1B, L-1, O-1 only)",
+      "detail": "For a visa petition, the petitioner's signatory certifies whether an export licence is needed.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Petitioner's authorised signatory",
+      "namedRole": "The petitioner's authorised signatory",
+      "productRoles": [],
+      "whyPerson": "signature",
+      "record": "Form I-129 Part 6",
+      "basis": [],
+      "basisNote": "Found only in a secondary source, and the USCIS form was not re-read; not confirmed here.",
+      "ruleTopic": null,
+      "productDoes": "Nothing: not tracked.",
+      "slices": [],
+      "r12Step": "Form I-129 Part 6 export certification (H-1B, L-1, O-1 only)"
+    },
+    {
+      "n": 26,
+      "id": "verify-existing-clearance",
+      "stage": "clearance",
+      "title": "Verify an existing clearance",
+      "detail": "For a role that needs an active clearance, the FSO verifies the candidate's clearance and whether it carries over (reciprocity), in the government's own system.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "FSO only",
+      "namedRole": "Facility Security Officer (FSO) only",
+      "productRoles": [
+        "security_officer"
+      ],
+      "whyPerson": "designated_role",
+      "record": "The FSO's record: verified or not",
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "sead7",
+      "productDoes": "Creates the item after the candidate's written acceptance and refuses it before; the security officer records the outcome, which only they see. cleared never queries or imitates government clearance systems.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Verify an existing clearance; check reciprocity"
+    },
+    {
+      "n": 27,
+      "id": "initiate-clearance",
+      "stage": "clearance",
+      "title": "Start a new clearance",
+      "detail": "The FSO starts the request; the candidate completes the SF-86 in the government's eApp; the FSO reviews it only for adequacy and completeness, collects fingerprints and submits. The FSO must see original or certified proof of citizenship.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "FSO (candidate completes the SF-86 in eApp)",
+      "namedRole": "Facility Security Officer (FSO); the candidate completes the SF-86",
+      "productRoles": [
+        "security_officer"
+      ],
+      "whyPerson": "designated_role",
+      "record": "Government forms, handled only by the candidate and the FSO",
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10(c), (d)(1), (f)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "sf86-eapp",
+      "productDoes": "Refuses the item before the candidate's written acceptance; the security officer records submission and outcome. It never touches the SF-86.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Initiate a new clearance; review SF-86 for adequacy and completeness; fingerprints"
+    },
+    {
+      "n": 28,
+      "id": "clearance-eligibility",
+      "stage": "clearance",
+      "title": "Eligibility decision",
+      "detail": "The government decides interim and final eligibility and notifies the company; on a denial the company must immediately deny access.",
+      "class": "GOV ONLY",
+      "r12Class": "GOV ONLY",
+      "whoMustAct": "DCSA / cognizant security agency; DOHA for appeals (not verified)",
+      "namedRole": "The government (for Defense Department work, DCSA)",
+      "productRoles": [
+        "security_officer"
+      ],
+      "whyPerson": "government",
+      "record": "Eligibility notice",
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10(a)(2)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "interim-clearance",
+      "productDoes": "The security officer enters the outcome; others see only done or blocked. Public timeline figures are available today through estimate_timeline and explain_rule.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Interim and final eligibility; adjudication; appeals"
+    },
+    {
+      "n": 29,
+      "id": "sf312-and-briefing",
+      "stage": "clearance",
+      "title": "SF 312 and security briefing before access",
+      "detail": "Before any classified access, the new hire signs the SF 312 nondisclosure agreement in front of a witness, and gets the initial security briefing.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "FSO, employee, witness",
+      "namedRole": "Facility Security Officer (FSO), the new hire and a witness",
+      "productRoles": [
+        "security_officer"
+      ],
+      "whyPerson": "designated_role",
+      "record": "Signed SF 312 (sent to the government); briefing record",
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10(g)"
+        },
+        {
+          "source": "cfr-117-12",
+          "cite": "32 CFR 117.12(e)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "Tracks it as an item owned by the security officer, due before access.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "SF 312 and initial security briefing before access"
+    },
+    {
+      "n": 30,
+      "id": "confidentiality-agreement",
+      "stage": "onboarding",
+      "title": "Confidentiality and invention-assignment agreement",
+      "detail": "Send the agreement with the trade-secret immunity notice and, in California, the invention-assignment notice; both sides sign.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Candidate and company sign",
+      "namedRole": "The candidate and the company sign",
+      "productRoles": [
+        "recruiter",
+        "candidate"
+      ],
+      "whyPerson": "signature",
+      "record": "Signed agreement with the required notices",
+      "basis": [
+        {
+          "source": "dtsa-1833",
+          "cite": "18 U.S.C. § 1833(b)(3)"
+        },
+        {
+          "source": "cal-lab-2870",
+          "cite": "Labor Code § 2870"
+        },
+        {
+          "source": "cal-lab-2872",
+          "cite": "Labor Code § 2872"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "confidentiality-invention-assignment",
+      "productDoes": "Tracks it as a recruiter-owned item due before the start date; the agreement goes through your own e-signature tool.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Confidentiality and invention-assignment agreement"
+    },
+    {
+      "n": 31,
+      "id": "form-i9-section-1",
+      "stage": "onboarding",
+      "title": "Form I-9, Section 1",
+      "detail": "The new employee completes Section 1 at the time of hire, in practice by the first day.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Employee",
+      "namedRole": "The new employee",
+      "productRoles": [
+        "candidate",
+        "recruiter"
+      ],
+      "whyPerson": "signature",
+      "record": "Form I-9 (kept by the company, never by cleared)",
+      "basis": [
+        {
+          "source": "cfr-274a-2",
+          "cite": "8 CFR 274a.2(b)(1)(i)(A)"
+        },
+        {
+          "source": "uscis-i9",
+          "cite": "USCIS Form I-9 page"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "form-i9",
+      "productDoes": "Tracks it as an item due on day one, never before the offer is accepted; the recruiter records it done. The form is never filled in or stored here.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Form I-9 Section 1"
+    },
+    {
+      "n": 32,
+      "id": "form-i9-section-2",
+      "stage": "onboarding",
+      "title": "Form I-9, Section 2",
+      "detail": "Within three business days of the hire, the company's representative examines the documents the employee chooses and completes Section 2.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Employer's authorised representative (in person, or remotely under the DHS alternative procedure if eligible)",
+      "namedRole": "The company's authorised representative (in person, or remotely under the DHS alternative procedure if eligible)",
+      "productRoles": [
+        "recruiter"
+      ],
+      "whyPerson": "signature",
+      "record": "Form I-9, Section 2",
+      "basis": [
+        {
+          "source": "cfr-274a-2",
+          "cite": "8 CFR 274a.2(b)(1)(ii)"
+        },
+        {
+          "source": "doj-export",
+          "cite": "the employee chooses the documents"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "form-i9",
+      "productDoes": "Tracks the deadline: three business days after the start date.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Form I-9 Section 2 (document examination within three business days)"
+    },
+    {
+      "n": 33,
+      "id": "e-verify-case",
+      "stage": "onboarding",
+      "title": "E-Verify case, where required",
+      "detail": "Create the case within three business days after the hire, never before. Not required under the federal-contract clause for someone with an active clearance; employers of STEM OPT students must be enrolled.",
+      "class": "NAMED ROLE",
+      "r12Class": "NAMED ROLE",
+      "whoMustAct": "Employer's authorised E-Verify user (or an E-Verify employer agent)",
+      "namedRole": "The company's authorised E-Verify user (or an E-Verify employer agent)",
+      "productRoles": [
+        "recruiter"
+      ],
+      "whyPerson": "signature",
+      "record": "E-Verify case",
+      "basis": [
+        {
+          "source": "far-52-222-54",
+          "cite": "FAR 52.222-54(b), (d)"
+        },
+        {
+          "source": "cfr-214-2",
+          "cite": "8 CFR 214.2(f)(10)(ii)(C)(5)"
+        },
+        {
+          "source": "everify-tnc",
+          "cite": "no adverse action during a mismatch"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "e-verify",
+      "productDoes": "Tracks it only after the start is recorded, and records \"not required\" for an active clearance holder.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "E-Verify case"
+    },
+    {
+      "n": 34,
+      "id": "payroll-and-new-hire-report",
+      "stage": "onboarding",
+      "title": "Payroll and the state new-hire report",
+      "detail": "Payroll forms, the state new-hire report within 20 days of the hire, and state pay notices.",
+      "class": "AGENT",
+      "r12Class": "AGENT (via the payroll platform)",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [
+        "recruiter"
+      ],
+      "whyPerson": null,
+      "record": "Payroll records; state new-hire report",
+      "basis": [
+        {
+          "source": "usc-42-653a",
+          "cite": "42 U.S.C. § 653a(b)(2)"
+        }
+      ],
+      "basisNote": "State pay-notice rules (for example California Labor Code § 2810.5) were not re-read.",
+      "ruleTopic": null,
+      "productDoes": "Tracks the hand-off to payroll and the 20-day new-hire report as recruiter-owned items.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Payroll forms, new-hire report (≤20 days), state pay notices"
+    },
+    {
+      "n": 35,
+      "id": "required-trainings",
+      "stage": "onboarding",
+      "title": "Required trainings",
+      "detail": "Assign the trainings each state requires.",
+      "class": "AGENT",
+      "r12Class": "AGENT (delivery)",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [
+        "recruiter"
+      ],
+      "whyPerson": null,
+      "record": "Training records",
+      "basis": [],
+      "basisNote": "State training rules (for example California's harassment-prevention training) were not re-read; not confirmed here.",
+      "ruleTopic": null,
+      "productDoes": "Tracks assignment and completion after the start date.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Required trainings"
+    },
+    {
+      "n": 36,
+      "id": "intern-pay",
+      "stage": "onboarding",
+      "title": "Intern pay: paid employee or not",
+      "detail": "An unpaid internship at a for-profit company is lawful only where the intern, not the company, is the primary beneficiary; otherwise the intern is an employee owed minimum wage.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Employer; counsel if unpaid",
+      "namedRole": "The company; counsel if unpaid",
+      "productRoles": [
+        "recruiter"
+      ],
+      "whyPerson": "decision",
+      "record": "Classification record",
+      "basis": [
+        {
+          "source": "dol-fs71",
+          "cite": "primary beneficiary test"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "For a role labelled as an internship, tracks the classification as an item due before the start date.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "Intern pay classification (paid vs unpaid)"
+    },
+    {
+      "n": 37,
+      "id": "stem-opt-i983",
+      "stage": "onboarding",
+      "title": "STEM OPT: Form I-983 and departure reporting",
+      "detail": "For a student on a STEM OPT extension, sign the Form I-983 training plan and report a departure to the school within five business days.",
+      "class": "PREP+SIGN",
+      "r12Class": "PREP+SIGN",
+      "whoMustAct": "Employer signatory; school's DSO",
+      "namedRole": "The company's signatory; the school's designated school official",
+      "productRoles": [
+        "recruiter"
+      ],
+      "whyPerson": "signature",
+      "record": "Form I-983; departure report",
+      "basis": [
+        {
+          "source": "cfr-214-2",
+          "cite": "8 CFR 214.2(f)(10)(ii)(C)(6)"
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": "e-verify",
+      "productDoes": "Tracks the I-983 as an item the recruiter records when the company knows the hire is on STEM OPT; the product never asks the candidate.",
+      "slices": [
+        "S13"
+      ],
+      "r12Step": "STEM OPT Form I-983 and departure reporting"
+    },
+    {
+      "n": 38,
+      "id": "retention-and-deletion",
+      "stage": "records",
+      "title": "Keep records, then delete them",
+      "detail": "Keep hiring records at least one year (four in California, longer if a charge is filed), keep each Form I-9 three years after hire or one year after the job ends, and dispose of background-check information securely.",
+      "class": "AGENT",
+      "r12Class": "AGENT",
+      "whoMustAct": "—",
+      "namedRole": null,
+      "productRoles": [
+        "admin"
+      ],
+      "whyPerson": null,
+      "record": "Retention schedule; deletion log",
+      "basis": [
+        {
+          "source": "cfr-1602-14",
+          "cite": "29 CFR 1602.14"
+        },
+        {
+          "source": "cal-gov-12946",
+          "cite": "Gov. Code § 12946"
+        },
+        {
+          "source": "cfr-274a-2",
+          "cite": "8 CFR 274a.2(b)(2)(i)(A)"
+        },
+        {
+          "source": "ftc-employers",
+          "cite": "FTC, \"Disposing of Consumer Reports\""
+        }
+      ],
+      "basisNote": null,
+      "ruleTopic": null,
+      "productDoes": "Keeps application records at least four years from the later of creation and the role's last decision, lets the company place legal holds that stop deletion, and purges on schedule.",
+      "slices": [
+        "S14"
+      ],
+      "r12Step": "Record retention and deletion"
+    }
+  ],
+  "gates": [
+    {
+      "id": "G1",
+      "rule": "No background check before a written conditional offer is recorded.",
+      "notBefore": 14,
+      "steps": [
+        16
+      ],
+      "basis": [
+        {
+          "source": "usc-41-4714",
+          "cite": "41 U.S.C. § 4714"
+        },
+        {
+          "source": "crd-fair-chance",
+          "cite": "CRD fact sheet"
+        },
+        {
+          "source": "nyc-fair-chance",
+          "cite": "NYC guidance"
+        }
+      ],
+      "slices": [
+        "S12"
+      ]
+    },
+    {
+      "id": "G1b",
+      "rule": "No criminal-history, medical or SF-86-style question before an offer: there is no free-text channel from the company to the candidate, and eligibility questions come from a closed list.",
+      "notBefore": null,
+      "steps": [
+        8,
+        9,
+        12
+      ],
+      "basis": [
+        {
+          "source": "crd-fair-chance",
+          "cite": "CRD fact sheet"
+        },
+        {
+          "source": "ada-12112",
+          "cite": "42 U.S.C. § 12112(d)(2)"
+        }
+      ],
+      "slices": [
+        "S4",
+        "S8"
+      ]
+    },
+    {
+      "id": "G2",
+      "rule": "No clearance step before the candidate has accepted the offer in writing.",
+      "notBefore": 14,
+      "steps": [
+        26,
+        27
+      ],
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10(f)"
+        }
+      ],
+      "slices": [
+        "S13"
+      ]
+    },
+    {
+      "id": "G3",
+      "rule": "No final adverse-action notice until at least five business days after the pre-adverse notice, ten if the candidate disputes the report.",
+      "notBefore": 20,
+      "steps": [
+        21
+      ],
+      "basis": [
+        {
+          "source": "ftc-weisberg",
+          "cite": "Weisberg opinion"
+        },
+        {
+          "source": "crd-fair-chance",
+          "cite": "CRD fact sheet"
+        },
+        {
+          "source": "nyc-fair-chance",
+          "cite": "NYC guidance"
+        },
+        {
+          "source": "il-2-103-1",
+          "cite": "775 ILCS 5/2-103.1(C)(2)"
+        }
+      ],
+      "slices": [
+        "S12"
+      ]
+    },
+    {
+      "id": "G4",
+      "rule": "No selection decision, offer acceptance or adverse-action step from an agent alone: each is confirmed by the named person on the web.",
+      "notBefore": null,
+      "steps": [
+        9,
+        13,
+        14,
+        19,
+        20,
+        21
+      ],
+      "basis": [],
+      "slices": [
+        "S10",
+        "S11",
+        "S12"
+      ]
+    },
+    {
+      "id": "export-after-acceptance",
+      "rule": "No export-control determination before the offer is accepted, and never combined with Form I-9.",
+      "notBefore": 14,
+      "steps": [
+        22
+      ],
+      "basis": [
+        {
+          "source": "doj-export",
+          "cite": "separate from Form I-9"
+        }
+      ],
+      "slices": [
+        "S13"
+      ]
+    },
+    {
+      "id": "G5",
+      "rule": "No Form I-9 item before the offer is accepted; Section 2 is due three business days after the start.",
+      "notBefore": 14,
+      "steps": [
+        31,
+        32
+      ],
+      "basis": [
+        {
+          "source": "cfr-274a-2",
+          "cite": "8 CFR 274a.2(b)(1)"
+        }
+      ],
+      "slices": [
+        "S13"
+      ]
+    },
+    {
+      "id": "G6",
+      "rule": "No E-Verify case before the start: never as a pre-screen.",
+      "notBefore": 31,
+      "steps": [
+        33
+      ],
+      "basis": [
+        {
+          "source": "far-52-222-54",
+          "cite": "three business days after the date of hire"
+        }
+      ],
+      "slices": [
+        "S13"
+      ]
+    },
+    {
+      "id": "G7",
+      "rule": "No AI evaluation for a New York City role until the AI notice has been up at least 10 business days and a bias audit dated within the past year is recorded.",
+      "notBefore": 10,
+      "steps": [
+        9
+      ],
+      "basis": [
+        {
+          "source": "nyc-aedt",
+          "cite": "Local Law 144"
+        }
+      ],
+      "slices": [
+        "S6"
+      ]
+    },
+    {
+      "id": "G8",
+      "rule": "No AI evaluation without the candidate's current consent; a candidate can switch to human-only review at any time.",
+      "notBefore": 6,
+      "steps": [
+        9
+      ],
+      "basis": [],
+      "slices": [
+        "S6"
+      ]
+    },
+    {
+      "id": "G9",
+      "rule": "A role cannot be closed while anyone in it is left without an outcome.",
+      "notBefore": null,
+      "steps": [
+        9,
+        13
+      ],
+      "basis": [],
+      "slices": [
+        "S10"
+      ]
+    },
+    {
+      "id": "G10",
+      "rule": "A role cannot open until the security officer or export lead confirms its access class.",
+      "notBefore": 1,
+      "steps": [
+        5,
+        6
+      ],
+      "basis": [
+        {
+          "source": "cfr-117-10",
+          "cite": "32 CFR 117.10(a)(1)"
+        }
+      ],
+      "slices": [
+        "S4"
+      ]
+    }
+  ]
+}

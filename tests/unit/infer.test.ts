@@ -37,12 +37,11 @@ describe("extractStatedSignals", () => {
     }
   });
 
-  // Regression for DECISIONS.md (judging panel round 2): "an active Top
-  // Secret security clearance" independently matched both the specific
-  // "ts" pattern (via "Top Secret") and the generic
+  // Regression: "an active Top Secret security clearance" independently matched
+  // both the specific "ts" pattern (via "Top Secret") and the generic
   // "clearance_required_unspecified" fallback (via "security clearance"),
-  // citing the identical evidence quote twice as if they were two
-  // distinct, possibly-conflicting requirements rather than one.
+  // citing the identical evidence quote twice as if they were two distinct,
+  // possibly-conflicting requirements rather than one.
   it("does not also emit the generic clearance_required_unspecified signal once a specific level is already detected", () => {
     const text = "Must hold an active Top Secret security clearance to be considered.";
     const values = extractStatedSignals(text).map((s) => s.value);
@@ -56,21 +55,21 @@ describe("extractStatedSignals", () => {
     expect(values).toContain("clearance_required_unspecified");
   });
 
-  // Regression for DECISIONS.md (judging panel round 3): "Secret security
-  // clearance" (as opposed to "Top Secret security clearance", round 2's
-  // case) fell through to ONLY the generic fallback, because the "secret"
-  // pattern required "secret clearance" immediately adjacent, and real
-  // postings commonly insert "security" between the level and "clearance."
+  // Regression: "Secret security clearance" (as opposed to "Top Secret security
+  // clearance", the case above) fell through to ONLY the generic fallback,
+  // because the "secret" pattern required "secret clearance" immediately
+  // adjacent, and real postings commonly insert "security" between the level
+  // and "clearance."
   it("classifies 'Secret security clearance' as the specific secret level, not just the generic fallback", () => {
     const values = extractStatedSignals("Candidates must hold a Secret security clearance.").map((s) => s.value);
     expect(values).toContain("secret");
     expect(values).not.toContain("clearance_required_unspecified");
   });
 
-  // Regression for DECISIONS.md (judging panel round 4): the fix above
-  // (making "security" optional between "secret" and "clearance") made the
-  // "secret" pattern ALSO match inside "Top Secret security clearance",
-  // double-counting the same phrase as both "ts" and "secret" signals.
+  // Regression: the fix above (making "security" optional between "secret" and
+  // "clearance") made the "secret" pattern ALSO match inside "Top Secret
+  // security clearance", double-counting the same phrase as both "ts" and
+  // "secret" signals.
   it("classifies 'Top Secret security clearance' as only 'ts', not also 'secret'", () => {
     const values = extractStatedSignals("Requires an active Top Secret security clearance.").map((s) => s.value);
     expect(values).toContain("ts");
@@ -105,11 +104,11 @@ describe("extractInferredSignals via extractRequirementSignals", () => {
     expect(signals).toHaveLength(0);
   });
 
-  // Regression for DECISIONS.md (judging panel round 2): a real posting
-  // based in Sydney, Australia (asking for an Australian NV2 clearance,
-  // not a US one) was tagged with the same inferred ITAR/US-person flag
-  // this function applies to domestic roles — ITAR's "US person" test is
-  // a US-law-specific concept that doesn't apply to a role based abroad.
+  // Regression: a real posting based in Sydney, Australia (asking for an
+  // Australian NV2 clearance, not a US one) was tagged with the same inferred
+  // ITAR/US-person flag this function applies to domestic roles — ITAR's "US
+  // person" test is a US-law-specific concept that doesn't apply to a role
+  // based abroad.
   it("does NOT infer us_person_likely for a defense-industry role explicitly based in a non-US location", () => {
     const signals = extractRequirementSignals("We build autonomous systems for national security.", {
       industry: "defense_space",

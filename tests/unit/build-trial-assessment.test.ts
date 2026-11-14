@@ -50,7 +50,7 @@ function mockJob(id = "job-1") {
 }
 
 describe("build_trial_assessment", () => {
-  it("scales rubric size by time box per research/R5 §B4 (60→3, 90→5, 180→6)", async () => {
+  it("scales rubric size by time box (60→3, 90→5, 180→6)", async () => {
     mockJob();
     const r60 = await buildTrialAssessmentTool.handler({ role_id: "job-1", minutes: 60 });
     expect(r60.rubric).toHaveLength(3);
@@ -85,10 +85,10 @@ describe("build_trial_assessment", () => {
     expect(result.itarSafetyNote.length).toBeGreaterThan(0);
   });
 
-  // Regression for DECISIONS.md (judging panel round 6, recruiter_user): a
-  // real posting typo ("Mange the ... Systems Engineering homeroom") was
-  // copied verbatim into a rubric criterion with no caveat anywhere in the
-  // output explaining that this is deliberate, not a quality bug.
+  // Regression: a real posting typo ("Mange the ... Systems Engineering
+  // homeroom") was copied verbatim into a rubric criterion with no caveat
+  // anywhere in the output explaining that this is deliberate, not a quality
+  // bug.
   it("discloses that tracedToQuote is copied verbatim from the posting, typos included", async () => {
     mockJob();
     const result = await buildTrialAssessmentTool.handler({ role_id: "job-1", minutes: 60 });
@@ -127,15 +127,33 @@ describe("build_trial_assessment", () => {
     expect(result.rubric.length).toBeGreaterThan(0);
   });
 
-  // Regression for DECISIONS.md (judging panel round 4): an invalid
-  // `minutes` value produced a bare "Invalid input" with no indication of
-  // what values ARE valid, unlike this product's string-enum fields
-  // elsewhere, which name their allowed options.
+  // Regression: an invalid `minutes` value produced a bare "Invalid input" with
+  // no indication of what values ARE valid, unlike this product's string-enum
+  // fields elsewhere, which name their allowed options.
   it("names the allowed values when minutes is invalid", () => {
     const result = buildTrialAssessmentTool.inputSchema.safeParse({ role_id: "job-1", minutes: 45 });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.some((i) => /60, 90, or 180/.test(i.message))).toBe(true);
     }
+  });
+});
+
+// The brief stated the task shape twice, and the 60-minute shape's "a single
+// named responsibility below" was repeated after the list, where the
+// responsibilities are above.
+describe("build_trial_assessment brief states the task once, pointing the right way", () => {
+  it.each([60, 90, 180] as const)("%i minutes: the task shape appears once, after the list, and never says 'below'", async (minutes) => {
+    mockJob();
+    const result = await buildTrialAssessmentTool.handler({ role_id: "job-1", minutes });
+    const lowerShape = result.taskShape.charAt(0).toLowerCase() + result.taskShape.slice(1);
+    const occurrences = result.brief.split(lowerShape).length - 1 + (result.brief.split(result.taskShape).length - 1);
+    expect(occurrences).toBe(1);
+    expect(result.brief).not.toMatch(/\bbelow\b/i);
+    const listEnd = result.brief.lastIndexOf('  - "');
+    const taskAt = result.brief.indexOf("Your task:");
+    expect(listEnd).toBeGreaterThan(-1);
+    expect(taskAt).toBeGreaterThan(listEnd);
+    expect(result.brief.slice(taskAt)).toMatch(/responsibility above/);
   });
 });

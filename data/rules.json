@@ -1,5 +1,5 @@
 {
-  "lastVerified": "2026-11-12",
+  "lastVerified": "2026-11-13",
   "rules": [
     {
       "id": "itar-us-person",
@@ -23,7 +23,7 @@
     },
     {
       "id": "clearance-citizenship",
-      "title": "Security Clearances Require U.S. Citizenship (Green Card Holders Included)",
+      "title": "Security Clearances Require U.S. Citizenship: a Green Card Is Not Enough",
       "category": "eligibility",
       "summary": "A U.S. security clearance is open to U.S. citizens. Executive Order 12968 § 3.1(b) says eligibility for access to classified information \"shall be granted only to employees who are United States citizens,\" with narrow exceptions, and 32 CFR 117.10(k) tells contractors to \"make every effort to ensure that non-U.S. citizens are not employed in duties that may require access to classified information.\" This is where green card holders most often get bad advice: a green card makes you a \"U.S. person\" under ITAR (22 CFR 120.62), which opens ITAR-only roles, but it does not make you eligible for a clearance. The only exception for any non-citizen is a Limited Access Authorization (see laa-non-citizen): granted in \"rare circumstances\" for skills urgently needed on a specific government contract when no cleared or clearable U.S. citizen is available, approved by a government senior official, never valid for TOP SECRET, and never granted on a temporary (interim) basis. In practice: if a posting requires a clearance — including \"eligible to obtain\" one — a green card holder should expect not to qualify; if it requires only U.S.-person status under ITAR, they do.",
       "keyPoints": [
@@ -82,17 +82,17 @@
       "id": "sf86-eapp",
       "title": "SF-86 and the eApp Filing System",
       "category": "clearance-process",
-      "summary": "The SF-86 (\"Questionnaire for National Security Positions\") is the core background-investigation form behind any security clearance, and it is filed electronically, not on paper. The legacy e-QIP filing portal is being phased out in favor of \"eApp,\" and the underlying form itself is also changing: DCSA began an internal rollout of a new, consolidated \"Personnel Vetting Questionnaire\" (PVQ) in April 2026, intended to eventually replace the SF-86/SF-85/SF-85P forms outright. Only the updated (February 2024 edition) SF-86 filed through eApp has been accepted since mid-2025; older/legacy-form submissions stopped being accepted August 1, 2025. Candidates fill this out themselves once sponsored by an employer — it covers 10+ years of history, foreign contacts, and finances, and should never be filled out by, or shared with, a third party.",
+      "summary": "The SF-86 (\"Questionnaire for National Security Positions\") is the core background-investigation form behind any security clearance, and it is filed electronically, not on paper. The legacy e-QIP filing portal has been replaced by \"eApp,\" and the underlying form itself is also changing: DCSA began an internal rollout of a new, consolidated \"Personnel Vetting Questionnaire\" (PVQ) in April 2026, intended to eventually replace the SF-86/SF-85/SF-85P forms outright. Only the updated (February 2024 edition) SF-86 filed through eApp has been accepted since mid-2025; older/legacy-form submissions stopped being accepted August 1, 2025. Candidates fill this out themselves once sponsored by an employer — it covers 10+ years of history, foreign contacts, and finances, and should never be filled out by, or shared with, a third party.",
       "keyPoints": [
         "SF-86 = the standard background-investigation questionnaire for national security positions",
-        "Filed electronically via \"eApp,\" which is replacing the older \"e-QIP\" portal",
+        "Filed electronically via \"eApp,\" which has replaced the older \"e-QIP\" portal",
         "Pre-2024 paper/legacy SF-86 versions stopped being accepted August 1, 2025",
         "A further-consolidated \"Personnel Vetting Questionnaire\" (PVQ) began internal DCSA rollout in April 2026 and is intended to eventually replace SF-86/85/85P",
         "OPM has not proposed content changes to the SF-86 form itself pending this broader replacement"
       ],
       "sources": [
         { "title": "Federal Register — OPM Notice on SF-86/SF-85 Information Collection", "url": "https://www.govinfo.gov/content/pkg/FR-2026-07-09/html/2026-13868.htm", "lastVerified": "2026-11-11" },
-        { "title": "DCSA — Electronic Questionnaires for Investigations Processing (e-QIP)", "url": "https://www.dcsa.mil/is/eqip", "lastVerified": "2026-11-11" },
+        { "title": "DCSA — Electronic Questionnaires for Investigations Processing (e-QIP)", "url": "https://www.dcsa.mil/Systems-Applications/Electronic-Questionnaires-for-Investigations-Processing-e-QIP/", "lastVerified": "2026-11-14" },
         { "title": "Trusted Workforce 2.0 Quarterly Progress Report, FY2026 Q3 (Performance Accountability Council)", "url": "https://assets.performance.gov/files/Personnel_Vetting_QPR_(FY26-Q3).pdf", "lastVerified": "2026-11-11" }
       ]
     },
@@ -190,7 +190,7 @@
       ],
       "sources": [
         { "title": "32 CFR § 117.10 — Determination of Eligibility for Access to Classified Information for Contractor Employees (Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/32/117.10", "lastVerified": "2026-11-11" },
-        { "title": "DCSA — Interim Clearances", "url": "https://www.dcsa.mil/mc/pv/fso/interim_clearances", "lastVerified": "2026-11-11" }
+        { "title": "DCSA — Interim Clearances", "url": "https://www.dcsa.mil/Industrial-Security/Entity-Vetting-Facility-Clearances-FOCI/Facility-Clearances/Interim-Clearances/", "lastVerified": "2026-11-14" }
       ]
     },
     {
@@ -282,6 +282,178 @@
       "sources": [
         { "title": "ISO/IEC 18013-5:2021 — Personal Identification — ISO-compliant Driving Licence — Part 5: Mobile Driving Licence (mDL) Application", "url": "https://www.iso.org/standard/69084.html", "lastVerified": "2026-11-11" }
       ]
+    },
+    {
+      "id": "fcra-background-check",
+      "title": "Background Checks: the FCRA Sequence",
+      "category": "pre-employment",
+      "summary": "A background check an employer buys from a background-check company (a \"consumer reporting agency\") is a \"consumer report\" under the Fair Credit Reporting Act (FCRA). Before ordering one, the employer must tell the candidate in writing, in a document that contains only that notice, that a report may be obtained for employment purposes, and must get the candidate's written permission. The employer also certifies to the background-check company that it did both, that it will follow the adverse-action steps if they apply, and that it will not use the report to break equal-employment law. The company sends a summary of the candidate's rights with the report. If the employer may turn the candidate down because of the report, the adverse-action sequence applies (see fcra-adverse-action); when the check may be ordered at all is set by fair-chance laws (see fair-chance-timing).",
+      "keyPoints": [
+        "Before the report is ordered: a clear written notice that a consumer report may be obtained for employment purposes, \"in a document that consists solely of the disclosure\" (15 U.S.C. § 1681b(b)(2)(A)(i))",
+        "The FTC says the notice cannot be part of the job application; a brief description of what consumer reports are is allowed only if it does not confuse or detract from the notice. In practice, use the background-check company's own notice form rather than adding text to it",
+        "Written permission from the candidate, which may be on the same page as the notice; to keep getting reports during employment, the permission must say so clearly (§ 1681b(b)(2)(A)(ii); FTC guidance)",
+        "The employer certifies to the background-check company that it gave the notice and got permission, will follow the adverse-action steps if they apply, and will not use the report to violate equal-employment law (§ 1681b(b)(1)(A))",
+        "The background-check company supplies \"A Summary of Your Rights Under the Fair Credit Reporting Act\" with the report (§ 1681b(b)(1)(B))",
+        "A reference check done by the background-check company through interviews about a person's character, reputation or way of living is an \"investigative consumer report\": a separate written notice is due within three days of ordering it, and, if the candidate asks, a written description of the investigation's nature and scope within five days (15 U.S.C. § 1681d(a)-(b))",
+        "Arrest records, civil suits and civil judgments older than seven years may not be reported, but that limit does not apply to a job paying, or reasonably expected to pay, $75,000 a year or more (15 U.S.C. § 1681c(a)(2), (b)(3)); convictions are not covered by that limit",
+        "Willful violations cost actual damages or $100 to $1,000 per person, plus punitive damages and attorney's fees (15 U.S.C. § 1681n(a))",
+        "When the report is no longer needed, dispose of it securely (FTC guidance)"
+      ],
+      "sources": [
+        { "title": "15 U.S.C. § 1681b — Permissible purposes of consumer reports; conditions for employment use (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/15/1681b", "lastVerified": "2026-11-13" },
+        { "title": "15 U.S.C. § 1681d — Disclosure of investigative consumer reports (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/15/1681d", "lastVerified": "2026-11-13" },
+        { "title": "15 U.S.C. § 1681c — Information excluded from consumer reports; $75,000 salary exception (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/15/1681c", "lastVerified": "2026-11-13" },
+        { "title": "15 U.S.C. § 1681n — Civil liability for willful noncompliance (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/15/1681n", "lastVerified": "2026-11-13" },
+        { "title": "FTC — Using Consumer Reports: What Employers Need to Know", "url": "https://www.ftc.gov/business-guidance/resources/using-consumer-reports-what-employers-need-know", "lastVerified": "2026-11-13" }
+      ],
+      "keywords": ["background check", "background checks", "fcra", "fair credit reporting act", "consumer report", "fcra disclosure", "fcra authorization", "background check consent", "reference check", "investigative consumer report"]
+    },
+    {
+      "id": "fcra-adverse-action",
+      "title": "Adverse Action After a Background Check",
+      "category": "pre-employment",
+      "summary": "\"Adverse action\" means any unfavourable employment decision, such as not hiring someone or withdrawing an offer, based in whole or in part on a background-check report. The FCRA sets the order: before acting, give the candidate a copy of the report and the summary of their rights (the \"pre-adverse action notice\"); wait, so they can point out errors; then, if the decision stands, give the adverse-action notice. The statute names no waiting period. FTC staff said in an informal 1997 opinion that five business days \"appears reasonable\", and California, New York City and Illinois require at least five business days for decisions based on criminal history (see fair-chance-timing). The duties fall on the employer that takes the action, whoever drafts or sends the letters.",
+      "keyPoints": [
+        "Before acting: give the candidate a copy of the report and a written description of their FCRA rights (15 U.S.C. § 1681b(b)(3)(A)); the FTC says this gives the person the chance to review the report and say whether it is correct",
+        "Wait: the statute is silent on how long. FTC staff (informal, 1997) said a five-business-day period \"appears reasonable\", while the facts of a particular situation may require a different time",
+        "Then the adverse-action notice (oral, written or electronic): that the action was taken; the background-check company's name, address and phone number; a statement that the company did not make the decision and cannot explain it; the right to a free copy of the report within 60 days and to dispute its accuracy or completeness; and any credit score used (15 U.S.C. § 1681m(a))",
+        "For a decision based on criminal history, fair-chance laws add an individual assessment and their own notices and waiting periods (see fair-chance-timing)",
+        "Keep the notices and their dates: hiring records must be kept at least one year (29 CFR 1602.14), four years in California (Gov. Code § 12946), and until a discrimination charge is resolved if one is filed"
+      ],
+      "sources": [
+        { "title": "15 U.S.C. § 1681b — Permissible purposes of consumer reports; conditions for employment use (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/15/1681b", "lastVerified": "2026-11-13" },
+        { "title": "15 U.S.C. § 1681m — Requirements on users of consumer reports: adverse action notice (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/15/1681m", "lastVerified": "2026-11-13" },
+        { "title": "FTC — Using Consumer Reports: What Employers Need to Know", "url": "https://www.ftc.gov/business-guidance/resources/using-consumer-reports-what-employers-need-know", "lastVerified": "2026-11-13" },
+        { "title": "FTC staff — Advisory Opinion to Weisberg (June 27, 1997): waiting period before adverse action", "url": "https://www.ftc.gov/legal-library/browse/advisory-opinions/advisory-opinion-weisberg-06-27-97", "lastVerified": "2026-11-13" },
+        { "title": "29 CFR § 1602.14 — Preservation of employment records (eCFR)", "url": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XIV/part-1602/subpart-C/section-1602.14", "lastVerified": "2026-11-13" },
+        { "title": "California Government Code § 12946 — Four-year retention of applications and personnel records", "url": "https://california.public.law/codes/government_code_section_12946", "lastVerified": "2026-11-13" }
+      ],
+      "keywords": ["adverse action", "pre-adverse action", "pre-adverse", "pre adverse action notice", "pre-adverse action notice", "adverse action notice", "rescind offer", "withdraw an offer", "reject after background check", "summary of rights"]
+    },
+    {
+      "id": "fair-chance-timing",
+      "title": "Fair-Chance Laws: When Criminal History May Be Checked",
+      "category": "pre-employment",
+      "summary": "Fair-chance (\"ban-the-box\") laws delay when an employer may ask about or check criminal history, usually until after a conditional offer, and add steps before turning someone down because of a conviction. Coverage differs by place and by employer size. A rule that meets every law summarised here: order the background check only after a conditional offer has been made (and recorded in writing), and before rejecting anyone for criminal history, do an individual assessment, send a preliminary notice with a copy of the report, wait at least five business days for a response (ten days in California if the candidate disputes the report), and then send a final notice.",
+      "keyPoints": [
+        "Federal contractors: a contractor may not ask, orally or in writing, about the criminal history of an applicant for a position related to the contract before extending a conditional offer. This does not apply where law requires the information before an offer, or to a contract that requires the person hired to have access to classified information or sensitive law-enforcement or national-security duties. A first violation brings a written warning; later ones can suspend contract payments (41 U.S.C. § 4714; 10 U.S.C. § 4657 for defense contracts). Whether the implementing FAR clause has been finalised was not confirmed",
+        "California (employers with five or more employees): no conviction questions on applications, no background check or internet search for criminal history before a job offer, and no job ads saying \"No Felons\" or \"Must Have Clean Record\". Never consider arrests that did not lead to a conviction (with limited exceptions), sealed, dismissed or diverted cases, or convictions more than seven years old. The law does not apply where an employer is required by law to check or restrict (CRD fact sheet, June 2025)",
+        "California process: an individualized assessment (nature and gravity of the offence, time passed, the job's duties); a written preliminary notice listing the convictions, with a copy of the report and the right to respond; at least five business days to respond, at least ten days if the candidate challenges the report's accuracy; then a written final decision with any appeal procedure and the right to complain to the Civil Rights Department",
+        "New York City (employers with four or more employees): no criminal-history inquiry before a conditional offer, and cases that ended without a conviction are protected at every stage. To withdraw an offer: a Fair Chance Analysis, a written copy of the inquiry and analysis on the Fair Chance Notice, and at least five business days to respond with the position held open. Where another law requires a check before an offer, the employer must still do the analysis, give the notice and wait (NYC Commission on Human Rights)",
+        "Illinois: before acting on a conviction, the employer weighs the statute's factors; a preliminary written notice gives the disqualifying convictions and reasoning, a copy of the conviction report and the right to respond; the candidate has at least five business days; the final decision is in writing with any appeal procedure and the right to file a charge with the Department of Human Rights (775 ILCS 5/2-103.1)",
+        "Other cities and states (for example Los Angeles, San Francisco, Philadelphia and Washington State) have their own fair-chance laws; they were not checked for this summary"
+      ],
+      "sources": [
+        { "title": "41 U.S.C. § 4714 — Fair Chance Act: no criminal-history inquiries by civilian-agency contractors before a conditional offer (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/41/4714", "lastVerified": "2026-11-13" },
+        { "title": "10 U.S.C. § 4657 — Fair Chance Act: no criminal-history inquiries by defense contractors before a conditional offer (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/10/4657", "lastVerified": "2026-11-13" },
+        { "title": "California Civil Rights Department — Criminal History and Employment fact sheet (June 2025)", "url": "https://calcivilrights.ca.gov/wp-content/uploads/sites/32/2025/07/Fair-Chance-Act-Factsheet_English.pdf", "lastVerified": "2026-11-13" },
+        { "title": "NYC Commission on Human Rights — Fair Chance Act legal guidance", "url": "https://www.nyc.gov/site/cchr/law/fair-chance-act.page", "lastVerified": "2026-11-13" },
+        { "title": "775 ILCS 5/2-103.1 — Illinois Human Rights Act: conviction record and interactive assessment", "url": "https://ilga.gov/documents/legislation/ilcs/documents/077500050K2-103.1.htm", "lastVerified": "2026-11-13" },
+        { "title": "Illinois Department of Human Rights — Conviction Record Protections FAQ", "url": "https://dhr.illinois.gov/about-us/idhr-faqs/know-your-rights-faqs/conviction-record-protections----faq.html", "lastVerified": "2026-11-13" }
+      ],
+      "keywords": ["fair chance", "fair chance act", "fair-chance", "ban the box", "ban-the-box", "criminal history", "criminal background check", "conviction history", "conviction record", "when can we run a background check", "individualized assessment", "fair chance notice"]
+    },
+    {
+      "id": "form-i9",
+      "title": "Form I-9: Employment Eligibility Verification",
+      "category": "pre-employment",
+      "summary": "Every U.S. employer completes Form I-9 for every person it hires, citizens included, to verify identity and permission to work in the United States. The new employee completes Section 1 at the time of hire, in practice by the first day of work. Within three business days of the hire, the employer examines the documents the employee chooses to present and completes Section 2. The employer keeps the form itself (it is not filed with the government) for three years after the hire or one year after the job ends, whichever is later. The I-9 is not a citizenship check: export-control checks are kept separate from it (see export-determination-after-offer).",
+      "keyPoints": [
+        "Section 1 (employee information and attestation): at the time of hire (8 CFR 274a.2(b)(1)(i)(A))",
+        "Section 2 (employer review): within three business days of the hire, examine the documents (in person, or remotely under the DHS-authorised alternative procedure for employers who qualify) and complete the section; for a job lasting under three business days, at the time of hire (8 CFR 274a.2(b)(1)(ii)-(iii); USCIS)",
+        "The employee chooses which acceptable documents to show: one List A document, or one List B plus one List C. Limiting that choice, asking for more or different documents than needed, or rejecting valid documents that reasonably appear genuine, because of citizenship, immigration status or national origin, is against the law (DOJ fact sheet)",
+        "Current edition 01/20/25; the 08/01/23 edition with the 05/31/2027 expiration date may still be used (USCIS)",
+        "Keep each form three years after the hire or one year after employment ends, whichever is later, and make it available for government inspection; do not send it to USCIS or ICE (8 CFR 274a.2(b)(2)(i)(A); USCIS)",
+        "Do not mark the I-9 with export-control notes or store export-control documents with it (DOJ fact sheet)"
+      ],
+      "sources": [
+        { "title": "8 CFR § 274a.2 — Verification of identity and employment authorization (Form I-9) (eCFR)", "url": "https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-274a/subpart-A/section-274a.2", "lastVerified": "2026-11-13" },
+        { "title": "USCIS — Form I-9, Employment Eligibility Verification (page updated 06/03/2026)", "url": "https://www.uscis.gov/i-9", "lastVerified": "2026-11-13" },
+        { "title": "DOJ Civil Rights Division (IER) — Employer Fact Sheet: Avoiding Immigration-Related Discrimination when Complying with U.S. Export Control Laws (rev. March 2024)", "url": "https://www.justice.gov/crt/media/1287536/dl", "lastVerified": "2026-11-13" }
+      ],
+      "keywords": ["i9", "i-9", "i 9", "form i9", "form i-9", "employment eligibility verification", "work authorization documents", "i-9 deadline", "i9 deadline", "section 2"]
+    },
+    {
+      "id": "e-verify",
+      "title": "E-Verify for New Hires",
+      "category": "pre-employment",
+      "summary": "E-Verify is the federal online system that checks Form I-9 information against government records. Two situations make it required that matter for defense-tech hiring: a federal contract that includes FAR clause 52.222-54, and employing a student on a STEM OPT extension. Under the FAR clause the case is created within three business days after the date of hire, so it comes after the hire, not before. A new hire who holds an active U.S. Government security clearance does not need an E-Verify case under the clause. While a mismatch is unresolved, the employer may not take adverse action against the employee because of it. State laws may require E-Verify in other cases; those were not checked here.",
+      "keyPoints": [
+        "Federal contracts with FAR 52.222-54 (Jan 2025): a contractor not yet enrolled enrols within 30 calendar days of the award, and within 90 days of enrolling starts verifying every new hire working in the U.S. within three business days after the date of hire; employees assigned to the contract are verified on their own schedule",
+        "Not required under the clause for an employee who holds an active U.S. Government security clearance for access to confidential, secret or top secret information, who was already verified through E-Verify by the contractor, or who holds HSPD-12 credentials (FAR 52.222-54(d))",
+        "STEM OPT: the student's employer must be enrolled in E-Verify and in good standing, sign the Form I-983 training plan, and report the student's departure to the school's designated school official within five business days; DHS may visit the worksite (8 CFR 214.2(f)(10)(ii)(C)(5)-(6), (11))",
+        "A mismatch (tentative nonconfirmation) is not a decision: the employer may not terminate, suspend, delay training, withhold or lower pay, or take any other adverse action because of it until it becomes a final nonconfirmation (e-verify.gov)",
+        "Create the case after the person is hired: the FAR clause counts its three business days from the date of hire. E-Verify's own user agreement also bars using it to screen applicants; that wording was not re-checked for this summary"
+      ],
+      "sources": [
+        { "title": "FAR 52.222-54 — Employment Eligibility Verification (Jan 2025)", "url": "https://www.acquisition.gov/far/52.222-54", "lastVerified": "2026-11-13" },
+        { "title": "8 CFR § 214.2(f)(10)(ii)(C) — STEM OPT extension: employer E-Verify, Form I-983 and reporting duties (eCFR)", "url": "https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-214/section-214.2", "lastVerified": "2026-11-13" },
+        { "title": "E-Verify — Tentative Nonconfirmations (Mismatches)", "url": "https://www.e-verify.gov/employers/verification-process/tentative-nonconfirmations-mismatches", "lastVerified": "2026-11-13" }
+      ],
+      "keywords": ["everify", "e-verify", "e verify", "e-verify federal contractor", "far 52.222-54", "stem opt e-verify", "tentative nonconfirmation", "e-verify mismatch"]
+    },
+    {
+      "id": "offer-contingencies",
+      "title": "Conditional Offers and Their Contingencies",
+      "category": "pre-employment",
+      "summary": "A conditional offer is a job offer that depends on conditions being met after it is made, such as a satisfactory background check. The offer is a turning point for timing: fair-chance laws allow a criminal-history check only after one, the ADA allows a medical examination only after one, and for a role that needs classified access on day one the company's Facility Security Officer (FSO) may ask the government to start the clearance before the start date only once the company has committed to the hire in writing and the candidate has accepted in writing. Typical contingencies for defense roles: a satisfactory background check; proof of identity and work authorisation on Form I-9; for export-controlled work, U.S.-person status or any export licence needed; for cleared work, clearance eligibility or verification of an existing clearance by the FSO; and signing the confidentiality and invention-assignment agreement. Contingency wording varies by state; have counsel approve it.",
+      "keyPoints": [
+        "Background check: order it after the conditional offer (see fair-chance-timing and fcra-background-check)",
+        "Clearance before the start date: the contractor may submit the request for investigation early only if it has made a written commitment for employment and the candidate has accepted the offer in writing; the commitment must say employment starts within 45 days of eligibility being granted (32 CFR 117.10(f))",
+        "Clearance requests are limited to the minimum number of employees needed and \"will not be used to establish a cache of cleared employees\" (32 CFR 117.10(a)(5)); the government decides eligibility and notifies the company, which must immediately deny access on a denial (117.10(a)(2))",
+        "Medical examinations: none before an offer; after an offer the employer may require one and condition the offer on it only if every entering employee in that job category is examined, with the results kept confidential and separate (42 U.S.C. § 12112(d)(2)-(3))",
+        "Form I-9: Section 2 is due within three business days of the hire (8 CFR 274a.2(b)(1)(ii)); see form-i9",
+        "Export-controlled work: releasing controlled technical data to a foreign person inside the U.S. is an export (22 CFR 120.50(a)(2)), so the contingency is U.S.-person status or the needed licence before access, not U.S. citizenship (see export-determination-after-offer)"
+      ],
+      "sources": [
+        { "title": "32 CFR § 117.10 — Eligibility for access to classified information: pre-employment action, SF 86 review, SF 312 (eCFR)", "url": "https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.10", "lastVerified": "2026-11-13" },
+        { "title": "42 U.S.C. § 12112 — ADA: medical examinations and inquiries before and after an offer (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/42/12112", "lastVerified": "2026-11-13" },
+        { "title": "8 CFR § 274a.2 — Verification of identity and employment authorization (Form I-9) (eCFR)", "url": "https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-274a/subpart-A/section-274a.2", "lastVerified": "2026-11-13" },
+        { "title": "22 CFR § 120.50 — Export, including release of technical data to a foreign person in the U.S. (Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/22/120.50", "lastVerified": "2026-11-13" },
+        { "title": "California Civil Rights Department — Criminal History and Employment fact sheet (June 2025)", "url": "https://calcivilrights.ca.gov/wp-content/uploads/sites/32/2025/07/Fair-Chance-Act-Factsheet_English.pdf", "lastVerified": "2026-11-13" }
+      ],
+      "keywords": ["offer letter", "conditional offer", "contingent offer", "offer contingencies", "offer contingency", "job offer", "written offer", "offer acceptance", "accepted the offer in writing"]
+    },
+    {
+      "id": "confidentiality-invention-assignment",
+      "title": "Confidentiality and Invention-Assignment Agreements",
+      "category": "pre-employment",
+      "summary": "New hires at technology companies usually sign an agreement that protects confidential information and assigns inventions to the company (often called an NDA or PIIA). Two notices matter. Under federal law, an agreement that governs trade secrets or confidential information must include notice of the whistleblower immunity in the Defend Trade Secrets Act, or the company cannot recover exemplary damages or attorney's fees from that employee. In California, an invention-assignment clause cannot reach an invention made entirely on the employee's own time without the company's equipment, supplies, facilities or trade secrets, unless it relates to the company's business or research or comes from the employee's work, and the employer must give written notice of that limit when the agreement is signed. None of this is the SF 312, the classified-information nondisclosure agreement a cleared employee signs with the government.",
+      "keyPoints": [
+        "Defend Trade Secrets Act: the employer must give notice of the whistleblower immunity in any contract with an employee that governs trade secrets or confidential information; a cross-reference to a policy document that sets out the reporting policy also counts; without it, no exemplary damages or attorney's fees against that employee (18 U.S.C. § 1833(b)(3))",
+        "California: a clause requiring assignment of an invention developed entirely on the employee's own time without the employer's equipment, supplies, facilities or trade secrets does not apply, unless the invention relates to the employer's business or actual or demonstrably anticipated research, or results from work done for the employer; a clause that reaches further is unenforceable (Labor Code § 2870)",
+        "California: the employer must give the employee written notice of that limit at the time the agreement is made (Labor Code § 2872)",
+        "Several other states have similar invention-assignment laws; they were not checked here, so state-specific exhibits need counsel review",
+        "Separate from all of this: the SF 312 is an agreement between the government and a person found eligible for classified access, signed before a witness before access is granted and sent to the government (32 CFR 117.10(g))"
+      ],
+      "sources": [
+        { "title": "18 U.S.C. § 1833(b) — Defend Trade Secrets Act whistleblower immunity and the notice requirement (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/18/1833", "lastVerified": "2026-11-13" },
+        { "title": "California Labor Code § 2870 — Limits on invention-assignment clauses", "url": "https://california.public.law/codes/labor_code_section_2870", "lastVerified": "2026-11-13" },
+        { "title": "California Labor Code § 2872 — Written notice of the § 2870 limit", "url": "https://california.public.law/codes/labor_code_section_2872", "lastVerified": "2026-11-13" },
+        { "title": "32 CFR § 117.10 — Eligibility for access to classified information: pre-employment action, SF 86 review, SF 312 (eCFR)", "url": "https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.10", "lastVerified": "2026-11-13" }
+      ],
+      "keywords": ["nda", "non-disclosure agreement", "nondisclosure agreement", "confidentiality agreement", "piia", "ciiaa", "invention assignment", "invention assignment agreement", "proprietary information and inventions agreement", "dtsa notice", "whistleblower immunity notice", "trade secret notice"]
+    },
+    {
+      "id": "export-determination-after-offer",
+      "title": "Export-Control Check After an Offer",
+      "category": "itar",
+      "summary": "For a role that works with export-controlled technology (under the ITAR or the EAR), the company needs to know whether the new hire is a U.S. person: a U.S. citizen or national, lawful permanent resident, refugee or asylee. If not, it may need a licence from the State Department (ITAR) or the Commerce Department (EAR) before releasing controlled technical data, because releasing it to a foreign person inside the U.S. counts as an export. The Justice Department's guidance: the ITAR and the EAR contain no hiring requirements, so do not limit jobs to U.S. citizens because of them; assess only the workers whose jobs need it, tell them why, and keep the assessment separate from Form I-9. No rule found sets when the check happens; doing it after an offer, apart from the I-9, keeps citizenship documents out of the hiring decision. Restricted-party screening against the Consolidated Screening List is a related, common step. A security clearance has a different, stricter rule: U.S. citizenship (see clearance-citizenship).",
+      "keyPoints": [
+        "U.S. persons include U.S. citizens and nationals, lawful permanent residents, and people granted refugee status or asylum (DOJ fact sheet; see itar-us-person)",
+        "Releasing technical data to a foreign person in the U.S. is a \"deemed export\" to every country where that person holds or held citizenship or holds permanent residency (22 CFR 120.50(a)(2), (b)); authorisation comes from the State Department's DDTC or the Commerce Department's BIS, depending on the item (DOJ fact sheet)",
+        "Employers with more than three employees may not discriminate in hiring based on national origin, or based on citizenship status against U.S. citizens, nationals, permanent residents, refugees or asylees (with some limits), unless it is required to comply with a law, regulation, executive order or government contract (8 U.S.C. § 1324b(a)(1)-(3)); the DOJ says the ITAR and the EAR impose no such requirement",
+        "DOJ best practices: do the assessment only for workers whose positions need export-controlled items; tell them it is to decide whether export authorisation is needed; keep it separate from Form I-9; do not require I-9 documents that prove status; store export documents apart from the I-9; never tell applicants that export rules require a particular citizenship",
+        "Restricted-party screening: the Consolidated Screening List combines export screening lists of the Departments of Commerce, State and the Treasury, with a free search engine and API; dealings with a listed party can be prohibited (for example, the Denied Persons List). The page sets no rule about screening employees: screening a new hire is common practice, not a stated hiring rule",
+        "Timing is practice, not a rule: the DOJ fact sheet does not say when to assess. Assessing after the offer is accepted means citizenship or immigration documents are never collected before a hiring decision"
+      ],
+      "sources": [
+        { "title": "DOJ Civil Rights Division (IER) — Employer Fact Sheet: Avoiding Immigration-Related Discrimination when Complying with U.S. Export Control Laws (rev. March 2024)", "url": "https://www.justice.gov/crt/media/1287536/dl", "lastVerified": "2026-11-13" },
+        { "title": "22 CFR § 120.50 — Export, including release of technical data to a foreign person in the U.S. (Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/22/120.50", "lastVerified": "2026-11-13" },
+        { "title": "8 U.S.C. § 1324b — Unfair immigration-related employment practices (Cornell LII)", "url": "https://www.law.cornell.edu/uscode/text/8/1324b", "lastVerified": "2026-11-13" },
+        { "title": "International Trade Administration — Consolidated Screening List", "url": "https://www.trade.gov/consolidated-screening-list", "lastVerified": "2026-11-13" }
+      ],
+      "keywords": ["export determination", "export control check", "us person determination", "u.s. person determination", "u.s. person check", "export license", "export licence", "export compliance assessment", "deemed export license", "restricted party screening", "denied party screening", "consolidated screening list"]
     }
   ]
 }

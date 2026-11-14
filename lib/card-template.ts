@@ -2,7 +2,7 @@ import type { CardTemplateField, ConsentedFields } from "@/lib/try-tool-types";
 
 /**
  * Fills a prepare_consented_card template with the user's own values, on
- * the user's side (D-047) — the /try playground does here exactly what a
+ * the user's side — the /try playground does here exactly what a
  * user's agent does locally. The server only ever saw the field names.
  * A list field becomes "- item" lines; a blank value drops its line.
  */

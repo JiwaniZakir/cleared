@@ -3,9 +3,9 @@ import { cn } from "@/lib/cn";
 
 /**
  * The one, consistent way every "not legal advice / ITAR-safe / stateless"
- * notice appears (R2 §3.12). Deliberately undramatic: neutral background,
+ * notice appears. Deliberately undramatic: neutral background,
  * neutral hairline border, body-sm text — NEVER caution/danger colored,
- * never a toast, never repeated more than once per view (Do/Don't #3).
+ * never a toast, never repeated more than once per view.
  */
 export function DisclaimerBanner({
   children,

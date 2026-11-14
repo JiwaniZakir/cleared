@@ -48,11 +48,10 @@ describe("get_role_rubric", () => {
     expect(result.disclaimer.toLowerCase()).toMatch(/not a score|never a score/);
   });
 
-  // Regression for DECISIONS.md (judging panel round 5): two distinct
-  // signals (here, "secret" and "ts" from two separate, legitimate
-  // requirement sentences) both map to the same rule (sead4), so its 3
-  // sources were pushed into the array twice -- once per signal -- with no
-  // final deduplication.
+  // Regression: two distinct signals (here, "secret" and "ts" from two
+  // separate, legitimate requirement sentences) both map to the same rule
+  // (sead4), so its 3 sources were pushed into the array twice -- once per
+  // signal -- with no final deduplication.
   it("does not list the same source twice when two signals map to the same underlying rule", async () => {
     vi.mocked(getJob).mockResolvedValueOnce(
       detail("Must hold an active Secret clearance. A Top Secret clearance is strongly preferred."),

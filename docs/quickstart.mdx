@@ -1,0 +1,134 @@
+---
+title: "Quickstart"
+description: "Connect your agent to cleared, make a first request, and run the server on your own machine."
+---
+
+## Connect your agent
+
+The connector's address is:
+
+```text
+https://cleared-mcp.vercel.app/mcp
+```
+
+It needs no account, no key and no sign-in. Use the exact URL: a trailing slash (`/mcp/`) answers with a 308 redirect, and some clients do not follow it.
+
+<Note>
+The steps below follow each client's own documentation. They have not all been run in a signed-in account. What the project tests is the server: the protocol suite connects the official MCP TypeScript client to it and checks the handshake, the instructions, the tool, resource and prompt lists, sample tool calls, the privacy guard and CORS.
+</Note>
+
+### Claude Code
+
+```bash
+claude mcp add --transport http cleared https://cleared-mcp.vercel.app/mcp
+```
+
+### Claude and ChatGPT
+
+- **Claude:** Settings → Connectors → Add custom connector. Name it `cleared`, paste the URL, leave authentication as "No auth" and save.
+- **ChatGPT:** Settings → Apps & Connectors → Advanced, and turn on Developer mode. Then Apps & Connectors → Create, paste the URL, set authentication to "No auth" and save. Enable it from the **+** menu in a chat.
+
+### Cursor and VS Code
+
+Cursor reads `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project):
+
+```json
+{
+  "mcpServers": {
+    "cleared": {
+      "url": "https://cleared-mcp.vercel.app/mcp"
+    }
+  }
+}
+```
+
+VS Code reads `.vscode/mcp.json` in your workspace. Its key is `servers`, and it needs `type`:
+
+```json
+{
+  "servers": {
+    "cleared": {
+      "type": "http",
+      "url": "https://cleared-mcp.vercel.app/mcp"
+    }
+  }
+}
+```
+
+### Grok Bot and grok.com
+
+- **Grok Bot desktop app:** in the sidebar, open **Connect apps**, choose **Add a custom connector**, enter a name, choose **Remote HTTPS**, paste the URL and leave the headers and OAuth fields empty. Click **Add plugin**, then type `@` in a chat to pick it. On any device you can instead send the bot: `Add this MCP server: https://cleared-mcp.vercel.app/mcp`.
+- **grok.com:** go to grok.com/connectors, click **New Connector**, then **Custom**, and enter a name and the URL. On Grok Business and Enterprise, an admin adds the connector first in the xAI console.
+
+### Muse
+
+The Muse app has no settings field for a connector URL. Ask Muse in a chat to build one:
+
+```text
+Create a Custom Connector for a remote MCP server and connect to it.
+Name: cleared. Transport: remote Streamable HTTP.
+URL: https://cleared-mcp.vercel.app/mcp.
+Authentication: none, no API key, no OAuth.
+List its tools to confirm, then save it as a skill called cleared.
+```
+
+Save it as a skill, or Muse may not remember it in a new chat.
+
+### Any other MCP client
+
+Any client that supports remote Streamable HTTP servers can use the same URL. The server answers `POST` only and sends no session id, so every request stands alone. It accepts a request whose `Accept` header lists only JSON, only SSE or nothing, and treats it as accepting both.
+
+## Make a first request
+
+With the connector added, ask your agent:
+
+```text
+Find new-grad autonomy roles that I could hold as a green card holder.
+For the best match, tell me which requirements are stated in the posting
+and which are inferred, and what the rule is behind each one.
+```
+
+A typical agent calls `search_defense_roles`, then `get_role_rubric` for the role, then `explain_rule` for the rules it names. The server's `instructions` tell the agent to search first, because every other role tool takes the `role_id` that search returns.
+
+To try a tool without any agent, open the [playground](https://cleared-mcp.vercel.app/try). It calls the same server code.
+
+## See the tool list with curl
+
+```bash
+curl -s -X POST https://cleared-mcp.vercel.app/mcp \
+  -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+The reply lists 16 tools.
+
+## Run the server locally
+
+You need Node.js 22.19 or later and pnpm 10.
+
+```bash
+pnpm install
+pnpm dev
+```
+
+The app starts at `http://localhost:3000`, with the MCP endpoint at `http://localhost:3000/mcp`. To use another port, run `pnpm dev --port 3400`.
+
+The public tools need no environment variables:
+
+| Variable | Without it |
+| --- | --- |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | The anonymous interest pool lives in memory and resets when the server restarts. |
+| `GITHUB_TOKEN` | `verify_evidence` uses GitHub's unauthenticated limit of 60 requests an hour. |
+| `DATABASE_URL` | Groundwork only: the database layer uses an embedded PGlite database under `.data/pglite`. No route opens it. |
+| `CRON_SECRET` | `/api/cron/tick` answers 401 and runs nothing. |
+
+`.env.example` lists every variable by name. Put values in `.env.local`, which git ignores. Never commit a value.
+
+To check your local server with a real MCP client, keep it running and run:
+
+```bash
+MCP_URL=http://localhost:3000/mcp pnpm test:protocol
+```
+
+`CONTRIBUTING.md` at the root of the repository has the full set of checks.

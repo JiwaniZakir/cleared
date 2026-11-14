@@ -15,12 +15,13 @@ import { contributeAnonymousSignalTool } from "@/lib/tools/contribute-anonymous-
 import { getAggregatedSignalTool } from "@/lib/tools/get-aggregated-signal";
 import { generateInterviewGuideTool } from "@/lib/tools/generate-interview-guide";
 import { verifySignedAttestationTool } from "@/lib/tools/verify-signed-attestation";
+import { enabledPipelineTools } from "@/lib/tools/pipeline";
 
 /**
  * The single list of every tool this server exposes. Both app/mcp/route.ts
  * (MCP transport) and app/api/tools/[name]/route.ts (web playground) iterate
  * this same array — adding a tool here is the only step needed to expose it
- * on both surfaces (spec §3.3: "no duplicated logic").
+ * on both surfaces, with no duplicated logic.
  */
 // `any` here (not `unknown`) is deliberate: a heterogeneous registry of
 // generically-typed definitions is contravariant in `handler`'s parameter, so
@@ -46,6 +47,9 @@ export const TOOL_REGISTRY: ToolDef<any, any>[] = [
   getAggregatedSignalTool,
   generateInterviewGuideTool,
   verifySignedAttestationTool,
+  // The pipeline tools whose slice has enabled them.
+  // Slice S1 created all twelve disabled, so this adds none yet.
+  ...enabledPipelineTools(),
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

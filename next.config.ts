@@ -2,11 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Cache Components (Next 16's `use cache`/cacheLife paradigm) is intentionally
-  // left OFF — see DECISIONS.md D-001. This app is a dynamic MCP server + API
-  // playground; route handlers are request-scoped by nature and gain nothing
-  // from static-shell prerendering, while adopting the new directive across
-  // every tool route would add real risk for a judged production deliverable.
-  // Conventional `fetch(..., { next: { revalidate } })` caching is used instead.
+  // left off. This app is a dynamic MCP server and API playground: route
+  // handlers are request-scoped and gain nothing from static-shell
+  // prerendering. Conventional `fetch(..., { next: { revalidate } })` caching
+  // is used instead.
   turbopack: {
     rules: {
       "*.css": {
@@ -36,7 +35,7 @@ const nextConfig: NextConfig = {
           // Permissions-Policy/nosniff) but CSP was missing entirely. Checked
           // what the app actually needs before writing this, not guessed:
           // next-themes and Next.js itself inject inline <script>s, hence
-          // 'unsafe-inline' on script-src — a tested, accepted tradeoff (D-044):
+          // 'unsafe-inline' on script-src — a tested, accepted tradeoff:
           // experimental SRI was tried and blocked all 4 inline scripts (no
           // hydration); nonces would force every page into dynamic rendering;
           // and there is no HTML-injection sink for an inline script to arrive

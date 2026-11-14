@@ -9,12 +9,11 @@ import { Button } from "@/components/ui/button";
 import { MCP_URL, CLAUDE_CODE_INSTALL_COMMAND } from "@/lib/constants";
 
 // The generic config shape Cursor, the JSON tab, and the manual fallback all
-// share — defined once so the server URL is never hand-duplicated (R2 §3.2 /
-// Do-Don't #4). VS Code's shape is genuinely different (see VSCODE_MCP_JSON
+// share — defined once so the server URL is never hand-duplicated. VS Code's shape is genuinely different (see VSCODE_MCP_JSON
 // below) — confirmed from VS Code's own current MCP docs, not guessed.
 const MCP_SERVERS_JSON = `{
   "mcpServers": {
-    "clearance-lens": {
+    "cleared": {
       "url": "${MCP_URL}"
     }
   }
@@ -22,7 +21,7 @@ const MCP_SERVERS_JSON = `{
 
 const VSCODE_MCP_JSON = `{
   "servers": {
-    "clearance-lens": {
+    "cleared": {
       "type": "http",
       "url": "${MCP_URL}"
     }
@@ -30,8 +29,8 @@ const VSCODE_MCP_JSON = `{
 }`;
 
 /**
- * Small, reusable copy-to-clipboard button (R2 §3.2: "swaps its icon +
- * caption-sized label to a check mark + 'Copied' for 1200ms, then reverts").
+ * Small, reusable copy-to-clipboard button: swaps its icon and
+ * caption-sized label to a check mark and 'Copied' for 1200ms, then reverts.
  * Built on the `Button` atom (ghost) so focus/hover states stay consistent
  * with the rest of the app.
  */
@@ -76,7 +75,7 @@ function CopyButton({ value, className }: { value: string; className?: string })
 }
 
 /** A single copyable line (a URL or a one-line CLI command) — the action
- * comes first, before any explanatory prose (Do-Don't #4). */
+ * comes first, before any explanatory prose. */
 function CommandRow({ value, prompt, className }: { value: string; prompt?: string; className?: string }) {
   return (
     <div
@@ -85,8 +84,8 @@ function CommandRow({ value, prompt, className }: { value: string; prompt?: stri
         className,
       )}
     >
-      {/* Found live via Playwright + axe against a production build
-          (DECISIONS.md): a horizontally-scrollable region (overflow-x-auto,
+      {/* Found via Playwright + axe against a production build: a
+          horizontally-scrollable region (overflow-x-auto,
           needed so a long URL/command scrolls instead of wrapping) with no
           tabIndex is axe's "scrollable-region-focusable" violation — a
           keyboard-only user has no way to reach and scroll it to see
@@ -152,7 +151,7 @@ const TABS = [
 ] as const;
 
 /**
- * Install-snippet (R2 §3.2): promoted Claude Code one-liner first, then
+ * Install-snippet: promoted Claude Code one-liner first, then
  * per-client tabs, then a closed-by-default manual-JSON accordion.
  *
  * Claude (Desktop/claude.ai) and ChatGPT are deliberately NOT given a JSON
@@ -204,7 +203,7 @@ export function InstallSnippet() {
             items={[
               "Settings → Connectors → Add custom connector.",
               <>
-                Name it <strong className="font-semibold text-neutral-12">Clearance Lens</strong> and paste the URL
+                Name it <strong className="font-semibold text-neutral-12">cleared</strong> and paste the URL
                 above.
               </>,
               "Leave authentication as “No auth” and save.",

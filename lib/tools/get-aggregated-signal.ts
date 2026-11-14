@@ -1,14 +1,21 @@
 import { z } from "zod";
 import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema, CompanySlugSchema } from "@/lib/tools/role-shared";
 import { getCompany } from "@/lib/speedrun/client";
-import { getSignalStore, getAggregate, MIN_CONTRIBUTORS, type AggregateBreakdown } from "@/lib/signal/store";
+import {
+  getSignalStore,
+  getReleasedAggregate,
+  MIN_CONTRIBUTORS,
+  RELEASE_STEP,
+  PERCENT_STEP,
+  type ReleasedAggregate,
+} from "@/lib/signal/store";
 import { DISCLAIMERS } from "@/lib/disclaimers";
 import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
 
 /**
- * Clearance Lens v2 piece #4 (read side): companion to
+ * The read side of the anonymous signal pool, companion to
  * contribute_anonymous_signal. Anyone can call this — there's no recruiter
- * login anywhere in this product (see DECISIONS.md D-001/D-002), so the
+ * login anywhere in this product, so the
  * privacy protection comes from the k-anonymity floor itself
  * (MIN_CONTRIBUTORS, lib/signal/store.ts), not from gating who asks.
  *
@@ -16,7 +23,7 @@ import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
  * self-reported contributions with no protection against duplicates or
  * bad-faith submissions — every response says so. It is a rough,
  * directional signal, never a rigorous survey, and never a ranking of any
- * individual (see DECISIONS.md D-032/D-035/D-036).
+ * individual.
  */
 
 const InputSchema = z
@@ -33,15 +40,22 @@ const BreakdownFieldSchema = z.record(z.string(), z.number()).nullable();
 
 const OutputSchema = z.object({
   scope: z.object({ type: z.enum(["role", "company"]), label: z.string() }),
-  // Null below the floor. Round 9: exact counts under 5 (1, 2, 3) were
+  // Null below the floor. Exact counts under 5 (1, 2, 3) used to be
   // returned, which lets a reader diff before/after their own call and pick
-  // out a single contributor's answer once the breakdown appears (D-048).
-  totalContributions: z.number().nullable(),
+  // out a single contributor's answer once the breakdown appears. Above the
+  // floor the exact total did the same, so the read
+  // side now shows whole steps of RELEASE_STEP contributions only — see
+  // getReleasedAggregate in lib/signal/store.ts for the reasoning.
+  contributionsReflected: z.number().nullable(),
+  totalContributionsBand: z.object({ atLeast: z.number(), fewerThan: z.number() }).nullable(),
+  releaseStep: z.number(),
+  percentStep: z.number(),
   meetsFloor: z.boolean(),
   percentages: z
     .object({
+      // No citizenship breakdown: the pool no longer collects it, and
+      // the store drops it from records written before that change.
       clearanceLevel: BreakdownFieldSchema,
-      citizenshipStatus: BreakdownFieldSchema,
       yearsExperience: BreakdownFieldSchema,
     })
     .nullable(),
@@ -54,7 +68,7 @@ function toPercentages(counts: Partial<Record<string, number>> | null, total: nu
   const out: Record<string, number> = {};
   for (const [key, count] of Object.entries(counts)) {
     if (count === undefined) continue;
-    out[key] = Math.round((count / total) * 100);
+    out[key] = Math.round((count / total) * (100 / PERCENT_STEP)) * PERCENT_STEP;
   }
   return out;
 }
@@ -63,7 +77,7 @@ export const getAggregatedSignalTool: ToolDef<z.infer<typeof InputSchema>, z.inf
   name: "get_aggregated_signal",
   title: "Read a role or company's aggregated anonymous signal",
   description:
-    "Reads back the anonymous signal pool contribute_anonymous_signal writes to, as rounded percentages — never an individual record, and never before at least 5 people have contributed for this exact role or company (a k-anonymity floor: below that, or for any specific bucket value with fewer than 5 contributors, this returns nothing for it rather than a number that could single someone out). Pass exactly one of role_id (that specific posting only) or company_slug (every contribution across all of that company's postings).",
+    "Reads back the anonymous signal pool contribute_anonymous_signal writes to, as percentages rounded to the nearest 5 — never an individual record, and never before at least 5 people have contributed for this exact role or company (a k-anonymity floor: below that, or for any specific bucket value with fewer than 5 contributors, this returns nothing for it rather than a number that could single someone out). It updates only in steps of 5 contributions and gives the total as a band, so comparing two reads can never isolate one new contributor. Pass exactly one of role_id (that specific posting only) or company_slug (every contribution across all of that company's postings).",
   inputSchema: InputSchema,
   outputSchema: OutputSchema,
   handler: async ({ role_id, company_slug }) => {
@@ -86,7 +100,8 @@ export const getAggregatedSignalTool: ToolDef<z.infer<typeof InputSchema>, z.inf
       scopeId = slug;
     }
 
-    const breakdown: AggregateBreakdown = await getAggregate(store, scopeType, scopeId);
+    const breakdown: ReleasedAggregate = await getReleasedAggregate(store, scopeType, scopeId);
+    const reflected = breakdown.contributionsReflected;
 
     const notDurableNote =
       store.backend === "in-memory"
@@ -95,19 +110,21 @@ export const getAggregatedSignalTool: ToolDef<z.infer<typeof InputSchema>, z.inf
 
     return {
       scope: { type: scopeType, label },
-      totalContributions: breakdown.meetsFloor ? breakdown.totalContributions : null,
+      contributionsReflected: breakdown.meetsFloor ? reflected : null,
+      totalContributionsBand: breakdown.meetsFloor ? { atLeast: reflected, fewerThan: reflected + RELEASE_STEP } : null,
+      releaseStep: RELEASE_STEP,
+      percentStep: PERCENT_STEP,
       meetsFloor: breakdown.meetsFloor,
       percentages: breakdown.meetsFloor
         ? {
-            clearanceLevel: toPercentages(breakdown.clearanceLevel, breakdown.totalContributions),
-            citizenshipStatus: toPercentages(breakdown.citizenshipStatus, breakdown.totalContributions),
-            yearsExperience: toPercentages(breakdown.yearsExperience, breakdown.totalContributions),
+            clearanceLevel: toPercentages(breakdown.clearanceLevel, reflected),
+            yearsExperience: toPercentages(breakdown.yearsExperience, reflected),
           }
         : null,
       sources: [SPEEDRUN_SOURCE],
       disclaimer:
         (breakdown.meetsFloor
-          ? `Reflects ${breakdown.totalContributions} anonymous contributions for this ${scopeType}. Any individual bucket value with fewer than ${MIN_CONTRIBUTORS} contributors is folded into "otherBelowFloor" rather than shown on its own, so no reader can single out a small subgroup. `
+          ? `Reflects the oldest ${reflected} anonymous contributions for this ${scopeType} (the total is at least ${reflected} and fewer than ${reflected + RELEASE_STEP}): the breakdown updates only in steps of ${RELEASE_STEP} contributions, and percentages are rounded to the nearest ${PERCENT_STEP}, so comparing two reads can't single out one new contributor. Any individual bucket value with fewer than ${MIN_CONTRIBUTORS} contributors is folded into "otherBelowFloor" rather than shown on its own, so no reader can single out a small subgroup. `
           : `Fewer than ${MIN_CONTRIBUTORS} people have contributed for this ${scopeType} yet, so no breakdown is shown — this protects the few contributors who do exist from being identifiable. `) +
         "This reflects unauthenticated, self-reported contributions. A short per-role cooldown blocks only the fastest burst-style fabrication (see contribute_anonymous_signal) — it is not a full anti-fabrication system, and nothing stops a slower, more patient bad-faith actor. Treat this as a rough, directional signal, never a rigorous survey, and never a ranking or score of any individual candidate." +
         notDurableNote +

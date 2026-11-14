@@ -36,7 +36,7 @@ const badOutputTool: ToolDef<z.infer<typeof EchoInput>, z.infer<typeof EchoOutpu
 describe("callTool pipeline", () => {
   it("round-trips valid input through handler to validated output", async () => {
     const result = await callTool(echoTool, { message: "hello" });
-    expect(result).toEqual({ ok: true, data: { echoed: "hello", sources: [] } });
+    expect(result).toEqual({ ok: true, data: { echoed: "hello", sources: [], ignoredInputKeys: [] } });
   });
 
   it("rejects PII in input before the handler ever runs (invalid-shape handler input would otherwise throw)", async () => {
@@ -74,12 +74,11 @@ describe("callTool pipeline", () => {
     if (!result.ok) expect(result.error.code).toBe("internal_error");
   });
 
-  // Regression for DECISIONS.md (judging panel round 1): a 404 from any
-  // SpeedrunApiError/GitHubApiError used ONE generic, job-posting-flavored
-  // message ("may have been filled or removed since you last searched")
-  // regardless of entity type -- nonsensical for a company slug or a
-  // GitHub username. Each error class's own userMessage (set at the
-  // specific throw site that knows what was being looked up) must now be
+  // Regression: a 404 from any SpeedrunApiError/GitHubApiError used ONE
+  // generic, job-posting-flavored message ("may have been filled or removed
+  // since you last searched") regardless of entity type -- nonsensical for a
+  // company slug or a GitHub username. Each error class's own userMessage (set
+  // at the specific throw site that knows what was being looked up) must now be
   // preferred over that generic fallback.
   it("prefers a SpeedrunApiError's own userMessage over the generic 404 fallback", async () => {
     const tool: ToolDef<{ message: string }, { echoed: string; sources: SourceRef[] }> = {
@@ -105,11 +104,11 @@ describe("callTool pipeline", () => {
     expect(result).toEqual({ ok: false, error: { code: "not_found", message: "Entity-specific GitHub not-found text." } });
   });
 
-  // Regression: GitLabApiError was added for verify_evidence's GitLab path
-  // (DECISIONS.md D-032) but never added to this file's own instanceof
-  // check, so a nonexistent GitLab username fell through to the fully
-  // generic "Something went wrong... please try again" -- misleading, since
-  // retrying the identical username will always 404 again.
+  // Regression: GitLabApiError was added for verify_evidence's GitLab path but
+  // never added to this file's own instanceof check, so a nonexistent GitLab
+  // username fell through to the fully generic "Something went wrong... please
+  // try again" -- misleading, since retrying the identical username will always
+  // 404 again.
   it("prefers a GitLabApiError's own userMessage over the generic 404 fallback", async () => {
     const tool: ToolDef<{ message: string }, { echoed: string; sources: SourceRef[] }> = {
       ...echoTool,
@@ -178,5 +177,69 @@ describe("callTool pipeline", () => {
     const result = await callTool(nestedTool, { nested: { note: "DOB: 01/01/1999" } });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("pii_cui_rejected");
+  });
+});
+
+// Unknown keys were once stripped without a word, so an agent that sent a
+// submission or a candidate reference to a tool that can't take it got a normal
+// answer and no hint. The call is still accepted; every result now lists what
+// was ignored.
+describe("callTool lists the input keys it ignored", () => {
+  const Nested = z.object({ role_id: z.string(), claims: z.object({ level: z.string() }), items: z.array(z.object({ a: z.string() })) });
+  const nestedTool: ToolDef<z.infer<typeof Nested>, { ok: boolean }> = {
+    name: "nested",
+    title: "Nested",
+    description: "test-only tool",
+    inputSchema: Nested,
+    outputSchema: z.object({ ok: z.boolean() }),
+    handler: async () => ({ ok: true }),
+  };
+
+  it("accepts the call and names every unknown key, nested ones included, in input order", async () => {
+    const result = await callTool(nestedTool, {
+      role_id: "r1",
+      submission: "see attached",
+      claims: { level: "secret", extra: true },
+      items: [{ a: "x" }, { a: "y", note: "z" }],
+      candidate_ref: "c-17",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.ignoredInputKeys).toEqual(["submission", "claims.extra", "items[1].note", "candidate_ref"]);
+  });
+
+  it("is an empty list when every key was used", async () => {
+    const result = await callTool(nestedTool, { role_id: "r1", claims: { level: "secret" }, items: [] });
+    expect(result.ok && result.data.ignoredInputKeys).toEqual([]);
+  });
+
+  it("still runs the personal-data guard on the whole raw input, unknown keys and their values included", async () => {
+    const byValue = await callTool(nestedTool, { role_id: "r1", claims: { level: "s" }, items: [], note: "my ssn is 123-45-6789" });
+    expect(byValue.ok).toBe(false);
+    if (!byValue.ok) expect(byValue.error.code).toBe("pii_cui_rejected");
+    const byKey = await callTool(nestedTool, { role_id: "r1", claims: { level: "s" }, items: [], "123-45-6789": "x" });
+    expect(byKey.ok).toBe(false);
+  });
+
+  it("lists undeclared top-level keys for a schema that passes unknown keys through", async () => {
+    const Loose = z.object({ role_id: z.string() }).passthrough();
+    const looseTool: ToolDef<z.infer<typeof Loose>, { ok: boolean }> = {
+      name: "loose",
+      title: "Loose",
+      description: "test-only tool",
+      inputSchema: Loose,
+      outputSchema: z.object({ ok: z.boolean() }),
+      handler: async () => ({ ok: true }),
+    };
+    const result = await callTool(looseTool, { role_id: "r1", submission: "x" });
+    expect(result.ok && result.data.ignoredInputKeys).toEqual(["submission"]);
+  });
+
+  it("every registered tool advertises ignoredInputKeys in the output schema clients see", async () => {
+    const { TOOL_REGISTRY } = await import("@/lib/tools/registry");
+    const { advertisedOutputSchema } = await import("@/lib/tools/wrap");
+    for (const def of TOOL_REGISTRY) {
+      const json = z.toJSONSchema(advertisedOutputSchema(def.outputSchema), { io: "output" }) as { properties?: Record<string, unknown> };
+      expect(json.properties, def.name).toHaveProperty("ignoredInputKeys");
+    }
   });
 });

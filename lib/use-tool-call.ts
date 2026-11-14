@@ -48,7 +48,7 @@ export function useToolCall<TInput, TOutput>(toolName: string) {
         if (id !== requestId.current) return null;
         const error: ToolErrorShape = {
           code: "network_error",
-          message: "Couldn't reach Clearance Lens. Check your connection and try again.",
+          message: "Couldn't reach cleared. Check your connection and try again.",
         };
         setState({ data: null, error, loading: false });
         return null;

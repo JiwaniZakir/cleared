@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { generateKeyPairSync, sign } from "crypto";
+import { readFileSync } from "fs";
+import path from "path";
 
 vi.mock("@/lib/speedrun/client", () => ({ getJob: vi.fn() }));
 
@@ -12,11 +14,10 @@ import { prepareSignedAttestationTool } from "@/lib/tools/prepare-signed-attesta
 import { callTool } from "@/lib/tools/wrap";
 import type { SpeedrunJobDetailResponse } from "@/lib/speedrun/types";
 
-// DECISIONS.md D-046. Judging panel round 9, 4 of 4 judges, verified against
-// eCFR and the Federal Register: a green card makes someone a "U.S. person"
-// under ITAR (22 CFR 120.62), but security clearances are limited to U.S.
-// citizens (EO 12968 § 3.1(b); 32 CFR 117.10(k)). The product told green card
-// holders the opposite, on its flagship example.
+// Verified against eCFR and the Federal Register: a green card makes someone a
+// "U.S. person" under ITAR (22 CFR 120.62), but security clearances are limited
+// to U.S. citizens (EO 12968 § 3.1(b); 32 CFR 117.10(k)). The product told
+// green card holders the opposite, on its flagship example.
 
 const US_ROLE = { industry: "defense_space", location: "Costa Mesa, CA" };
 
@@ -105,6 +106,19 @@ describe("rules data: the green card / clearance distinction", () => {
     const urls = rule!.sources.map((s) => s.url);
     expect(urls).toContain("https://www.federalregister.gov/documents/1995/08/07/95-19654/access-to-classified-information");
     expect(urls.some((u) => u.includes("section-117.10"))).toBe(true);
+  });
+
+  // The title once read "Security Clearances Require U.S. Citizenship (Green
+  // Card Holders Included)", which a reader can take to mean green card holders
+  // are included among those who qualify.
+  it("clearance-citizenship's title cannot be read as including green card holders", () => {
+    const rule = findRule("clearance-citizenship");
+    expect(rule?.title).toBe("Security Clearances Require U.S. Citizenship: a Green Card Is Not Enough");
+    expect(rule?.title).not.toMatch(/included/i);
+    // Every surface that shows the title reads it from the data file; the
+    // generated SOURCES.md section must carry the same title.
+    expect(readFileSync(path.join(process.cwd(), "SOURCES.md"), "utf8")).toContain(`**${rule?.title}** (\`clearance-citizenship\``);
+    expect(findRule(rule!.title)?.id).toBe("clearance-citizenship");
   });
 });
 
@@ -205,13 +219,13 @@ describe("prepare_signed_attestation: claim consistency and payload strictness",
     expect(r.claimNotes).toEqual([]);
   });
 
-  it("rejects a signed payload that smuggles in an extra field (round 9: a hidden name and street address)", async () => {
+  it("rejects a signed payload that smuggles in an extra field (a hidden name and street address)", async () => {
     const claims = { clearance_level: "secret" };
     const r = await callTool(prepareSignedAttestationTool, { claims, ...signed({ claims, issued_at: now, holder: "Jane Q. Public, 1600 Pennsylvania Ave NW" }, now) });
     expect(r.ok).toBe(false);
   });
 
-  it("rejects an issued_at in the future (round 9: 2099 was accepted)", async () => {
+  it("rejects an issued_at in the future (2099 was once accepted)", async () => {
     const claims = { clearance_level: "secret" };
     const future = "2099-01-01T00:00:00Z";
     const r = await callTool(prepareSignedAttestationTool, { claims, ...signed({ claims, issued_at: future }, future) });

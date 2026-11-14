@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema } from "@/lib/tools/role-shared";
+import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema, roleImpliesClearance, HowToApplySchema, howToApply } from "@/lib/tools/role-shared";
 import { extractSections, isJobContentBullet } from "@/lib/speedrun/extract-sections";
 import { DISCLAIMERS } from "@/lib/disclaimers";
 import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
@@ -18,10 +18,10 @@ const OutputSchema = z.object({
       agentFillsThisIn: z.literal(true),
     }),
   }),
-  // Renamed from `recruiterQuestions` (judging panel round 8, candidate_user):
-  // these are questions for the candidate to ASK the recruiter, and the old
+  // Renamed from `recruiterQuestions`: these are questions for the candidate to ASK the recruiter, and the old
   // name read as the reverse. Matches fit_debrief's questionsToAskTheCompany.
   questionsToAskTheRecruiter: z.array(z.string()),
+  howToApply: HowToApplySchema,
   evaluate_locally: z.literal(true),
   instructionsForAgent: z.string(),
   sources: z.array(SourceRefSchema),
@@ -38,16 +38,23 @@ export const readinessBriefTool: ToolDef<z.infer<typeof InputSchema>, z.infer<ty
   handler: async ({ role_id }) => {
     const role = await resolveRole(role_id);
     const sections = extractSections(role.descriptionText);
-    // A prep plan for "Must be a U.S. citizen" isn't a plan — D-050.
+    // A prep plan for "Must be a U.S. citizen" isn't a plan.
     const quals = sections.qualifications.filter(isJobContentBullet);
     const focusAreas = (quals.length > 0 ? quals : sections.rawBullets.filter(isJobContentBullet)).slice(0, 6);
 
-    const questionsToAskTheRecruiter = [
-      `Does the ${role.title} role currently require an active clearance, or could I start on unclassified work while an investigation is pending?`,
-      `Does ${role.company} currently hold a Facility Clearance (FCL), or would sponsorship be needed for this role?`,
-      "What does the first 90 days typically look like for someone waiting on a clearance to finalize?",
-      "Is there flexibility on start date if an investigation or interim determination is still in progress?",
-    ];
+    // These four used to go out for every role, so a posting that
+    // states no clearance read as if it needed one. They now follow the
+    // role's signals, the same test run_job_preview uses for its scenes.
+    const questionsToAskTheRecruiter = roleImpliesClearance(role.signals)
+      ? [
+          `Does the ${role.title} role currently require an active clearance, or could I start on unclassified work while an investigation is pending?`,
+          `Does ${role.company} currently hold a Facility Clearance (FCL), or would sponsorship be needed for this role?`,
+          "What does the first 90 days typically look like for someone waiting on a clearance to finalize?",
+          "Is there flexibility on start date if an investigation or interim determination is still in progress?",
+        ]
+      : [
+          `The posting doesn't mention a security clearance — can you confirm the ${role.title} role doesn't need one, now or later?`,
+        ];
     if (role.signals.some((s) => s.kind === "citizenship")) {
       questionsToAskTheRecruiter.push(
         "Can you confirm exactly what citizenship/US-person status this specific role requires, beyond what's in the posting?",
@@ -76,6 +83,7 @@ export const readinessBriefTool: ToolDef<z.infer<typeof InputSchema>, z.infer<ty
         },
       },
       questionsToAskTheRecruiter,
+      howToApply: howToApply(role),
       evaluate_locally: true,
       instructionsForAgent:
         "Fill in the three template sections yourself. " + DISCLAIMERS.evaluateLocally,

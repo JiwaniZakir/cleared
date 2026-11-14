@@ -6,7 +6,7 @@ import { Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 /** Built on Radix Switch but styled as a 2-position sun/moon icon toggle
- * rather than a literal on/off track (R2 §3.16). next-themes already owns
+ * rather than a literal on/off track. next-themes already owns
  * persistence — no custom storage code needed. */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();

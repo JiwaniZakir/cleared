@@ -34,8 +34,8 @@ function mockJob(id: string, overrides: Partial<{ title: string; company: string
 }
 
 describe("prepare_consented_card", () => {
-  // D-047: the card is a template the user's own agent fills in locally — the
-  // server receives field NAMES only, so it never sees (or echoes) a value.
+  // The card is a template the user's own agent fills in locally — the server
+  // receives field NAMES only, so it never sees (or echoes) a value.
   it("returns a template with a placeholder for exactly the approved fields, in a fixed order", async () => {
     mockJob("job-1");
     const result = await prepareConsentedCardTool.handler({ role_id: "job-1", approved_fields: ["notes", "headline"] });
@@ -84,9 +84,8 @@ describe("prepare_consented_card", () => {
     expect(result.disclaimer.toLowerCase()).toContain("never submit");
   });
 
-  // Regression for DECISIONS.md D-034 (per-company re-consent): nothing
-  // carries over between calls.
-  describe("no persistence across calls (D-034)", () => {
+  // Regression (per-company re-consent): nothing carries over between calls.
+  describe("no persistence across calls", () => {
     it("rejects a call with no approved_fields — there is no implicit carry-over from a prior call", () => {
       const parsed = prepareConsentedCardTool.inputSchema.safeParse({ role_id: "job-1" });
       expect(parsed.success).toBe(false);

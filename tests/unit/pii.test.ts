@@ -21,7 +21,7 @@ describe("SSN detection", () => {
     "SS# 345-67-8901",
     "soc sec 456789123", // keyword + bare 9 digits
     "ss# 123456789", // "#"-ending keyword + bare 9 digits, no dash pattern to mask a regression
-    "123.45.6789", // dotted separator (Presidio's SSN5 pattern; research/R1-leverage.md §3.2)
+    "123.45.6789", // dotted separator (Presidio's SSN5 pattern)
   ])("flags SSN-shaped input: %s", (text) => {
     expect(categoriesOf(text)).toContain("ssn");
   });
@@ -35,7 +35,7 @@ describe("SSN detection", () => {
     "tracking id 123456789012",
     // Bare 9 digits, no keyword — still allowed because area 987 can't be a
     // real SSN. (A valid-structure run like "order number 123456789" is
-    // rejected since D-047; see the bare-9-digit block below.)
+    // rejected; see the bare-9-digit block below.)
     "confirmation code: 987654321",
   ])("does NOT flag ordinary phone/number input: %s", (text) => {
     expect(categoriesOf(text)).not.toContain("ssn");
@@ -128,7 +128,7 @@ describe("Clearance record text detection", () => {
     "I hold a TS/SCI clearance",
     "can a startup sponsor my clearance?",
     "I'm interested in roles that require a clearance",
-    // Found live via the spec §5 agent-in-the-loop persona eval: bare
+    // Found live by an agent-in-the-loop persona eval: bare
     // mentions of DISS/JPAS/NBIS (asking ABOUT the system, not pasting a
     // record from it) were wrongly rejected — including explain_rule's own
     // "nbis-diss" topic id and its real rule title, making that rule
@@ -234,11 +234,10 @@ describe("assertNoPiiCui / PiiCuiError", () => {
   });
 });
 
-// Red-team pass (spec §5): every case below was confirmed LIVE as a real
-// bypass of the pre-fix guard before the corresponding fix landed in
-// lib/guard/pii.ts (normalizeForScan, rot13 pass, percent-decode pass,
-// embedded-base64-token pass, and fail-closed depth limit). See DECISIONS.md
-// for the write-up of each.
+// Red-team pass: every case below was confirmed LIVE as a real bypass of
+// the pre-fix guard before the corresponding fix landed in lib/guard/pii.ts
+// (normalizeForScan, rot13 pass, percent-decode pass, embedded-base64-token
+// pass, and fail-closed depth limit).
 describe("red-team: Unicode obfuscation of an SSN", () => {
   it.each([
     ["zero-width space spliced into the dash position", "my ssn is 123​-45-6789"],
@@ -344,11 +343,10 @@ describe("red-team: obfuscation-defeat passes do not introduce new false positiv
   });
 });
 
-// Regression for DECISIONS.md (judging panel round 2, hard-constraint
-// finding): prepare_consented_card's filter was bypassed by trivial
-// rephrasing of 4 of 5 protected categories, found live by two independent
-// judges using the MCP endpoint and the REST API.
-describe("judging panel round 2: PII bypasses found via rephrasing, now fixed", () => {
+// Regression: prepare_consented_card's filter was bypassed by trivial
+// rephrasing of 4 of 5 protected categories, found live on both the MCP
+// endpoint and the REST API.
+describe("rephrased dates, case numbers, JPAS jargon and card numbers, now caught", () => {
   it.each([
     ["Born 03/14/1992, happy to relocate", "dob"],
     ["My e-QIP request number is 2024-SEC-0098765", "case_number"],
@@ -366,7 +364,7 @@ describe("judging panel round 2: PII bypasses found via rephrasing, now fixed", 
   });
 });
 
-describe("judging panel round 3: PII bypasses found via rephrasing, now fixed", () => {
+describe("agency-prefixed case ids and adjudication jargon, now caught", () => {
   it.each([
     ["my case number is DCSA-2026-0417", "case_number"],
     ["my clearance was adjudicated under e-QIP", "clearance_record"],
@@ -382,7 +380,7 @@ describe("judging panel round 3: PII bypasses found via rephrasing, now fixed", 
   });
 });
 
-describe("judging panel round 4: PII bypasses found via rephrasing, now fixed", () => {
+describe("bare 'case' plus digits and spelled-out birthdates, now caught", () => {
   it.each([
     ["DCSA case 2024-0045678, autonomy engineer", "case_number"],
     ["born march second nineteen ninety two, autonomy engineer", "dob"],
@@ -399,7 +397,7 @@ describe("judging panel round 4: PII bypasses found via rephrasing, now fixed", 
   });
 });
 
-describe("judging panel round 5: hard-constraint findings, now fixed", () => {
+describe("classification and control markings, now caught", () => {
   it.each([
     "SECRET//NOFORN -- the propulsion subsystem spec sheet shows a 12 percent thrust margin",
     "(S//NF) the test results were favorable",
@@ -415,7 +413,7 @@ describe("judging panel round 5: hard-constraint findings, now fixed", () => {
   });
 });
 
-describe("judging panel round 3: credit-card false positive on UUID-shaped identifiers, now fixed", () => {
+describe("credit-card false positive on UUID-shaped identifiers, now fixed", () => {
   it.each([
     "00000000-0000-4000-8000-000000000000",
     "11111111-1111-1111-1111-111111111111",
@@ -431,11 +429,11 @@ describe("judging panel round 3: credit-card false positive on UUID-shaped ident
   });
 });
 
-// Round 2 found a bare, unlabeled SSN on prepare_consented_card; that tool
-// had its own stricter check. Round 9 found one accepted elsewhere
-// ("software 078051120", echoed in a search note), so since D-047 a bare
-// 9-digit run with a valid SSN structure is rejected everywhere.
-describe("bare 9-digit SSN-shaped runs (D-047, rounds 2 and 9)", () => {
+// A bare, unlabeled SSN was first caught only on prepare_consented_card,
+// which had its own stricter check. One was then accepted elsewhere
+// ("software 078051120", echoed in a search note), so a bare 9-digit run
+// with a valid SSN structure is now rejected everywhere.
+describe("bare 9-digit SSN-shaped runs", () => {
   it.each(["123456789", "software 078051120", "order number 123456789", "My ID number is 212345678"])(
     "rejects %j even with no SSN keyword",
     (text) => expect(categoriesOf(text)).toContain("ssn"),
@@ -452,7 +450,7 @@ describe("bare 9-digit SSN-shaped runs (D-047, rounds 2 and 9)", () => {
   });
 });
 
-describe("judging panel round 7: hard-constraint finding, now fixed (email/phone had no detector at all)", () => {
+describe("email and phone detectors (there were none at first)", () => {
   it.each(["jane.doe@example.com", "contact me at jane.doe@example.com or 555-123-4567", "reach out: j.doe+jobs@sub.example.co.uk"])(
     "flags an email address: %s",
     (text) => {
@@ -492,7 +490,7 @@ describe("judging panel round 7: hard-constraint finding, now fixed (email/phone
   });
 });
 
-describe("judging panel round 8: hard-constraint findings, now fixed", () => {
+describe("bare numeric birthdates, and questions about record systems", () => {
   // A bare birthdate typed the way people normally type one — no "DOB" or
   // "born" keyword — previously passed every tool.
   it.each(["01/15/1990", "1990-01-15", "15/01/1990", "Available starting 01/15/1990 full time"])(
@@ -526,17 +524,16 @@ describe("judging panel round 8: hard-constraint findings, now fixed", () => {
   });
 });
 
-// Round 8 found an SSN split across two prepare_consented_card fields with
-// filler between the digit groups; D-042 added a cross-field check. Since
-// D-047 that tool receives field NAMES only — never values — so there are
-// no fields to split anything across (tests/unit/prepare-consented-card.test.ts).
+// An SSN split across two prepare_consented_card fields, with filler
+// between the digit groups, once needed a cross-field check. That tool now
+// receives field NAMES only — never values — so there are no fields to
+// split anything across (tests/unit/prepare-consented-card.test.ts).
 
-// Found by a self-run red-team pass between judging panel rounds 8 and 9
-// (DECISIONS.md D-043), before any judge found them: 21 of 33 format
-// variations got through. Round 8's DOB fix covered only numeric dates, and
-// the guard had no category at all for DoD IDs, A-numbers, driver's
-// licenses, or street addresses.
-describe("D-043 red-team pass: format variations and missing identifier types, now rejected", () => {
+// Found by a self-run red-team pass: 21 of 33 format variations got
+// through. The earlier DOB fix covered only numeric dates, and the guard
+// had no category at all for DoD IDs, A-numbers, driver's licenses, or
+// street addresses.
+describe("red-team pass: format variations and missing identifier types, now rejected", () => {
   const MUST_REJECT: [string, string][] = [
     ["Available starting January 15, 1990", "dob"],
     ["Jan 15 1990", "dob"],
@@ -573,8 +570,8 @@ describe("D-043 red-team pass: format variations and missing identifier types, n
   });
 });
 
-describe("D-043: the new detectors don't block legitimate questions", () => {
-  // The full false-positive sweep run before shipping D-043 (0 of 87 blocked).
+describe("the new detectors don't block legitimate questions", () => {
+  // The full false-positive sweep run before shipping them (0 of 87 blocked).
   const MUST_ALLOW = [
     "Do I need my home address history for 7 years on the SF-86?",
     "How far back does the SF-86 ask where I've lived? I've had 3 addresses in 7 years",
@@ -608,7 +605,7 @@ describe("D-043: the new detectors don't block legitimate questions", () => {
   });
 });
 
-describe("D-043: worst-case scan time stays linear at the real 20KB input limit", () => {
+describe("worst-case scan time stays linear at the real 20KB input limit", () => {
   // Unbounded `[...]+` local parts in the email patterns made a 20KB run of
   // "a.a.a." take ~700ms — present in the shipped guard, not only the new
   // patterns. Bounded quantifiers brought it to ~18ms. The bound here is
@@ -630,11 +627,10 @@ describe("D-043: worst-case scan time stays linear at the real 20KB input limit"
   });
 });
 
-// DECISIONS.md D-047 — judging panel round 9: 38 of 80 refuse-list payloads
-// were accepted (and, via prepare_consented_card, echoed). Every payload the
-// judges quoted is here. Markings are matched by SYNTAX (banners, portion
+// A review found 38 of 80 refuse-list payloads accepted (and, via
+// prepare_consented_card, echoed). Every payload it quoted is here. Markings are matched by SYNTAX (banners, portion
 // marks, legends), not vocabulary, so questions about them still pass below.
-describe("D-047: round 9's accepted payloads, now rejected", () => {
+describe("refuse-list payloads once accepted, now rejected", () => {
   const MUST_REJECT: [string, string][] = [
     ["CUI//SP-EXPT", "classification_marking"],
     ["CUI//BASIC", "classification_marking"],
@@ -690,7 +686,7 @@ describe("D-047: round 9's accepted payloads, now rejected", () => {
   });
 });
 
-describe("D-047: questions about the same subjects still pass", () => {
+describe("questions about the same subjects still pass", () => {
   const MUST_ALLOW = [
     "What does FOUO mean?",
     "What is CUI and how do contractors handle it?",

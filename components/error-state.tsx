@@ -4,12 +4,12 @@ import { cn } from "@/lib/cn";
 import type { ToolErrorShape } from "@/lib/try-tool-types";
 
 /**
- * Shared failed-tool-call component (R2 §3.15). States what failed in plain
+ * Shared failed-tool-call component. States what failed in plain
  * language (never a raw error code/stack — `error.message` is already the
  * human sentence `lib/tools/wrap.ts`/`lib/guard/pii.ts` produced, so we just
  * render it verbatim), a Retry button, and a DISTINCT, calm — not
- * security-alert-toned — copy variant for `pii_cui_rejected` (Do/Don't #9:
- * danger is reserved for real system errors/destructive actions, never used
+ * security-alert-toned — copy variant for `pii_cui_rejected` (danger is
+ * reserved for real system errors/destructive actions, never used
  * to make a rejection feel like an alarm).
  */
 export function ErrorState({

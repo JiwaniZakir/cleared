@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema } from "@/lib/tools/role-shared";
+import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema, HowToApplySchema, howToApply } from "@/lib/tools/role-shared";
 import { extractSections, isJobContentBullet } from "@/lib/speedrun/extract-sections";
 import { findRule } from "@/lib/rules-data";
 import { DISCLAIMERS } from "@/lib/disclaimers";
@@ -20,6 +20,7 @@ const OutputSchema = z.object({
   eligibilityChecklist: z.array(ChecklistItemSchema),
   skillsRubric: z.array(z.object({ skill: z.string(), evidenceFromPosting: z.string() })),
   questionsForAgent: z.array(z.string()),
+  howToApply: HowToApplySchema,
   evaluate_locally: z.literal(true),
   instructionsForAgent: z.string(),
   sources: z.array(SourceRefSchema),
@@ -27,10 +28,9 @@ const OutputSchema = z.object({
 });
 
 const SIGNAL_TO_QUESTION: Record<string, { question: string; ruleId?: string }> = {
-  // Found via the spec §6 judging panel round 9 (4 of 4 judges): this
-  // checklist asked about U.S.-person status and clearance as unrelated
-  // items, so a green card holder could answer "yes" to both on a role they
-  // can't take. A clearance requires U.S. citizenship (D-046).
+  // This checklist used to ask about U.S.-person status and clearance as
+  // unrelated items, so a green card holder could answer "yes" to both on a
+  // role they can't take. A clearance requires U.S. citizenship.
   us_citizen_required_for_clearance: {
     question:
       "Are you a U.S. citizen? This role needs a U.S. security clearance, and clearances are limited to U.S. citizens — a green card satisfies ITAR, but not this.",
@@ -73,7 +73,7 @@ const LEVEL_NAMES: Record<string, string> = {
 };
 
 /** A clearance question has to say WHEN the clearance is needed — "eligible
- *  to obtain" means no clearance is needed to apply (D-046). */
+ *  to obtain" means no clearance is needed to apply. */
 function questionFor(signal: RequirementSignal): { question: string; ruleId?: string } | undefined {
   const mapped = SIGNAL_TO_QUESTION[signal.value];
   const level = LEVEL_NAMES[signal.value];
@@ -113,8 +113,7 @@ export const getRoleRubricTool: ToolDef<z.infer<typeof InputSchema>, z.infer<typ
 
     const seen = new Set<string>();
     const eligibilityChecklist: z.infer<typeof ChecklistItemSchema>[] = [];
-    // Deduplicated by URL below, not just pushed — found live via the spec
-    // §6 judging panel round 5 (product_designer): two distinct signals
+    // Deduplicated by URL below, not just pushed: two distinct signals
     // whose mapped rules happen to cite the same source (e.g. two
     // citizenship-adjacent signals both citing the same ITAR/CFR section)
     // listed that one citation twice, since `seen` only dedupes by signal
@@ -139,7 +138,7 @@ export const getRoleRubricTool: ToolDef<z.infer<typeof InputSchema>, z.infer<typ
       });
     }
 
-    // Eligibility lines belong to the checklist above, not here (D-050).
+    // Eligibility lines belong to the checklist above, not here.
     const skillQuals = sections.qualifications.filter(isJobContentBullet);
     const skillsRubric = (skillQuals.length > 0 ? skillQuals : sections.rawBullets.filter(isJobContentBullet)).map((q) => ({
       skill: q,
@@ -156,6 +155,7 @@ export const getRoleRubricTool: ToolDef<z.infer<typeof InputSchema>, z.infer<typ
         "For skillsRubric, assess alignment per item as aligned / mixed / unclear — never a score or percentage.",
         "Summarize for the user: which eligibility items look clear, which are uncertain, and what to verify with the employer directly.",
       ],
+      howToApply: howToApply(role),
       evaluate_locally: true,
       instructionsForAgent:
         "This checklist and skills rubric are for you, the agent. " + DISCLAIMERS.evaluateLocally,

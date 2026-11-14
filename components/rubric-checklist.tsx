@@ -16,7 +16,7 @@ export interface RubricRow {
   /** "stated" | "inferred" — rendered with the same solid/dashed chip
    * convention as role-search-result-card, for visual consistency. */
   basis?: "stated" | "inferred";
-  /** A StatusPill-style Badge (R2 §3.6) — aligned=success / mixed=caution /
+  /** A StatusPill-style Badge — aligned=success / mixed=caution /
    * unclear=neutral. Deliberately unused by the get_role_rubric view on this
    * page (there's no agent here to actually evaluate anything), but the
    * component supports it so it stays genuinely reusable. */
@@ -142,7 +142,7 @@ function GroupBody({ group }: { group: RubricGroup }) {
 }
 
 /**
- * Reusable checklist renderer (R2 §3.6) — used for get_role_rubric's
+ * Reusable checklist renderer — used for get_role_rubric's
  * eligibility/skills rows, build_trial_assessment's rubric, and
  * company-profile-card's published criteria. Rows group into a Radix
  * Accordion once the combined list runs past ~6 rows; below that, groups

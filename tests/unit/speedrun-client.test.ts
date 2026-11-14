@@ -24,7 +24,7 @@ describe("speedrun client", () => {
     await searchJobs({ q: "autonomy", industry: "defense_space" });
 
     const calledUrl = new URL(fetchMock.mock.calls[0][0] as string);
-    expect(calledUrl.searchParams.get("source")).toBe("clearance-lens");
+    expect(calledUrl.searchParams.get("source")).toBe("cleared");
     expect(calledUrl.searchParams.get("q")).toBe("autonomy");
     expect(calledUrl.pathname).toBe("/api/v1/jobs");
   });
@@ -85,11 +85,11 @@ describe("speedrun client", () => {
   });
 });
 
-// Found by a self-run probe between judging panel rounds 8 and 9 (DECISIONS.md
-// D-045): there was no per-request timeout, so one stalled upstream request
-// held a whole tool call open (33s measured), and a network-level failure
-// escaped as a raw exception the pipeline reported as a generic internal error.
-describe("timeouts and deadlines (D-045)", () => {
+// Found by a self-run probe: there was no per-request timeout, so one stalled
+// upstream request held a whole tool call open (33s measured), and a
+// network-level failure escaped as a raw exception the pipeline reported as a
+// generic internal error.
+describe("timeouts and deadlines", () => {
   // These measure real elapsed time against real deadlines; the file-level
   // beforeEach installs fake timers for the retry-backoff tests above.
   beforeEach(() => {

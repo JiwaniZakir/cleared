@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 /**
- * Shared zero-results component (R2 §3.13) — search, no-published-criteria,
+ * Shared zero-results component — search, no-published-criteria,
  * explain_rule misses. A single-color neutral-9 icon, one sentence
  * explaining WHY it's empty (never a bare "No results"), and — where
- * resolvable — one button that fixes it (Do/Don't #8).
+ * resolvable — one button that fixes it.
  */
 export function EmptyState({
   icon: Icon = Inbox,

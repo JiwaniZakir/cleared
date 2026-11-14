@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Claude Code session-local state (scheduled-wakeup locks, etc.) -- not project content
 .claude/
+
+# local embedded database (PGlite), lib/db/client.ts
+.data/

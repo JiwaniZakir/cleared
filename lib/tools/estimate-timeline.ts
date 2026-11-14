@@ -8,9 +8,8 @@ const InputSchema = z.object({
   target_level: z.enum(["secret", "ts", "ts_sci"]),
   current_status: z.enum(["none", "interim", "active", "lapsed_lt_2y", "lapsed_gt_2y"]),
   employer_has_fcl: z.enum(["yes", "no", "unknown"]).default("unknown"),
-  // Found via the spec §6 judging panel round 9 (4 of 4 judges): with no
-  // citizenship input, a green card holder asking the README's own example
-  // question got "~197 days" for a clearance they can't hold. General status
+  // With no citizenship input, a green card holder asking the README's own
+  // example question got "~197 days" for a clearance they can't hold. General status
   // only — the same closed enum the attestation and signal tools use.
   citizenship_status: z
     .enum(["us_citizen", "green_card", "other_protected_individual", "not_us_person", "unknown"])
@@ -52,16 +51,15 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
   name: "estimate_timeline",
   title: "Estimate clearance timeline",
   description:
-    // Found live via the spec §6 judging panel (DECISIONS.md): ALL 5 judges
-    // independently flagged this tool's own "never a false-precision
-    // single number" claim as false for the single most common real input
-    // (current_status: "none" or "interim") — DCSA's own primary source
+    // This tool's old "never a false-precision single number" claim was false
+    // for the single most common real input (current_status: "none" or
+    // "interim") — DCSA's own primary source
     // publishes a quarterly AVERAGE, not a range, for a fresh investigation,
     // so minDays/maxDays are genuinely identical there. That's an honest
-    // reflection of what the source gives (D-010), not a shortcut — the fix
-    // is accurate wording, not a fabricated range.
-    // D-049: rewritten after a source-by-source check found two day ranges
-    // here (lapsed > 2 years, no-FCL wait) that no cited source contains.
+    // reflection of what the source gives, not a shortcut — the fix is
+    // accurate wording, not a fabricated range. Rewritten again after a
+    // source-by-source check found two day ranges here (lapsed > 2 years,
+    // no-FCL wait) that no cited source contains.
     "Estimates how long reaching a target clearance level might realistically take, given current status, whether the employer has a Facility Clearance (FCL), and (optionally) citizenship. Returns DCSA's most recent published quarterly average for the target level (a mean, not a median) and returns no number where no primary source publishes one — plus key drivers and an explicit uncertainty note. Never an invented number.",
   inputSchema: InputSchema,
   outputSchema: OutputSchema,
@@ -74,8 +72,9 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
     const drivers: Output["keyDrivers"] = [];
     const sources: z.infer<typeof SourceRefSchema>[] = [];
 
-    // DCSA publishes quarterly AVERAGES, not medians (confirmed in research/R4 —
-    // medianDays is null for both levels as of this data's lastVerified date).
+    // DCSA publishes quarterly AVERAGES, not medians (checked against the
+    // source — medianDays is null for both levels as of this data's
+    // lastVerified date).
     // Rather than leaving minDays null while maxDays holds a value (which reads
     // as a bug, not a deliberate "we only have one number"), collapse to a
     // single honest point estimate when that's genuinely all the source gives.
@@ -96,8 +95,7 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
       });
     }
 
-    // Found live via the spec §5 agent-in-the-loop persona eval (DECISIONS.md
-    // D-016): a true zero-history caller (current_status: "none") — the
+    // A true zero-history caller (current_status: "none") — the
     // single most common new-grad call shape — never saw that an interim
     // determination can let them start work well before the full baseline
     // above finishes, because that content used to be gated behind
@@ -125,14 +123,12 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
       });
       if (reciprocityRule) sources.push(...reciprocityRule.sources);
     } else if (current_status === "interim") {
-      // Found live via the spec §6 judging panel round 2 (DECISIONS.md):
-      // this used to share the generic "modifier exists but has no day
+      // This used to share the generic "modifier exists but has no day
       // count" branch below with lapsed_lt_2y/lapsed_gt_2y, which just
       // appends the interim modifier's own driver ON TOP of the unchanged
       // baseline — producing output nearly identical to current_status=
-      // "none" (which, since D-017, ALSO surfaces the same interim-
-      // modifier content as an informational note). Someone who already
-      // HOLDS interim eligibility has already completed real progress
+      // "none" (which ALSO surfaces the same interim-modifier content as an
+      // informational note). Someone who already HOLDS interim eligibility has already completed real progress
       // toward final adjudication; treating their remaining wait as
       // identical to someone starting from zero is misleading even though
       // no fabricated number is involved. Gets its own bespoke driver that
@@ -151,7 +147,7 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
       // Reciprocity, not a new investigation — so the initial-investigation
       // baseline doesn't apply, and no source publishes an end-to-end figure
       // (SEAD 7's five business days covers only the determination step).
-      // The baseline is dropped rather than shown misleadingly (D-049).
+      // The baseline is dropped rather than shown misleadingly.
       const modifier = findModifier("lapsed_lt_2y");
       estimate = { minDays: null, maxDays: null, medianDays: null };
       const sciNote = drivers.find((d) => d.label === "SCI access determination");
@@ -165,8 +161,8 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
     } else if (current_status === "lapsed_gt_2y") {
       const modifier = findModifier(current_status);
       if (!modifier) {
-        // Data genuinely lacks this modifier (shouldn't happen once research/R4
-        // has landed, but stay honest rather than silently matching on nothing).
+        // Data genuinely lacks this modifier (shouldn't happen with the current
+        // data, but stay honest rather than silently matching on nothing).
         drivers.push({
           label: `Status: ${current_status.replace(/_/g, " ")}`,
           detail:
@@ -193,8 +189,7 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
       }
     }
 
-    // Found live via the spec §6 judging panel round 8 (candidate_user):
-    // employer_has_fcl "yes" and "no" returned IDENTICAL minDays/maxDays —
+    // employer_has_fcl "yes" and "no" used to return IDENTICAL minDays/maxDays —
     // the no-FCL sponsorship wait (sourced, with a real typical range) only
     // appeared as prose in keyDrivers, never in the structured number a
     // caller or a downstream agent reads first, even though this tool's own
@@ -240,20 +235,15 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
     }
 
     // Explicitly explains a point estimate rather than leave minDays===maxDays
-    // to speak for itself — found live via the spec §6 judging panel (rounds
-    // 3 and 5, multiple judges each round, independently): several judges'
-    // own sampled inputs always happened to land on a no-range case (the
-    // most common ones: current_status none/interim/active) and read the
-    // identical min/max as the tool failing to deliver the range its own
-    // description promises "where the data supports one" — when in fact a
-    // real range DOES exist for lapsed_gt_2y (sourced, not fabricated). This
-    // doesn't change WHICH cases get a range (that's governed entirely by
-    // what the primary source publishes, never invented), only whether the
-    // reason for a given case's shape is stated plainly in the output
-    // itself rather than left for a reader to work out.
-    // D-049: the old note said the source "publishes only one quarterly
-    // average" (it publishes several per level) and pointed to lapsed_gt_2y
-    // as a sourced range (its 180–270 came from no cited source).
+    // to speak for itself: readers whose inputs landed on the most common
+    // no-range cases (current_status none/interim/active) read the identical
+    // min/max as the tool failing to deliver a range. This doesn't change
+    // WHICH cases get a range (that's governed entirely by what the primary
+    // source publishes, never invented), only whether the reason for a given
+    // case's shape is stated plainly in the output itself. The old note said
+    // the source "publishes only one quarterly average" (it publishes several
+    // per level) and pointed to lapsed_gt_2y as a sourced range (its 180–270
+    // came from no cited source).
     const uncertaintyNote =
       estimate.minDays === null
         ? "No day count is shown for this case because no primary source publishes one — the key drivers below say what does apply. Ask your FSO for a case-specific estimate once you're in process."
@@ -281,7 +271,7 @@ export const estimateTimelineTool: ToolDef<z.infer<typeof InputSchema>, Output> 
 };
 
 /** No timeline exists for someone who isn't clearance-eligible, so the
- *  honest answer is the rule itself — never a day count (D-046). */
+ *  honest answer is the rule itself — never a day count. */
 function nonCitizenAnswer(
   targetLevel: "secret" | "ts" | "ts_sci",
   status: "green_card" | "other_protected_individual" | "not_us_person",

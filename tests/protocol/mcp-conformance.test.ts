@@ -4,14 +4,13 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { TOOL_REGISTRY } from "@/lib/tools/registry";
 
 /**
- * Protocol conformance test (spec §5): connects a REAL MCP client to a REAL
+ * Protocol conformance test: connects a REAL MCP client to a REAL
  * running server — not a mock of the SDK — and exercises the full surface:
  * handshake, tools/list, resources/list, prompts/list, and every tool with
  * both valid and invalid input. Defaults to the local dev server; point
- * MCP_URL at a deployed preview/production URL to run the same suite there
- * (spec explicitly calls for running this against the deployed /mcp).
+ * MCP_URL at a deployed preview/production URL to run the same suite there.
  *
- * Run: MCP_URL=https://clearance-lens.vercel.app/mcp npx vitest run tests/protocol
+ * Run: MCP_URL=https://cleared-mcp.vercel.app/mcp npx vitest run tests/protocol
  * (requires the target server to already be running/deployed — this test
  * does not start one itself).
  */
@@ -33,10 +32,10 @@ afterAll(async () => {
 describe(`MCP protocol conformance against ${MCP_URL}`, () => {
   it("completes the initialize handshake and reports server info", () => {
     const version = client.getServerVersion();
-    expect(version?.name).toBe("clearance-lens");
+    expect(version?.name).toBe("cleared");
   });
 
-  it("sets CORS headers for a browser-based MCP client (found missing live, D-012 — mcp-handler doesn't add these by default)", async () => {
+  it("sets CORS headers for a browser-based MCP client (found missing live — mcp-handler doesn't add these by default)", async () => {
     const preflight = await fetch(MCP_URL, {
       method: "OPTIONS",
       headers: { Origin: "https://example.com", "Access-Control-Request-Method": "POST" },
@@ -69,10 +68,10 @@ describe(`MCP protocol conformance against ${MCP_URL}`, () => {
     const listedNames = tools.map((t) => t.name).sort();
     const registryNames = TOOL_REGISTRY.map((t) => t.name).sort();
     expect(listedNames).toEqual(registryNames);
-    // Derived from the registry itself, not hardcoded — found live (Clearance
-    // Lens v2): a hardcoded "11" here silently went stale the moment a 12th
-    // tool was registered, since toEqual(registryNames) alone would still
-    // pass if BOTH sides were wrong in the same way.
+    // Derived from the registry itself, not hardcoded — found live (v2): a
+    // hardcoded "11" here silently went stale the moment a 12th tool was
+    // registered, since toEqual(registryNames) alone would still pass if
+    // BOTH sides were wrong in the same way.
     expect(listedNames).toHaveLength(TOOL_REGISTRY.length);
   });
 
@@ -88,12 +87,12 @@ describe(`MCP protocol conformance against ${MCP_URL}`, () => {
     const { resources } = await client.listResources();
     const uris = resources.map((r) => r.uri).sort();
     expect(uris).toEqual(
-      ["clearance-lens://disclaimers.json", "clearance-lens://rules.json", "clearance-lens://timelines.json"].sort(),
+      ["cleared://disclaimers.json", "cleared://rules.json", "cleared://timelines.json"].sort(),
     );
   });
 
   it("reads the rules resource and gets back valid JSON with real entries", async () => {
-    const { contents } = await client.readResource({ uri: "clearance-lens://rules.json" });
+    const { contents } = await client.readResource({ uri: "cleared://rules.json" });
     const first = contents[0];
     // Our resource always serves text (JSON), never a binary blob — assert
     // that rather than casting past the SDK's correctly-modeled union type.
@@ -152,4 +151,31 @@ describe(`MCP protocol conformance against ${MCP_URL}`, () => {
     const result = await client.callTool({ name: name as string, arguments: args as Record<string, unknown> });
     expect(result.isError).toBeFalsy();
   }, 20_000);
+
+  // The instructions name the true scope.
+  it("server instructions name the Talent Network's defense and space roles", () => {
+    const instructions = client.getInstructions() ?? "";
+    expect(instructions).toMatch(/defense and space roles from the a16z speedrun Talent Network/);
+    expect(instructions).not.toMatch(/at a16z speedrun companies/);
+  });
+
+  // The SDK strips unknown keys before the tool runs; the route
+  // hands the raw arguments to callTool so the result can say what it ignored.
+  it("a stray input key is accepted and named in ignoredInputKeys, end to end", async () => {
+    const result = await client.callTool({
+      name: "explain_rule",
+      arguments: { topic: "itar", submission: "my work sample", candidate_ref: "c-17" },
+    });
+    expect(result.isError).toBeFalsy();
+    expect((result.structuredContent as { ignoredInputKeys: string[] }).ignoredInputKeys).toEqual(["submission", "candidate_ref"]);
+    const clean = await client.callTool({ name: "explain_rule", arguments: { topic: "itar" } });
+    expect((clean.structuredContent as { ignoredInputKeys: string[] }).ignoredInputKeys).toEqual([]);
+  });
+
+  it("every tool's advertised output schema includes ignoredInputKeys", async () => {
+    const { tools } = await client.listTools();
+    for (const tool of tools) {
+      expect((tool.outputSchema as { properties?: Record<string, unknown> } | undefined)?.properties, tool.name).toHaveProperty("ignoredInputKeys");
+    }
+  });
 });

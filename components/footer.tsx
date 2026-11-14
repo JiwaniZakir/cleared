@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { GITHUB_REPO_URL } from "@/lib/constants";
 
-/** Calm, dense close for every page (R2 §3.18). No newsletter field, no
+/** Calm, dense close for every page. No newsletter field, no
  * social icon row, no logo cloud. */
 export function Footer() {
   return (
@@ -9,7 +9,7 @@ export function Footer() {
       <div className="mx-auto max-w-[1120px] px-6 py-10">
         <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
           <div>
-            <p className="font-mono text-sm font-semibold text-neutral-12">⌁ Clearance Lens</p>
+            <p className="font-mono text-sm font-semibold text-neutral-12">⌁ cleared</p>
           </div>
           <div className="flex gap-10 text-sm">
             <div className="flex flex-col gap-2">
@@ -19,6 +19,9 @@ export function Footer() {
               </Link>
               <Link href="/try" className="text-neutral-11 hover:text-neutral-12">
                 Try it
+              </Link>
+              <Link href="/docs/recruiter" className="text-neutral-11 hover:text-neutral-12">
+                Recruiter guide
               </Link>
               <a href={GITHUB_REPO_URL} className="text-neutral-11 hover:text-neutral-12">
                 GitHub
@@ -39,7 +42,7 @@ export function Footer() {
           </div>
         </div>
         <p className="mt-8 text-[0.8125rem] text-neutral-10">
-          Clearance Lens is not legal advice and never queries DISS/NBIS/DCSA.{" "}
+          cleared is not legal advice and never queries DISS/NBIS/DCSA.{" "}
           <Link href="/privacy" className="underline underline-offset-2 hover:text-neutral-11">
             See Privacy.
           </Link>

@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
+import { readFileSync } from "fs";
+import path from "path";
 
 vi.mock("@/lib/speedrun/client", () => ({ getJob: vi.fn() }));
 import { getJob } from "@/lib/speedrun/client";
@@ -108,6 +110,32 @@ describe("generate_interview_guide", () => {
     expect(result.limitsNote).toMatch(/\.51/);
   });
 
+  // .51 and .38 (Schmidt & Hunter 1998) were revised by Sackett et al. (2022)
+  // to .42 and .19.
+  it("states the current validity figures (Sackett et al. 2022: .42 vs .19), each with its source", async () => {
+    mockJob();
+    const result = await generateInterviewGuideTool.handler({ role_id: "job-1", minutes: 30 });
+    expect(result.limitsNote).toMatch(/Sackett, Zhang, Berry & Lievens's \(2022\)[^.]*\.42 for structured interviews, versus \.19/);
+    expect(generateInterviewGuideTool.description).toMatch(/\(\.42\).*\(\.19\)/);
+    expect(generateInterviewGuideTool.description).not.toMatch(/\.51|\.38/);
+    const sackett = result.sources.find((s) => s.title.startsWith("Sackett, Zhang, Berry & Lievens (2022)"));
+    expect(sackett?.url).toBe("https://doi.org/10.1037/apl0000994");
+  });
+
+  it("every validity figure the guide states appears in SOURCES.md on the line of the source it cites", async () => {
+    mockJob();
+    const result = await generateInterviewGuideTool.handler({ role_id: "job-1", minutes: 30 });
+    const sourcesMd = readFileSync(path.join(process.cwd(), "SOURCES.md"), "utf8").split("\n");
+    const lineFor = (url: string) => sourcesMd.find((l) => l.includes(url)) ?? "";
+    const sackettLine = lineFor("https://doi.org/10.1037/apl0000994");
+    const schmidtLine = lineFor("https://doi.org/10.1037/0033-2909.124.2.262");
+    for (const figure of [".42", ".19"]) expect(sackettLine, figure).toContain(figure);
+    for (const figure of [".51", ".38"]) expect(schmidtLine, figure).toContain(figure);
+    const stated = [...`${result.limitsNote} ${generateInterviewGuideTool.description}`.matchAll(/(?<![\d.])\.\d{2}\b/g)].map((m) => m[0]);
+    expect(stated.length).toBeGreaterThan(0);
+    for (const figure of stated) expect(`${sackettLine}\n${schmidtLine}`, figure).toContain(figure);
+  });
+
   it("accepts no candidate input at all — the schema has no field for one", () => {
     expect(
       generateInterviewGuideTool.inputSchema.safeParse({ role_id: "job-1", minutes: 30, candidate_name: "x" }).success,
@@ -123,10 +151,10 @@ describe("generate_interview_guide", () => {
   });
 });
 
-// D-050 (judging panel round 9): eligibility, degree, and logistics bullets
-// became interview questions ("Tell me about a time your work connected to:
-// 'Must be a U.S. citizen…'") and trial rubric criteria.
-describe("eligibility and credential bullets are never interview questions (D-050)", () => {
+// Eligibility, degree, and logistics bullets once became interview questions
+// ("Tell me about a time your work connected to: 'Must be a U.S. citizen…'")
+// and trial rubric criteria.
+describe("eligibility and credential bullets are never interview questions", () => {
   it("skips citizenship, clearance, and degree bullets, and phrases task vs. skill bullets differently", async () => {
     const { isJobContentBullet } = await import("@/lib/speedrun/extract-sections");
     expect(isJobContentBullet("Must be a U.S. citizen and eligible to apply for a security clearance")).toBe(false);

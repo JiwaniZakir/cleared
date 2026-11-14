@@ -74,10 +74,9 @@ describe("contribute_anonymous_signal", () => {
     expect(Object.keys(result).sort()).toEqual(["company", "disclaimer", "recorded", "roleTitle", "sources"]);
   });
 
-  // Regression for DECISIONS.md (judging panel round 7, recruiter_user,
-  // directly demonstrated): with no accounts, nothing stopped one script
-  // from pushing a role's pool from 0 to 10 contributions in under 2
-  // seconds. This cooldown directly defeats that exact burst pattern.
+  // Regression: with no accounts, nothing stopped one script from pushing a
+  // role's pool from 0 to 10 contributions in under 2 seconds. This cooldown
+  // directly defeats that exact burst pattern.
   it("rejects a second contribution to the same role within the cooldown window, without throwing an error", async () => {
     mockJob("job-1");
     const first = await contributeAnonymousSignalTool.handler({
@@ -94,10 +93,10 @@ describe("contribute_anonymous_signal", () => {
     expect(second.disclaimer).toMatch(/not recorded/i);
 
     // The rejected attempt must not have been silently counted anyway — read
-    // from the store itself, since the tool reports no count below the floor (D-048).
+    // from the store itself, since the tool reports no count below the floor.
     const agg = await getAggregate(testStore, "role", "job-1");
     expect(agg.totalContributions).toBe(1);
-    expect((await getAggregatedSignalTool.handler({ role_id: "job-1" })).totalContributions).toBeNull();
+    expect((await getAggregatedSignalTool.handler({ role_id: "job-1" })).contributionsReflected).toBeNull();
   });
 
   it("allows a new contribution once the cooldown window has passed", async () => {
@@ -177,9 +176,9 @@ describe("get_aggregated_signal", () => {
     vi.useFakeTimers();
     try {
       for (let i = 0; i < MIN_CONTRIBUTORS; i++) {
-        // Each role has a short anti-burst cooldown (D-037/round 7) --
-        // advance past it between contributions so this test exercises
-        // aggregation, not the cooldown (which has its own dedicated test).
+        // Each role has a short anti-burst cooldown -- advance past it between
+        // contributions so this test exercises aggregation, not the cooldown
+        // (which has its own dedicated test).
         if (i > 0) await vi.advanceTimersByTimeAsync(COOLDOWN_MS);
         await contributeAnonymousSignalTool.handler({ role_id: "job-1", contribution: { clearance_level: "secret" } });
       }
@@ -228,7 +227,7 @@ describe("get_aggregated_signal", () => {
     });
 
     const result = await getAggregatedSignalTool.handler({ company_slug: "acme-defense" });
-    expect(result.totalContributions).toBe(5);
+    expect(result.contributionsReflected).toBe(5);
     expect(result.meetsFloor).toBe(true);
     expect(result.scope).toEqual({ type: "company", label: "Acme Defense" });
   });
@@ -237,5 +236,75 @@ describe("get_aggregated_signal", () => {
     mockJob("job-1");
     const result = await getAggregatedSignalTool.handler({ role_id: "job-1" });
     expect(result.disclaimer).toMatch(/non-durable/i);
+  });
+});
+
+// Above the floor, the exact total plus rounded percentages let a reader take
+// one read before and one after a single new contribution and recover that
+// contributor's buckets. This plays the attack.
+describe("get_aggregated_signal: two reads can't isolate the newest contributor", () => {
+  const scope = { roleId: "job-1", companySlug: "acme-defense" };
+  type C = import("@/lib/signal/store").SignalContribution;
+  const KNOWN: C = { clearance_level: "secret", years_experience_bucket: "3-5" };
+  const VICTIM: C = { clearance_level: "ts_sci", years_experience_bucket: "10+" };
+  const OTHER: C = { clearance_level: "ts", years_experience_bucket: "6-10" };
+
+  async function seed(contributions: C[]) {
+    for (const c of contributions) await testStore.addContribution(scope, c);
+  }
+  const read = () => getAggregatedSignalTool.handler({ role_id: "job-1" });
+
+  it("the read after one new contribution is identical to the read before it", async () => {
+    mockJob("job-1");
+    await seed([KNOWN, KNOWN, KNOWN, KNOWN, KNOWN]);
+    const before = await read();
+    expect(before.meetsFloor).toBe(true);
+
+    await seed([VICTIM]);
+    const after = await read();
+    // The attack needs any difference between the two reads; there is none.
+    expect(after).toEqual(before);
+    expect(JSON.stringify(after)).not.toMatch(/ts_sci|10\+/);
+    expect(after.totalContributionsBand).toEqual({ atLeast: 5, fewerThan: 10 });
+  });
+
+  it("the output changes only when a step of five completes", async () => {
+    mockJob("job-1");
+    await seed([KNOWN, KNOWN, KNOWN, KNOWN, KNOWN]);
+    let previous = await read();
+    for (let n = 6; n <= 15; n++) {
+      await seed([n % 2 === 0 ? VICTIM : OTHER]);
+      const current = await read();
+      if (n % 5 === 0) expect(current.contributionsReflected).toBe(n);
+      else expect(current, `n=${n}`).toEqual(previous);
+      previous = current;
+    }
+  });
+
+  it("when a step completes, the change is an aggregate of five: which one was the newcomer can't be told", async () => {
+    mockJob("job-1");
+    // World A: the victim is the 6th contributor; world B: the 9th. Same five
+    // people in the step, different order — the reader sees the same thing.
+    await seed([KNOWN, KNOWN, KNOWN, KNOWN, KNOWN, VICTIM, OTHER, OTHER, OTHER, OTHER]);
+    const worldA = await read();
+    testStore = new InMemorySignalStore();
+    await seed([KNOWN, KNOWN, KNOWN, KNOWN, KNOWN, OTHER, OTHER, OTHER, VICTIM, OTHER]);
+    const worldB = await read();
+    expect(worldA).toEqual(worldB);
+    // And a lone newcomer's bucket (1 of 10) never shows on its own: it is
+    // folded into otherBelowFloor with anything else under five.
+    expect(worldA.percentages?.clearanceLevel).not.toHaveProperty("ts_sci");
+  });
+
+  it("percentages are rounded to the nearest 5 and the total is a band, never the exact count", async () => {
+    mockJob("job-1");
+    await seed([KNOWN, KNOWN, KNOWN, KNOWN, KNOWN, KNOWN, OTHER, OTHER, OTHER, OTHER, OTHER, OTHER, OTHER]);
+    const result = await read();
+    expect(result.contributionsReflected).toBe(10);
+    expect(result.totalContributionsBand).toEqual({ atLeast: 10, fewerThan: 15 });
+    expect(result).not.toHaveProperty("totalContributions");
+    for (const breakdown of Object.values(result.percentages ?? {})) {
+      for (const pct of Object.values(breakdown ?? {})) expect(pct % 5).toBe(0);
+    }
   });
 });

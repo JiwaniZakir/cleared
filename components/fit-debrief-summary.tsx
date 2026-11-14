@@ -13,10 +13,10 @@ function tagLabel(tag: string): string {
 }
 
 /**
- * Renders fit_debrief (R2 §3.9). Loved/disliked as Chips, suggested
+ * Renders fit_debrief. Loved/disliked as Chips, suggested
  * questions for the company, and an editable share-draft textarea. No
  * number, star rating, or progress bar anywhere — this is never a score
- * (Hard Constraint 4). `summaryTemplate` is an INSTRUCTION written for an
+ * (no tool scores a person). `summaryTemplate` is an INSTRUCTION written for an
  * agent to act on ("Using what you know about the user, write a short,
  * honest summary...") — rendering it as if it were already a finished,
  * personalized paragraph would be dishonest with no agent here to have

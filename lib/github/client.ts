@@ -2,7 +2,7 @@
  * Public-signal lookup for the verify_evidence tool. GitHub's public REST API
  * only — no scraping, no private data, no auth required (an optional
  * GITHUB_TOKEN env var raises the rate limit from 60/hr to 5,000/hr but is
- * never required; see DECISIONS.md). Returns only what's already public on a
+ * never required). Returns only what's already public on a
  * user's profile: repo count/names, languages, recent activity timestamps.
  */
 

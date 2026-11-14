@@ -1,14 +1,16 @@
 import { z } from "zod";
 import { isValidEd25519Signature, publicKeyFingerprint } from "@/lib/attestation/ed25519";
 import { DISCLAIMERS } from "@/lib/disclaimers";
+import { checkStatedTime, STATED_TIME_MAX_SKEW_MS } from "@/lib/attestation/stated-time";
 import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
 
 /**
- * Clearance Lens v2: the "signed self-attestation" alternative to
+ * v2: the "signed self-attestation" alternative to
  * cryptographic clearance *verification* (not buildable — DISS/NBIS access
  * is FSO-only by federal design, not by this app's choice). A signature
- * proves WHO made a claim and WHEN, and that it hasn't been altered since —
- * never WHETHER the claim is true. The candidate's own agent generates and
+ * proves WHICH KEY made a claim and that it hasn't been altered since —
+ * never WHEN (issued_at is the signer's stated time) and never
+ * WHETHER the claim is true. The candidate's own agent generates and
  * holds the keypair entirely client-side; this server never receives,
  * stores, or even sees a private key, consistent with every other tool
  * here. Reusing the same keypair across calls gives a recruiter a stable,
@@ -52,8 +54,7 @@ function claimsMatchSignedPayload(claims: Claims, issuedAt: string, signedPayloa
     return false;
   }
   if (!parsed || typeof parsed !== "object") return false;
-  // Exactly these two keys. Found via the spec §6 judging panel round 9: a
-  // validly signed payload with an extra "holder": "<name>, <street address>"
+  // Exactly these two keys. A validly signed payload with an extra "holder": "<name>, <street address>"
   // field passed, and that name and address were echoed back in
   // credential.proof.signedPayload — free text in a tool that promises none.
   const topKeys = Object.keys(parsed).sort();
@@ -67,11 +68,9 @@ function claimsMatchSignedPayload(claims: Claims, issuedAt: string, signedPayloa
   return claimKeys.every((key) => parsedClaims[key] === claims[key]);
 }
 
-const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
-
 /** Flags claim combinations the published rules make impossible or rare,
- *  so the signer hears it before a recipient does. Found via the spec §6
- *  judging panel round 9: /try signed "Secret + green_card" with no warning.
+ *  so the signer hears it before a recipient does. /try used to sign
+ *  "Secret + green_card" with no warning.
  *  A note, never a refusal — this tool never judges whether a claim is true. */
 function claimNotesFor(claims: Claims): string[] {
   const nonCitizen = claims.citizenship_status !== undefined && claims.citizenship_status !== "us_citizen";
@@ -117,9 +116,10 @@ const InputSchema = z
       });
       return;
     }
-    // Also round 9: issued_at "2099-…" was accepted, though the credential
-    // claims to prove WHEN it was signed. Allows a few minutes of clock skew.
-    if (Date.parse(data.issued_at) > Date.now() + MAX_CLOCK_SKEW_MS) {
+    // issued_at "2099-…" used to be accepted. The signature can't prove the
+    // time either way, but a future one is plainly wrong.
+    // Allows a few minutes of clock skew.
+    if (Date.parse(data.issued_at) > Date.now() + STATED_TIME_MAX_SKEW_MS) {
       ctx.addIssue({
         code: "custom",
         path: ["issued_at"],
@@ -147,9 +147,8 @@ const OutputSchema = z.object({
       type: z.string(),
       verificationMethod: z.string(),
       signatureValue: z.string(),
-      // The exact bytes that were signed. Found via the spec §6 judging panel
-      // round 8 (candidate_user): without this, a recipient could not verify
-      // the credential — a signature covers exact bytes, and this tool
+      // The exact bytes that were signed. Without this, a recipient could not
+      // verify the credential — a signature covers exact bytes, and this tool
       // deliberately accepts any caller serialization of {claims, issued_at},
       // so those bytes can't be reliably rebuilt from the parsed fields.
       signedPayload: z.string(),
@@ -158,7 +157,7 @@ const OutputSchema = z.object({
   }),
   shareableMarkdown: z.string(),
   whatThisProves: z.string(),
-  /** For the signer, not part of the shared credential (D-046). */
+  /** For the signer, not part of the shared credential. */
   claimNotes: z.array(z.string()),
   sources: z.array(SourceRefSchema),
   disclaimer: z.string(),
@@ -174,18 +173,23 @@ export const prepareSignedAttestationTool: ToolDef<z.infer<typeof InputSchema>, 
     "(3) Sign its UTF-8 bytes (crypto.sign(null, Buffer.from(signed_payload), privateKey)), base64-encode as signature_base64. " +
     "(4) Export the public key (publicKey.export({type:'spki',format:'der'}).toString('base64')) as public_key_base64. " +
     "(5) Call this tool with claims, issued_at, signed_payload, signature_base64, public_key_base64 — claims/issued_at are cross-checked against signed_payload's own content, and the signature is verified before anything is returned. " +
-    "Proves WHO signed the claim and WHEN, and that it hasn't been altered since — never that the claim itself is true. Reusing the same keypair lets a recruiter recognize repeat signals from the same pseudonymous source without ever learning who you are. Loosely modeled on the W3C Verifiable Credentials data shape, not a certified implementation of it.",
+    "Proves which key signed the claim and that it hasn't been altered since — not when it was signed (issued_at is the signer's stated time, which the signature cannot prove; verify_signed_attestation flags a stated time older than 30 days), and never that the claim itself is true. Reusing the same keypair lets a recruiter recognize repeat signals from the same pseudonymous source without ever learning who you are. Loosely modeled on the W3C Verifiable Credentials data shape, not a certified implementation of it.",
   inputSchema: InputSchema,
   outputSchema: OutputSchema,
   handler: async ({ claims, issued_at, signed_payload, signature_base64, public_key_base64 }) => {
     const claimEntries = Object.entries(claims).filter(([, v]) => v !== undefined) as [keyof Claims, string][];
     const claimLines = claimEntries.map(([key, value]) => `- **${CLAIM_LABELS[key]}:** ${value}`).join("\n");
     const keyFingerprint = publicKeyFingerprint(public_key_base64);
+    // The recipient's verifier flags an old stated time; tell the signer first.
+    const timeCheck = checkStatedTime(issued_at);
+    const staleNote = timeCheck.isOld
+      ? [`issued_at is ${timeCheck.ageDays} days old. A recipient's verify_signed_attestation flags a stated time older than ${timeCheck.thresholdDays} days and suggests asking for a fresh one — sign with the current UTC time.`]
+      : [];
 
     const shareableMarkdown =
       `# Signed self-attestation\n\n${claimLines}\n\n` +
-      `Signed ${issued_at} by key fingerprint \`${keyFingerprint}\`.\n\n` +
-      "To verify: pass signed_payload, signature_base64, and public_key_base64 below to Clearance Lens's verify_signed_attestation tool — or check the Ed25519 signature yourself. A valid signature proves who signed this and when, never that the claim is true.\n\n" +
+      `Signed by key fingerprint \`${keyFingerprint}\`. Signer's stated time: ${issued_at}.\n\n` +
+      "To verify: pass signed_payload, signature_base64, and public_key_base64 below to cleared's verify_signed_attestation tool — or check the Ed25519 signature yourself. A valid signature proves which key signed this and that it hasn't changed since. It does not prove when it was signed (the time above is the signer's own statement), and never that the claim is true.\n\n" +
       `\`\`\`json\n${JSON.stringify({ claims, issued_at, signed_payload, signature_base64, public_key_base64 }, null, 2)}\n\`\`\``;
 
     return {
@@ -205,8 +209,8 @@ export const prepareSignedAttestationTool: ToolDef<z.infer<typeof InputSchema>, 
       },
       shareableMarkdown,
       whatThisProves:
-        "The claim was signed by whoever holds the private key matching the embedded public key, at the stated time, and the content hasn't been altered since.",
-      claimNotes: claimNotesFor(claims),
+        "The claim was signed by whoever holds the private key matching the embedded public key, and the content hasn't been altered since. issued_at is the signer's stated time: the signature does not prove when it was signed.",
+      claimNotes: [...claimNotesFor(claims), ...staleNote],
       sources: [
         { title: "W3C Verifiable Credentials Data Model v2.0", url: "https://www.w3.org/TR/vc-data-model-2.0/" },
         ...(claimNotesFor(claims).length > 0

@@ -14,10 +14,10 @@ export interface ToolCardProps {
 }
 
 /**
- * One MCP tool in the `/` tools grid (research/R2-design-system.md §3.3).
+ * One MCP tool in the `/` tools grid.
  * The parent grid uses `auto-rows-fr`; this card stretches to `h-full` and
  * pins its "Try it" button to the bottom with `flex-1` on the text block —
- * equal height via CSS grid alone, never JS-measured (R2 §3.3 / Do-Don't #8).
+ * equal height via CSS grid alone, never JS-measured.
  */
 export function ToolCard({ name, description, fields }: ToolCardProps) {
   return (
@@ -27,7 +27,7 @@ export function ToolCard({ name, description, fields }: ToolCardProps) {
         {/* break-words: a tool's raw `description` (the TOOL_CARD_META
             fallback) is written to teach an agent and can contain long
             unbroken code tokens; without this, that silently overflowed
-            the card and the page at mobile widths (found live, round 6). */}
+            the card and the page at mobile widths. */}
         <p className="mt-2 text-[0.875rem] leading-[1.55] text-neutral-11 break-words">{description}</p>
         {fields.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 /** Non-binary choice between a small fixed set (e.g. 60/90/180 minutes) —
- * NOT a Switch, which is strictly binary (R2 §4's Switch row). */
+ * NOT a Switch, which is strictly binary. */
 export function SegmentedControl<T extends string>({
   options,
   value,

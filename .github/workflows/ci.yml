@@ -37,7 +37,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: pnpm build
       - name: Start server
-        run: pnpm start -- -p 3100 &
+        # Not `pnpm start -- -p 3100`: pnpm 10 passes the literal `--` on to
+        # `next start`, which then reads `-p` as a project directory and exits
+        # (the same bug playwright.config.ts works around).
+        run: pnpm exec next start -p 3100 &
       - name: Wait for server
         run: |
           for i in $(seq 1 30); do

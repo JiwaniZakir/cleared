@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema } from "@/lib/tools/role-shared";
+import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema, HowToApplySchema, howToApply } from "@/lib/tools/role-shared";
 import { FIT_TAGS, FIT_TAG_LABELS, FIT_TAG_QUESTIONS, type FitTag } from "@/data/fit-tags";
 import { DISCLAIMERS } from "@/lib/disclaimers";
 import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
@@ -18,6 +18,7 @@ const OutputSchema = z.object({
   summaryTemplate: z.string(),
   questionsToAskTheCompany: z.array(z.string()),
   shareDraft: z.object({ markdown: z.string(), note: z.string() }),
+  howToApply: HowToApplySchema,
   sources: z.array(SourceRefSchema),
   disclaimer: z.string(),
 });
@@ -55,7 +56,7 @@ export const fitDebriefTool: ToolDef<z.infer<typeof InputSchema>, z.infer<typeof
     const shareDraftLines = [
       `# Interest note — ${role.title} at ${role.company}`,
       "",
-      "*Draft for the candidate to review and edit before sharing. Nothing here was verified by Clearance Lens.*",
+      "*Draft for the candidate to review and edit before sharing. Nothing here was verified by cleared.*",
       "",
       lovedLabels.length ? `**What stood out positively:** ${lovedLabels.join(", ")}` : "",
       dislikedLabels.length ? `**Open questions / reservations:** ${dislikedLabels.join(", ")}` : "",
@@ -70,8 +71,9 @@ export const fitDebriefTool: ToolDef<z.infer<typeof InputSchema>, z.infer<typeof
       questionsToAskTheCompany,
       shareDraft: {
         markdown: shareDraftLines.join("\n"),
-        note: "This is a draft. Review and edit every line before sending it to anyone — nothing in it was verified by Clearance Lens, and it is never a score.",
+        note: "This is a draft. Review and edit every line before sending it to anyone — nothing in it was verified by cleared, and it is never a score.",
       },
+      howToApply: howToApply(role),
       sources: [SPEEDRUN_SOURCE],
       disclaimer: DISCLAIMERS.notAScore,
     };

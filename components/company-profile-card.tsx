@@ -18,7 +18,7 @@ function formatCompRange(range: CompanyProfileOutput["workRealities"]["compRange
 }
 
 /**
- * Renders get_company_profile (R2 §3.10). Header, then either published
+ * Renders get_company_profile. Header, then either published
  * criteria as rubric-checklist-style rows (each with a real source +
  * one-line job-relevance reason) or — if none exist — an empty-state
  * variant instead of any fit read, by design: this product never guesses
@@ -77,7 +77,7 @@ export function CompanyProfileCard({ data }: { data: CompanyProfileOutput }) {
           <EmptyState
             icon={ShieldOff}
             title="No published criteria — we won't guess"
-            description="Clearance Lens has not independently sourced published hiring criteria for this company. Ask the recruiter directly what they evaluate for, and ask for a source."
+            description="cleared has not independently sourced published hiring criteria for this company. Ask the recruiter directly what they evaluate for, and ask for a source."
           />
         ) : (
           <RubricChecklist groups={criteriaGroups} />

@@ -1,7 +1,7 @@
 /**
  * PII / CUI input guard.
  *
- * Hard constraint (spec §1.1): this server is stateless and must never receive,
+ * Non-negotiable: this server must never receive,
  * store, or log PII, clearance case details, or image uploads. This module is the
  * enforcement point — every MCP tool call and every /api/tools/* playground call
  * runs its raw input through `assertNoPiiCui` before anything else happens.
@@ -39,31 +39,30 @@ export interface PiiFinding {
 }
 
 const FRIENDLY_BY_CATEGORY: Record<PiiCategory, string> = {
-  ssn: "This looks like it includes a Social Security Number. Clearance Lens never accepts SSNs — please remove it. Your own agent already knows your details privately; just describe your situation in general terms (e.g. \"I'm a US citizen\").",
-  dob: "This looks like it includes a date of birth. Clearance Lens never accepts dates of birth — please remove it and continue without it.",
-  passport: "This looks like it includes a passport number. Clearance Lens never accepts passport or ID document numbers — please remove it. If citizenship status matters, just state it in general terms (e.g. \"green card holder\").",
-  case_number: "This looks like it includes an investigation or case number (e.g. an OPM/e-QIP/DCSA case ID). Clearance Lens never accepts these — please remove it.",
-  clearance_record: "This looks like it includes clearance record or adjudication-system text (e.g. a DISS/JPAS/NBIS record). Clearance Lens never accepts clearance record text or screenshots — recruiters must verify clearance through an FSO, not self-reported record text. Please remove it.",
-  image_upload: "Clearance Lens does not accept image uploads or screenshots of any kind, including clearance record screenshots. Please describe your situation in text instead.",
-  binary_data: "This looks like it includes an embedded file or binary data. Clearance Lens only accepts plain text fields — please remove any attached file data.",
-  unscannable_structure: "This request is structured too deeply (nested objects/arrays many levels deep) for Clearance Lens to safely check for sensitive information. Please simplify the request and try again.",
-  credit_card: "This looks like it includes a credit card number. Clearance Lens never accepts payment card numbers — please remove it; nothing here needs billing information.",
-  classification_marking: "This looks like it includes a classification marking (e.g. SECRET//NOFORN). Clearance Lens never accepts classified or export-controlled content, real or described — please remove it and describe your situation without quoting or paraphrasing any marked material.",
-  email: "This looks like it includes an email address. Clearance Lens never accepts contact info — your own agent already knows how to reach you privately; please remove it and continue without it.",
-  phone: "This looks like it includes a phone number. Clearance Lens never accepts contact info — your own agent already knows how to reach you privately; please remove it and continue without it.",
-  government_id: "This looks like it includes a government ID number (e.g. a DoD ID/EDIPI, a USCIS A-number, or a driver's license number). Clearance Lens never accepts ID numbers — please remove it. If your status matters, describe it in general terms (e.g. \"green card holder\").",
-  personal_name: "This looks like it includes your name. Clearance Lens never accepts names — your own agent knows who you are, and none of these tools needs it. Please remove it and continue.",
-  sensitive_disclosure: "This looks like it includes sensitive personal details — the kind a clearance investigation or an employer must handle carefully (e.g. arrests, health or disability, finances, polygraph results, religion, or age). Clearance Lens never accepts these; your own agent can weigh them privately. To ask how something is treated, ask in general terms (e.g. \"how does SEAD 4 treat a past DUI?\").",
-  secret_credential: "This looks like it includes an access token, password, or private key. Clearance Lens never accepts credentials — none of these tools needs one. Remove it, and rotate it if it was real.",
-  address: "This looks like it includes a street address. Clearance Lens never accepts home or mailing addresses — please remove it. If location matters, a city or region is enough (e.g. \"open to roles near Huntsville\").",
+  ssn: "This looks like it includes a Social Security Number. cleared never accepts SSNs — please remove it. Your own agent already knows your details privately; just describe your situation in general terms (e.g. \"I'm a US citizen\").",
+  dob: "This looks like it includes a date of birth. cleared never accepts dates of birth — please remove it and continue without it.",
+  passport: "This looks like it includes a passport number. cleared never accepts passport or ID document numbers — please remove it. If citizenship status matters, just state it in general terms (e.g. \"green card holder\").",
+  case_number: "This looks like it includes an investigation or case number (e.g. an OPM/e-QIP/DCSA case ID). cleared never accepts these — please remove it.",
+  clearance_record: "This looks like it includes clearance record or adjudication-system text (e.g. a DISS/JPAS/NBIS record). cleared never accepts clearance record text or screenshots — recruiters must verify clearance through an FSO, not self-reported record text. Please remove it.",
+  image_upload: "cleared does not accept image uploads or screenshots of any kind, including clearance record screenshots. Please describe your situation in text instead.",
+  binary_data: "This looks like it includes an embedded file or binary data. cleared only accepts plain text fields — please remove any attached file data.",
+  unscannable_structure: "This request is structured too deeply (nested objects/arrays many levels deep) for cleared to safely check for sensitive information. Please simplify the request and try again.",
+  credit_card: "This looks like it includes a credit card number. cleared never accepts payment card numbers — please remove it; nothing here needs billing information.",
+  classification_marking: "This looks like it includes a classification marking (e.g. SECRET//NOFORN). cleared never accepts classified or export-controlled content, real or described — please remove it and describe your situation without quoting or paraphrasing any marked material.",
+  email: "This looks like it includes an email address. cleared never accepts contact info — your own agent already knows how to reach you privately; please remove it and continue without it.",
+  phone: "This looks like it includes a phone number. cleared never accepts contact info — your own agent already knows how to reach you privately; please remove it and continue without it.",
+  government_id: "This looks like it includes a government ID number (e.g. a DoD ID/EDIPI, a USCIS A-number, or a driver's license number). cleared never accepts ID numbers — please remove it. If your status matters, describe it in general terms (e.g. \"green card holder\").",
+  personal_name: "This looks like it includes your name. cleared never accepts names — your own agent knows who you are, and none of these tools needs it. Please remove it and continue.",
+  sensitive_disclosure: "This looks like it includes sensitive personal details — the kind a clearance investigation or an employer must handle carefully (e.g. arrests, health or disability, finances, polygraph results, religion, or age). cleared never accepts these; your own agent can weigh them privately. To ask how something is treated, ask in general terms (e.g. \"how does SEAD 4 treat a past DUI?\").",
+  secret_credential: "This looks like it includes an access token, password, or private key. cleared never accepts credentials — none of these tools needs one. Remove it, and rotate it if it was real.",
+  address: "This looks like it includes a street address. cleared never accepts home or mailing addresses — please remove it. If location matters, a city or region is enough (e.g. \"open to roles near Huntsville\").",
 };
 
 /** SSN-context keywords that gate the riskier bare-9-digit check. No trailing
  *  `\b`: a couple of alternatives end in `#`, and `\b` right after a non-word
  *  char that's followed by whitespace is never a boundary, which would silently
  *  fail the match (caught by tests/unit/pii.test.ts — "ss# 123456789"). */
-// "my social" / "social #" added after a self-run red-team pass between
-// judging panel rounds 8 and 9 (DECISIONS.md D-043): it's how people
+// "my social" / "social #" added after a red-team pass: it's how people
 // actually refer to an SSN, and "my social is …" previously didn't register.
 const SSN_CONTEXT = /\b(ssn|soc(?:ial)?[\s.-]*sec(?:urity)?|ss\s*#|my\s+social\b|social\s*(?:#|no\.?|num(?:ber)?\b))/i;
 /** Strictly 3-2-4 digit groups joined by `-` or a space — the SSN print format.
@@ -73,16 +72,16 @@ const SSN_CONTEXT = /\b(ssn|soc(?:ial)?[\s.-]*sec(?:urity)?|ss\s*#|my\s+social\b
  *  correct, safer behavior for a detector being red-teamed with "obviously fake" PII.
  */
 // Includes "." as a separator alongside "-"/space: confirmed against
-// Presidio's SSN5 pattern (research/R1-leverage.md §3.2) that a dotted SSN
+// Presidio's SSN5 pattern that a dotted SSN
 // (123.45.6789) is a real format in the wild this was missing.
 const SSN_DASHED = /\b\d{3}[-.\s/]\d{2}[-.\s/]\d{4}\b/;
 /** An isolated 9-digit run, only treated as an SSN when an SSN keyword is present
  *  somewhere in the same field. */
 const BARE_9_DIGITS = /\b\d{9}\b/;
 
-// Found live via the spec §6 judging panel round 2 (DECISIONS.md): "Born
-// 03/14/1992, happy to relocate" — bare "Born" directly followed by a date,
-// no "on"/"in" preposition — bypassed this guard entirely. Still gated by
+// "born" alone counts: "Born 03/14/1992, happy to relocate" — bare "Born"
+// directly followed by a date, no "on"/"in" preposition — once bypassed
+// this guard entirely. Still gated by
 // requiring an adjacent date pattern below, so bare "born" alone (no date
 // nearby) still can't fire on its own.
 const BIRTH_CONTEXT = /\b(dob|d\.o\.b\.?|date of birth|born|birth\s*date|birthday)\b/i;
@@ -101,8 +100,7 @@ const DATE_DAY_MONTH_YEAR = new RegExp(
 const BARE_YEAR = /\b(19|20)\d{2}\b/;
 // A fully spelled-out date ("born march second nineteen ninety two") has no
 // digits at all, so none of the numeric date-shape checks above can ever
-// match it — found live via the spec §6 judging panel round 4 (2 of 5
-// judges, independently). Requires a month name, an ordinal (the day), and
+// match it. Requires a month name, an ordinal (the day), and
 // two more number-words (the year, spelled as two "teens/tens" words) all
 // clustered within a bounded window — specific enough that ordinary prose
 // is very unlikely to coincidentally match, while still catching this exact
@@ -124,29 +122,28 @@ const ALPHANUM_ID_TOKEN = /\b(?=[A-Za-z0-9]{6,9}\b)(?=[A-Za-z0-9]*\d)[A-Za-z0-9]
 
 // No trailing `\b` — same reasoning as SSN_CONTEXT above: the `#` alternatives
 // end in a non-word char, so a trailing boundary assertion can silently fail.
-// "request" added to the e-QIP branch: found live via the spec §6 judging
-// panel round 2 — "my e-QIP request number is 2024-SEC-0098765" bypassed
-// this because the context list only had case/id/submission, not "request".
+// "request" added to the e-QIP branch: "my e-QIP request number is
+// 2024-SEC-0098765" bypassed this because the context list only had
+// case/id/submission, not "request".
 // A bare digit directly after "case"/"investigation" (no "number"/"no"/"#"/
-// "id" word in between) added as a further alternative: found live via
-// round 4 — "DCSA case 2024-0045678" bypassed this because "case" went
-// straight into the number with no qualifying word at all.
+// "id" word in between) added as a further alternative: "DCSA case
+// 2024-0045678" bypassed this because "case" went straight into the number
+// with no qualifying word at all.
 const CASE_NUMBER_CONTEXT =
   /\b(case\s*(?:number|no\.?|#|id|\d)|investigation\s*(?:number|no\.?|#|id|\d)|e-?qip\s*(?:case|id|submission|request)|opm\s*case)/i;
 const DIGIT_RUN_5PLUS = /\b[A-Za-z]?\d{5,}\b/;
 // A standalone pattern (no keyword context needed): a 4-digit year, a dash,
 // 2-4 letters, a dash, 4+ digits — the shape of a real government case ID
 // ("2024-ABC-56789", "2024-SEC-0098765") distinctive enough to flag on
-// structure alone, found live via the same round: "my file 2024-ABC-56789
+// structure alone: "my file 2024-ABC-56789
 // is in review" and "reference number 2024-ABC-56789" both used generic
 // framing words (file/reference) the keyword list was never going to cover
 // exhaustively, but the ID's own shape is a reliable independent signal.
 // Second alternative (letters-year-number, e.g. "DCSA-2026-0417") added:
-// found live via the spec §6 judging panel round 3 — the original pattern
-// only covered year-first case IDs ("2024-ABC-56789"); a real DCSA case
+// the original pattern only covered year-first case IDs ("2024-ABC-56789"); a real DCSA case
 // number in agency-prefix order bypassed it entirely.
 const CASE_ID_SHAPE =
-  /\b(?:(19|20)\d{2}-[A-Za-z]{2,4}-\d{4,}|[A-Za-z]{2,6}-(19|20)\d{2}-\d{4,})\b/;
+  /\b(?:(19|20)\d{2}-[A-Za-z]{2,4}-\d{4,}|[A-Za-z]{2,6}-(19|20)\d{2}-\d{4,})\b/g;
 
 /** Specific adjudication/records-system jargon. Deliberately narrow — generic
  *  words like "clearance", "secret", or "active" must NOT appear here, since
@@ -158,27 +155,26 @@ const CASE_ID_SHAPE =
  *  *why* self-attestation isn't verification — exactly the content this
  *  product most wants to surface) was itself rejected as if it were pasted
  *  record text, including the rule's own id ("nbis-diss") and title ("NBIS
- *  vs. DISS: Current System of Record") — found live via the spec §5
- *  agent-in-the-loop persona eval, not a hypothetical. The other phrases
+ *  vs. DISS: Current System of Record"), as an agent-in-the-loop test
+ *  found. The other phrases
  *  below (subject summary, investigation opened/closed, etc.) still catch an
  *  actual record dump independently, so this narrowing doesn't meaningfully
  *  reduce real protection.
  *
- *  "owning smo"/"\bpsq\b" added: found live via the spec §6 judging panel
- *  round 2 — "JPAS Owning SMO: 123456, PSQ submitted, SON 1234567890"
+ *  "owning smo"/"\bpsq\b" added: "JPAS Owning SMO: 123456, PSQ submitted,
+ *  SON 1234567890"
  *  bypassed the record-context requirement above because it uses real
  *  JPAS field terminology (Security Management Office; Personnel Security
  *  Questionnaire) instead of a word like "record"/"shows". Both terms are
  *  distinctive enough internal-system jargon to add directly, without
  *  reintroducing the bare "jpas"/"diss"/"nbis" false positive this file's
- *  own history (DECISIONS.md D-016) already fixed once — "SON" itself was
+ *  own history already fixed once — "SON" itself was
  *  deliberately left out despite appearing in the same bypass string,
  *  since it collides with the ordinary English word. */
-// "record" excludes "record system(s)" / "record-keeping" — found live via
-// the spec §6 judging panel round 8 (trust_skeptic): "what is the
+// "record" excludes "record system(s)" / "record-keeping": "what is the
 // difference between NBIS and DISS record systems" was rejected as pasted
 // clearance-record text, the same question-about-a-system vs. content-
-// from-one confusion D-016 fixed for the bare system names. "My DISS
+// from-one confusion fixed above for the bare system names. "My DISS
 // record shows..." (record followed by content) is still rejected.
 const CLEARANCE_RECORD_CONTEXT =
   /\b(?:diss|jpas|nbis)\s+(?:record(?!s?\s+systems?\b)(?!\s*-?\s*keeping)|printout|screenshot|summary|history|shows|says|entry)|e-?adjudication|subject summary|investigation (?:opened|closed)|adjudication (?:result|history)|eqip (?:record|history)|owning\s+smo|\bpsq\b/i;
@@ -188,7 +184,7 @@ const CLEARANCE_RECORD_CONTEXT =
  *  "T5"/"SOR" are too short to be safe alone) but, co-occurring with an
  *  adjudication-status verb anywhere in the same text, reliably indicates
  *  real clearance-record content rather than an innocent acronym mention.
- *  Found live via the spec §6 judging panel round 3: "my SOR was adjudicated
+ *  Without it, "my SOR was adjudicated
  *  favorably in 2021 with T5 scope and CI poly" and "my clearance was
  *  adjudicated under e-QIP" both bypassed every existing detector — neither
  *  names DISS/JPAS/NBIS, the only system names this file previously
@@ -205,9 +201,8 @@ const BINARY_DATA_URI = /data:[a-z0-9/+.-]+;base64,/i;
  *  heuristic catch-all for a pasted file/image with no explicit MIME prefix. */
 const LONG_BASE64_RUN = /[A-Za-z0-9+/]{200,}={0,2}/;
 /** Credit-card-shaped: 4 groups of 4 digits (with optional separators),
- *  Luhn-plausible length, found via the spec §6 judging panel round 2 — not
- *  one of the originally documented refused categories, but squarely
- *  within the hard constraint's "never receive PII" spirit, and this exact
+ *  Luhn-plausible length — not one of the originally documented refused
+ *  categories, but squarely within the "never receive PII" rule, and this exact
  *  shape essentially never appears in legitimate defense-job-search
  *  content, so it's safe to flag on structure alone. */
 const CREDIT_CARD_SHAPE = /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/;
@@ -216,18 +211,58 @@ const CREDIT_CARD_SHAPE = /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/;
  *  one (e.g. "00000000-0000-4000-8000-000000000000" — a plausible probe
  *  value, or any UUID whose hex digits happen to all land on 0-9) can
  *  satisfy CREDIT_CARD_SHAPE's 4-4-4-4 digit-group pattern by coincidence.
- *  Found live via the spec §6 judging panel round 3 (4 of 5 judges
- *  independently reproduced this): a legitimate role_id lookup was rejected
- *  as "a credit card number." Stripped out before the credit-card check
- *  runs, and ONLY before that check — a UUID has no legitimate way to also
- *  look like an SSN/DOB/passport shape, so narrowing this to credit-card
- *  detection alone doesn't reopen any other category. */
+ *  A legitimate role_id lookup was once rejected as "a credit card number."
+ *  The same exemption also covers the
+ *  other shapes a UUID's digit runs can satisfy by coincidence: the bare
+ *  valid-structure SSN, the bare and international phone numbers, and the
+ *  EDIPI, A-number and driver's-licence numbers, and the case-ID shape, for a match wholly inside the UUID (see
+ *  `hasCaseIdShape`). Only those: every other detector, keyword checks
+ *  included, still reads a UUID's text. The exemption is this exact shape and
+ *  nothing looser. It holds in the ROT13 view too (see
+ *  `scanTextForPiiCui`). */
 const UUID_SHAPE = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
+
+/** A [start, end) index range of a string. */
+type Span = readonly [start: number, end: number];
+
+/** Where the canonical UUIDs are in `text`, in order. */
+function uuidSpans(text: string): Span[] {
+  return Array.from(text.matchAll(UUID_SHAPE), (m) => [m.index!, m.index! + m[0].length] as const);
+}
+
+/** The text the UUID-exempt detectors read: `text` without the UUIDs it
+ *  contains and without the `inherited` spans, which held a canonical UUID
+ *  in the text this view was derived from. With no inherited spans
+ *  this is `text.replace(UUID_SHAPE, "")`, as before. */
+function withoutExemptIds(text: string, inherited: readonly Span[]): string {
+  let kept = "";
+  let from = 0;
+  for (const [start, end] of inherited) {
+    kept += text.slice(from, start);
+    from = end;
+  }
+  return (kept + text.slice(from)).replace(UUID_SHAPE, "");
+}
+
+/** CASE_ID_SHAPE anywhere except wholly inside a canonical UUID: an id's own
+ *  groups can take the shape by coincidence ("042d386f-dbdf-1923-3005-…",
+ *  about 3 ids in 100,000 of any version; never a UUIDv4, whose third group
+ *  starts with 4). A match reaching outside the id still counts, so a case
+ *  number whose digits run into an id ("DCSA-2026-04170000-…") is refused as
+ *  before. Removing ids first, as `withoutExemptIds` does, would have let
+ *  that through. */
+function hasCaseIdShape(text: string, idSpans: readonly Span[]): boolean {
+  for (const m of text.matchAll(CASE_ID_SHAPE)) {
+    const start = m.index!;
+    const end = start + m[0].length;
+    if (!idSpans.some(([s, e]) => start >= s && end <= e)) return true;
+  }
+  return false;
+}
 
 /** A real classification/control marking, in either its spelled-out banner
  *  form ("SECRET//NOFORN") or its abbreviated portion-marking form
- *  ("(S//NF)", "(TS//SI/TK)") — found live via the spec §6 judging panel
- *  round 5 (product_designer): a synthetic "SECRET//NOFORN ... propulsion
+ *  ("(S//NF)", "(TS//SI/TK)"). A synthetic "SECRET//NOFORN ... propulsion
  *  subsystem spec sheet ..." string was accepted and echoed verbatim into
  *  `prepare_consented_card`'s shareable output. Anchored specifically on
  *  the "//" + a recognized control-marking abbreviation (NOFORN/ORCON/
@@ -239,9 +274,7 @@ const UUID_SHAPE = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 const CLASSIFICATION_MARKING =
   /\b(?:top secret|secret|confidential|unclassified)\s*\/\/\s*(?:noforn|orcon|fouo|rel\s+to|nato|si|tk|hcs|sap|fisa)\b|\(\s*(?:u|c|s|ts)\s*\/\/\s*(?:nf|noforn|orcon|fouo|rel\s+to|nato|si|tk|hcs|sap|fisa)/i;
 
-/** Standard email shape — found live via the spec §6 judging panel round 7
- *  (function_engineer, reproduced 3 more times in isolation across 3
- *  different tools/fields): this guard caught every documented category
+/** Standard email shape. This guard once caught every documented category
  *  (SSN/DOB/passport/credit-card/classification-marking) but had no
  *  detector at all for contact info, directly contradicting this
  *  product's own "never receives... PII" claim. Not RFC-5322-complete —
@@ -249,7 +282,7 @@ const CLASSIFICATION_MARKING =
  *  without the edge cases a fully spec-compliant regex invites. */
 // Quantifiers bounded to RFC 5321's own limits (64-char local part, 253-char
 // domain): an unbounded `[...]+` here re-scans the rest of the input from
-// every word boundary, which made a 20KB run of "a.a.a." quadratic (D-043).
+// every word boundary, which made a 20KB run of "a.a.a." quadratic.
 const EMAIL_SHAPE = /\b[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,24}\b/;
 /** A US-phone-number shape WITH separators (dash/dot/space, optional
  *  parens around the area code, optional leading +1) — deliberately
@@ -261,14 +294,13 @@ const EMAIL_SHAPE = /\b[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,2
  *  legitimate reason to contain one anyway. */
 const PHONE_FORMATTED = /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/;
 
-/** A full calendar date with day precision. Found live via the spec §6
- *  judging panel round 8 (trust_skeptic, reproduced 3 times): the DOB
+/** A full calendar date with day precision. The DOB
  *  detector above requires a birth keyword ("DOB"/"born") next to a date,
  *  so a bare birthdate typed the way people normally type one
  *  ("01/15/1990", "1990-01-15") passed every tool, and was echoed into
  *  prepare_consented_card's shareable card as "Available starting
- *  01/15/1990." Round 8's fix covered only `/` and `-` with a 4-digit year;
- *  a self-run red-team pass before round 9 (DECISIONS.md D-043) found the
+ *  01/15/1990." A first fix covered only `/` and `-` with a 4-digit year;
+ *  a later red-team pass found the
  *  same birthdate still passed written out ("January 15, 1990", "15th of
  *  January, 1990"), dotted ("15.01.1990"), space-separated, or with a
  *  2-digit year ("1/15/90") — all now covered. Dotted and spaced forms
@@ -331,8 +363,7 @@ function hasBirthPlausibleFullDate(text: string): boolean {
 }
 
 /* ------------------------------------------------------------------------ */
-/* Found by a self-run red-team pass between judging panel rounds 8 and 9     */
-/* (DECISIONS.md D-043): 21 of 33 format variations of already-covered       */
+/* Found by a red-team pass: 21 of 33 format variations of already-covered */
 /* categories slipped through, plus four identifier types the guard had no    */
 /* category for at all. Each detector below names what it closes.             */
 /* ------------------------------------------------------------------------ */
@@ -411,12 +442,12 @@ const ADDRESS_CONTEXT =
 const STREET_ADDRESS_RE = new RegExp(STREET_ADDRESS, "i");
 
 /* ------------------------------------------------------------------------ */
-/* Judging panel round 9 (D-047): 38 of 80 refuse-list payloads got through.  */
+/* A later review: 38 of 80 refuse-list payloads got through.                */
 /* ------------------------------------------------------------------------ */
 
 /** A bare 9-digit run with a valid SSN structure (area 001–899 except 666,
- *  group 01–99, serial 0001–9999). D-014 required an SSN keyword for this,
- *  but round 9 showed an unlabeled SSN ("software 078051120") accepted and
+ *  group 01–99, serial 0001–9999). This used to require an SSN keyword,
+ *  but an unlabeled SSN ("software 078051120") accepted and
  *  echoed. No legitimate input here carries a bare 9-digit run — role ids
  *  are UUIDs (removed before this check), comp figures and years are shorter.
  *  The stated cost: a 9-digit order or tracking number is rejected too. */
@@ -450,7 +481,7 @@ function hasIntlPhone(text: string): boolean {
 
 /** Marking SYNTAX, not marking vocabulary: "what does FOUO mean?" is a
  *  legitimate question, "CUI//SP-EXPT" is a marking. Banners and portion
- *  marks use "//"; legends are recognizable sentences. Round 9 found
+ *  marks use "//"; legends are recognizable sentences. A review found
  *  "TOP SECRET//SCI" ("SCI" wasn't in the old list), "S//REL TO USA, FVEY"
  *  (abbreviated level, no parentheses), and every CUI form passing. */
 const MARKING_BANNER =
@@ -470,7 +501,7 @@ const MARKING_LEGEND =
 const CONTROLLED_DATA_CONTENT =
   /\b(?:itar|export)[- ]controlled\b[^.\n]{0,40}?\b(?:technical data|drawings?|schematics?|specs?|specifications?|blueprints?|tolerances?|source code)\s*[:=]\s*\S|\b(?:itar|export)[- ]controlled\b[^.\n]{0,80}[±]\s*\d|\bitar[- ]controlled (?:schematics?|drawings?|blueprints?)\b/i;
 
-/** Adjudication history and record fields — round 9: "My TS was granted …
+/** Adjudication history and record fields, e.g. "My TS was granted …
  *  after SOR for Guideline H", "An incident report was filed in DISS",
  *  "Eligibility: TS; Access: SCI; Investigation Type: SSBI". A general
  *  question ("what is a Statement of Reasons?") names no outcome. */
@@ -479,18 +510,18 @@ const ADJUDICATION_HISTORY =
 const RECORD_FIELD =
   /\b(?:eligibility|access|investigation(?:\s+type)?|adjudication(?:\s+date)?|closed date|ce enrollment|sii)\s*:\s*(?:ts\b|sci\b|s\b|secret|top secret|confidential|t[1-5]r?\b|ssbi|sbpr|naclc|anaci|pr\b|favorabl|enrolled|denied|revoked)/gi;
 
-/** First-person sensitive disclosures. Round 9: a failed polygraph, a DUI,
- *  mental-health history, religion, age, and disability put on an
+/** First-person sensitive disclosures: a failed polygraph, a DUI,
+ *  mental-health history, religion, age, and disability once reached an
  *  employer-facing card. Asking in general terms ("does a DUI disqualify
  *  someone?") passes; stating it about yourself doesn't. */
 const SENSITIVE_DISCLOSURE =
   /\b(?:i|i've|i have|i had|i was|i'm|i am|my)\b[^.]{0,30}?\b(?:failed (?:a |my |the )?poly(?:graph)?|dui|dwi|arrested|convicted|felony|misdemeanou?r|bankrupt\w*|foreclos\w*|rehab\b|in treatment for|psychiatric|hospitali[sz]ed for|diagnosed with|adhd|ptsd|bipolar|schizophreni\w*|on probation|on parole)\b|\bi(?:'m| am)\s+(?:\d{2}|[a-z]+(?:-[a-z]+)?)\s+years?\s+old\b|\b(?:i(?:'m| am)|as)\s+an?\s+(?:practicing\s+|devout\s+)?(?:muslim|christian|jew|jewish|hindu|buddhist|sikh|catholic|mormon|atheist)\b|\bi(?:'m| am)\s+(?:pregnant|disabled|deaf|blind)\b|\bmy (?:religion|race|ethnicity|disability|age|national origin|nationality|diagnosis) is\b/i;
 
 /** "CA DL D1234567" — a state code or "DL" directly followed by a license-shaped
- *  token (round 9), with no "#"/"number" between them. Case-sensitive. */
+ *  token, with no "#"/"number" between them. Case-sensitive. */
 const DL_INLINE = /\bDL\s+[A-Z]{0,2}\d{5,13}\b/;
 
-/** "Jane Q. Doe, 1600 Pennsylvania Ave NW" (round 9): a full name directly
+/** "Jane Q. Doe, 1600 Pennsylvania Ave NW": a full name directly
  *  followed by a street address. Either alone stays allowed — "the office at
  *  2000 Avenue of the Stars" is a company address. */
 const NAME_COMMA_BEFORE_DIGIT = /\b[A-Z][a-z]+(?:\s+[A-Z]\.?)?\s+[A-Z][a-z]+,\s*(?=\d)/g;
@@ -505,7 +536,7 @@ function hasNameThenStreet(text: string): boolean {
 /** "My name is Jane Doe" / "Name: Jane Doe" — explicit self-identification only. */
 const PERSONAL_NAME = /\b[Mm][Yy] [Nn][Aa][Mm][Ee] [Ii][Ss]\s+[A-Z][a-z]+(?:\s+[A-Z]\.?)?(?:\s+[A-Z][a-z]+)?|\b[Nn]ame\s*:\s*[A-Z][a-z]+\s+(?:[A-Z]\.?\s+)?[A-Z][a-z]+/;
 
-/** Tokens and private keys. Round 9: a GitHub token (ghp_…) was accepted
+/** Tokens and private keys. A GitHub token (ghp_…) was once accepted
  *  and echoed. The Ed25519 PKCS#8 prefix catches a private key pasted where
  *  prepare_signed_attestation's public key belongs. */
 const SECRET_CREDENTIAL =
@@ -513,8 +544,10 @@ const SECRET_CREDENTIAL =
 
 /** The actual, un-obfuscated detectors. Operates on already-normalized,
  *  already-decoded plain text — see `scanTextForPiiCui` below, which is the
- *  only caller and the thing that actually runs against raw user input. */
-function scanPlainText(text: string): PiiFinding[] {
+ *  only caller and the thing that actually runs against raw user input.
+ *  `inheritedIds`: spans of `text` that held a canonical UUID in the text a
+ *  derived view was made from; empty for the plain view. */
+function scanPlainText(text: string, inheritedIds: readonly Span[] = []): PiiFinding[] {
   const findings: PiiFinding[] = [];
   const add = (category: PiiCategory) => {
     if (!findings.some((f) => f.category === category)) {
@@ -523,10 +556,11 @@ function scanPlainText(text: string): PiiFinding[] {
   };
 
   const ssnView = ssnDetectionView(text);
-  const noUuidsForSsn = text.replace(UUID_SHAPE, "");
+  // What the UUID-exempt detectors read (see UUID_SHAPE for which they are).
+  const noUuids = withoutExemptIds(text, inheritedIds);
   if (SSN_DASHED.test(text) || SSN_DASHED.test(ssnView) || SSN_MASKED.test(text) || SSN_LAST_FOUR.test(text)) add("ssn");
   else if (SSN_CONTEXT.test(text) && (BARE_9_DIGITS.test(text) || BARE_9_DIGITS.test(ssnView))) add("ssn");
-  else if (hasBareValidSsnShape(noUuidsForSsn)) add("ssn");
+  else if (hasBareValidSsnShape(noUuids)) add("ssn");
 
   if (
     BIRTH_CONTEXT.test(text) &&
@@ -544,7 +578,7 @@ function scanPlainText(text: string): PiiFinding[] {
 
   if (PASSPORT_CONTEXT.test(text) && ALPHANUM_ID_TOKEN.test(text)) add("passport");
 
-  if ((CASE_NUMBER_CONTEXT.test(text) && DIGIT_RUN_5PLUS.test(text)) || CASE_ID_SHAPE.test(text)) {
+  if ((CASE_NUMBER_CONTEXT.test(text) && DIGIT_RUN_5PLUS.test(text)) || hasCaseIdShape(text, [...inheritedIds, ...uuidSpans(text)])) {
     add("case_number");
   }
 
@@ -554,7 +588,7 @@ function scanPlainText(text: string): PiiFinding[] {
   if (IMAGE_DATA_URI.test(text)) add("image_upload");
   else if (BINARY_DATA_URI.test(text) || LONG_BASE64_RUN.test(text)) add("binary_data");
 
-  if (CREDIT_CARD_SHAPE.test(text.replace(UUID_SHAPE, ""))) add("credit_card");
+  if (CREDIT_CARD_SHAPE.test(noUuids)) add("credit_card");
 
   if (
     CLASSIFICATION_MARKING.test(text) ||
@@ -575,7 +609,6 @@ function scanPlainText(text: string): PiiFinding[] {
   if (EMAIL_SHAPE.test(text) || (text.includes("@") && EMAIL_SPACED.test(text)) || (HAS_AT_TOKEN.test(text) && EMAIL_OBFUSCATED.test(text))) {
     add("email");
   }
-  const noUuids = text.replace(UUID_SHAPE, "");
   if (PHONE_FORMATTED.test(text) || (PHONE_CONTEXT.test(text) && PHONE_BARE.test(noUuids)) || hasIntlPhone(noUuids)) add("phone");
 
   if (
@@ -596,8 +629,8 @@ function scanPlainText(text: string): PiiFinding[] {
 
 /** Invisible/zero-width characters sometimes spliced into a digit run to break
  *  a pattern match without changing how the text visually reads (e.g.
- *  "123​-45-6789"). Stripped before scanning — red-team-found gap, see
- *  tests/unit/pii.test.ts and DECISIONS.md. */
+ *  "123​-45-6789"). Stripped before scanning — a red-team-found gap, see
+ *  tests/unit/pii.test.ts. */
 const INVISIBLE_CHARS = /[​‌‍⁠﻿­]/g;
 
 /** Unicode dash/hyphen lookalikes that read identically to "-" but aren't in
@@ -612,8 +645,8 @@ const DASH_LOOKALIKES = /[‐‑‒–—−]/g;
 /** Normalizes text before any detector runs: NFKC folds full-width digits and
  *  FULLWIDTH HYPHEN-MINUS to standard ASCII; the two replace()s close the
  *  remaining gaps NFKC doesn't cover (verified empirically — see above). */
-/** Zero code points of the decimal-digit blocks NFKC leaves alone (round 9:
- *  an SSN in Arabic-Indic digits passed). Fullwidth/mathematical digits are
+/** Zero code points of the decimal-digit blocks NFKC leaves alone (an SSN
+ *  in Arabic-Indic digits once passed). Fullwidth/mathematical digits are
  *  already folded by NFKC. */
 const DIGIT_ZEROS = [0x0660, 0x06f0, 0x07c0, 0x0966, 0x09e6, 0x0a66, 0x0ae6, 0x0b66, 0x0be6, 0x0c66, 0x0ce6, 0x0d66, 0x0de6, 0x0e50, 0x0ed0, 0x0f20, 0x1040, 0x1090, 0x17e0, 0x1810, 0x1946, 0x19d0, 0x1a80, 0x1a90, 0x1b50, 0x1bb0, 0x1c40, 0x1c50, 0xa620, 0xa8d0, 0xa900, 0xa9d0, 0xaa50, 0xabf0];
 function foldDigits(text: string): string {
@@ -625,8 +658,8 @@ function foldDigits(text: string): string {
   });
 }
 
-/** Cyrillic/Greek letters that render identically to Latin ones (round 9: a
- *  homoglyph "SECRET//NOFORN" passed). Detection-only view, never shown. */
+/** Cyrillic/Greek letters that render identically to Latin ones (a
+ *  homoglyph "SECRET//NOFORN" once passed). Detection-only view, never shown. */
 const CONFUSABLES: Record<string, string> = {
   А: "A", В: "B", С: "C", Е: "E", Н: "H", І: "I", Ј: "J", К: "K", М: "M", О: "O", Р: "P", Ѕ: "S", Т: "T", Х: "X", У: "Y",
   а: "a", с: "c", е: "e", і: "i", ј: "j", о: "o", р: "p", ѕ: "s", х: "x", у: "y", ԁ: "d", ԛ: "q", ԝ: "w",
@@ -642,7 +675,7 @@ function normalizeForScan(text: string): string {
     .replace(CONFUSABLE_RE, (ch) => CONFUSABLES[ch]);
 }
 
-/** "&#53;36-22-8790" (round 9) — decode numeric and the common named HTML
+/** "&#53;36-22-8790" — decode numeric and the common named HTML
  *  entities as one more view of the text, like the URI-decode passes. */
 function tryHtmlEntityDecode(text: string): string | null {
   if (!/&(?:#\d{1,7}|#x[0-9a-f]{1,6}|amp|lt|gt|quot|apos|nbsp);/i.test(text)) return null;
@@ -665,16 +698,20 @@ function rot13(text: string): string {
   });
 }
 
-/** One layer of percent-decoding. Returns null (rather than throwing or
- *  looping forever) when the escape sequences are malformed, or when decoding
- *  made no difference — both mean "nothing more to decode here." */
-function tryUriDecode(text: string): string | null {
-  try {
-    const decoded = decodeURIComponent(text);
-    return decoded === text ? null : decoded;
-  } catch {
-    return null;
-  }
+/** A run of well-formed percent escapes ("%31%32"). A "%" not followed by two
+ *  hex digits is not part of one. */
+const PERCENT_ESCAPES = /(?:%[0-9a-f]{2})+/gi;
+
+/** One layer of percent-decoding, lenient the way Python's `unquote` is:
+ *  each run of well-formed escapes is decoded as UTF-8 (bytes that are not
+ *  valid UTF-8 become U+FFFD, never an error) and everything else, malformed
+ *  escapes included, is left as it is. This used `decodeURIComponent`, which
+ *  throws on the first malformed escape anywhere in the string, and the whole
+ *  view was skipped: "my ssn is %31%32%33-%34%35-%36%37%38%39 %" passed.
+ *  Returns null when decoding made no difference. */
+function percentDecode(text: string): string | null {
+  const decoded = text.replace(PERCENT_ESCAPES, (run) => Buffer.from(run.replace(/%/g, ""), "hex").toString("utf8"));
+  return decoded === text ? null : decoded;
 }
 
 /** Bounds the percent-decode loop below — defeats double-encoding (verified:
@@ -698,18 +735,31 @@ const EMBEDDED_BASE64_TOKEN = /[A-Za-z0-9+/]{12,}={0,2}/g;
  *  real PII hidden this way is always a plain-text phrase, never binary.
  *  Verified empirically against realistic non-PII tokens (a role-id-shaped
  *  string, a GitHub-username-shaped string, a long run-on sentence with no
- *  spaces, a repeated-letter run, a plain digit run) — zero false decodes. */
+ *  spaces, a repeated-letter run, a plain digit run) — zero false decodes.
+ *
+ *  A character or three glued to the end of a real encoding made both checks
+ *  fail, so the token was skipped, though Node's own decoder still reads it
+ *  ("bXkgc3NuIGlzIDEyMy00NS02Nzg5x" passed). So when the
+ *  token fails as it is, it is tried without its last one, two and three
+ *  characters, each under the same two checks. Nothing here throws (Buffer
+ *  never does on a string), so no error can skip the view silently. */
 function tryBase64Decode(token: string): string | null {
-  try {
-    const buf = Buffer.from(token, "base64");
-    const reencoded = buf.toString("base64").replace(/=+$/, "");
-    if (reencoded !== token.replace(/=+$/, "")) return null;
-    const text = buf.toString("utf8");
-    if (text.length < 4 || !/^[\t\r\n\x20-\x7E]*$/.test(text)) return null;
-    return text;
-  } catch {
-    return null;
+  const core = token.replace(/=+$/, "");
+  for (let drop = 0; drop <= 3; drop++) {
+    const text = decodeExactBase64(core.slice(0, core.length - drop));
+    if (text !== null) return text;
   }
+  return null;
+}
+
+/** `core` (no padding) decoded, or null unless it round-trips exactly and
+ *  decodes to at least 4 characters of printable ASCII. */
+function decodeExactBase64(core: string): string | null {
+  const buf = Buffer.from(core, "base64");
+  if (buf.toString("base64").replace(/=+$/, "") !== core) return null;
+  const text = buf.toString("utf8");
+  if (text.length < 4 || !/^[\t\r\n\x20-\x7E]*$/.test(text)) return null;
+  return text;
 }
 
 /**
@@ -725,12 +775,28 @@ function tryBase64Decode(token: string): string | null {
  *  - Unicode normalization + invisible-character stripping + dash-lookalike
  *    folding (normalizeForScan), applied first, unconditionally.
  *  - ROT13 of the whole normalized text.
- *  - Percent-decoding, repeated to a fixed point (bounded).
+ *  - Percent-decoding, repeated to a fixed point (bounded). Lenient: a
+ *    malformed escape is left as it is and never stops the rest decoding.
  *  - Any embedded base64-looking token, decoded and re-scanned.
- * Found via red-teaming (spec §5) — all four were confirmed live bypasses
- * before this fix; see tests/unit/pii.test.ts for the regression cases and
- * DECISIONS.md for the write-up. Verified this doesn't introduce new false
+ * Found via red-teaming — all four were confirmed live bypasses before
+ * this fix; see tests/unit/pii.test.ts for the regression cases. Verified this doesn't introduce new false
  * positives against this file's existing "does NOT flag" corpus.
+ *
+ * A canonical UUID exempt in the plain view stays exempt in the views
+ * derived from it. ROT13 is the one view that changes a UUID's own
+ * characters: it turns the hex letters a-f into n-s, so the rotated text no
+ * longer matches UUID_SHAPE, and about 1 random UUID in 100 had a digit run
+ * read as an SSN or a card number there. ROT13 keeps every character in
+ * place, so the UUIDs of the normalized text are passed to that view as
+ * spans: the same detectors skip them, and every other detector reads the
+ * rotated text exactly as before. The other views need nothing. Percent and
+ * entity decoding change only `%XX` and `&…;` sequences, which a UUID does
+ * not contain, so each view's own UUID_SHAPE still finds it (unless a `%` is
+ * glued to its front: then its first two hex digits decode as an escape and
+ * that view scans the result, which can only refuse more). A base64 token
+ * inside a UUID is its 12-hex last group; it decodes to 9 bytes of which
+ * every third cannot be a digit, so at most 6 digits, and every exempt shape
+ * needs 7 or more.
  */
 function scanTextForPiiCui(text: string): PiiFinding[] {
   const normalized = normalizeForScan(text);
@@ -741,17 +807,20 @@ function scanTextForPiiCui(text: string): PiiFinding[] {
     }
   };
 
-  merge(scanPlainText(rot13(normalized)));
+  merge(scanPlainText(rot13(normalized), uuidSpans(normalized)));
 
   const entityDecoded = tryHtmlEntityDecode(normalized);
   if (entityDecoded !== null) merge(scanPlainText(normalizeForScan(entityDecoded)));
 
+  // Each decoded layer is normalized like the input was (as the entity view
+  // is): percent-encoded full-width digits ("%EF%BC%91…") decode to "１…",
+  // which no detector reads until folded to ASCII.
   let current = normalized;
   for (let i = 0; i < MAX_URI_DECODE_PASSES; i++) {
-    const decoded = tryUriDecode(current);
+    const decoded = percentDecode(current);
     if (decoded === null) break;
-    merge(scanPlainText(decoded));
-    current = decoded;
+    current = normalizeForScan(decoded);
+    merge(scanPlainText(current));
   }
 
   for (const token of normalized.match(EMBEDDED_BASE64_TOKEN) ?? []) {
@@ -774,7 +843,7 @@ export function scanValueForPiiCui(value: unknown, depth = 0): PiiFinding[] {
     // structure nested deeper than we scan is exactly the ambiguous case
     // that principle is about; silently returning [] here (as this used to)
     // let a 9+-level-deep payload bypass the guard entirely (confirmed live
-    // during red-teaming, spec §5 — see tests/unit/pii.test.ts). No
+    // during red-teaming — see tests/unit/pii.test.ts). No
     // legitimate tool input (every schema here is flat objects/short arrays)
     // comes anywhere near this depth, so this never fires on real traffic.
     return [{ category: "unscannable_structure", message: FRIENDLY_BY_CATEGORY.unscannable_structure }];
@@ -784,8 +853,8 @@ export function scanValueForPiiCui(value: unknown, depth = 0): PiiFinding[] {
     return value.flatMap((item) => scanValueForPiiCui(item, depth + 1));
   }
   if (value && typeof value === "object") {
-    // Keys too: round 9 sent an SSN as a JSON key, and zod's
-    // "Unrecognized key" error echoed it back (D-047).
+    // Keys too: an SSN sent as a JSON key was once echoed back by zod's
+    // "Unrecognized key" error.
     return Object.entries(value as Record<string, unknown>).flatMap(([k, v]) => [
       ...scanTextForPiiCui(k),
       ...scanValueForPiiCui(v, depth + 1),
@@ -807,7 +876,7 @@ export function buildFriendlyRejectionMessage(findings: PiiFinding[]): string {
   if (findings.length === 0) return "";
   if (findings.length === 1) return findings[0].message;
   const bullets = findings.map((f) => `- ${f.message}`).join("\n");
-  return `This request looks like it includes more than one kind of information Clearance Lens never accepts:\n${bullets}`;
+  return `This request looks like it includes more than one kind of information cleared never accepts:\n${bullets}`;
 }
 
 /** Throws a PiiCuiError (deduplicated by category) if `value` contains anything

@@ -6,9 +6,8 @@ import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
 
 /**
  * Compliant alternative to "AI recruiter panels"/multi-agent hiring
- * committees (explicitly declined — DECISIONS.md D-032/D-035/D-036: that
- * category of request conflicts with this project's own hard constraint
- * and with employment-AI law regardless of whether the scoring is one
+ * committees (explicitly declined: that category of request conflicts with
+ * this project's own rule against scoring people and with employment-AI law regardless of whether the scoring is one
  * model or a committee of them). This tool never sees, touches, or asks
  * about any candidate at all — it is built ONLY from the role's own public
  * posting text, exactly like build_trial_assessment, just producing a
@@ -72,8 +71,8 @@ function buildGuidance(quote: string): z.infer<typeof EvaluationGuidanceSchema> 
 }
 
 /** Phrased by what the bullet is: something the job does (a task) or
- *  something the candidate brings (a skill). Round 9 found one template
- *  pasted around every bullet (D-050). */
+ *  something the candidate brings (a skill), not one template pasted around
+ *  every bullet. */
 function questionFor(quote: string): string {
   if (/^(?:design|build|develop|lead|own|write|implement|integrate|test|deploy|maintain|create|drive|manage|define|architect|support|collaborate|work|partner|analy[sz]e|evaluate|operate|run|ship|deliver|coordinate|conduct|perform|establish|improve|optimi[sz]e)\b/i.test(quote)) {
     return `This role involves: "${quote}". Tell me about the closest thing you've done — what you did, what made it hard, and how it turned out.`;
@@ -88,7 +87,7 @@ export const generateInterviewGuideTool: ToolDef<z.infer<typeof InputSchema>, z.
   name: "generate_interview_guide",
   title: "Generate a structured interview guide for a role",
   description:
-    "Generates a structured-interview question set (behaviorally-anchored evaluation guidance per question, never a numeric score) built only from a role's public posting text — for a startup's own human panel to run themselves. Never accepts, asks about, or produces anything about any specific candidate; this is a role-side prep tool only, same traced-to-the-posting discipline as build_trial_assessment. Grounded in Schmidt & Hunter (1998)'s meta-analytic validity estimate for structured interviews (.51) vs. unstructured ones (.38) — see sources[].",
+    "Generates a structured-interview question set (behaviorally-anchored evaluation guidance per question, never a numeric score) built only from a role's public posting text — for a startup's own human panel to run themselves. Never accepts, asks about, or produces anything about any specific candidate; this is a role-side prep tool only, same traced-to-the-posting discipline as build_trial_assessment. Grounded in Sackett, Zhang, Berry & Lievens (2022)'s meta-analytic validity estimates for structured interviews (.42) vs. unstructured ones (.19) — see sources[].",
   inputSchema: InputSchema,
   outputSchema: OutputSchema,
   handler: async ({ role_id, minutes }) => {
@@ -137,15 +136,23 @@ export const generateInterviewGuideTool: ToolDef<z.infer<typeof InputSchema>, z.
       ],
       itarSafetyNote: DISCLAIMERS.itarSafeTrial,
       limitsNote:
-        "Structured interviews (questions determined by job analysis, asked consistently, evaluated against predetermined criteria) are one of the most validated predictors of job performance in the personnel-selection literature — Schmidt & Hunter's (1998) meta-analysis estimates a validity of .51, versus .38 for unstructured interviews (see sources[]). That evidence licenses the design choices above (job-traced, consistent, criteria stated up front), not a claim that this specific generated guide reproduces any particular validity number.",
+        // This used to cite Schmidt & Hunter's (1998) .51 and .38, which
+        // Sackett et al. (2022) revised.
+        "Structured interviews (questions determined by job analysis, asked consistently, evaluated against predetermined criteria) are among the strongest predictors of job performance in the personnel-selection literature — Sackett, Zhang, Berry & Lievens's (2022) meta-analysis estimates an operational validity of .42 for structured interviews, versus .19 for unstructured ones, revising Schmidt & Hunter's (1998) earlier estimates of .51 and .38 (see sources[]). That evidence licenses the design choices above (job-traced, consistent, criteria stated up front), not a claim that this specific generated guide reproduces any particular validity number.",
       neverAScoreNote:
         "No field anywhere in this output is a score, rating, or ranking of any candidate — this tool has never seen, and cannot see, any candidate's answers. " +
         DISCLAIMERS.noDemographicInference,
       sources: [
         SPEEDRUN_SOURCE,
         {
-          title: "Schmidt & Hunter (1998) — The Validity and Utility of Selection Methods in Personnel Psychology",
-          url: "https://stafforini.com/works/schmidt-1998-validity-and-utility/",
+          title: "Sackett, Zhang, Berry & Lievens (2022) — Revisiting meta-analytic estimates of validity in personnel selection, Journal of Applied Psychology 107(11)",
+          url: "https://doi.org/10.1037/apl0000994",
+          lastVerified: "2026-11-13",
+        },
+        {
+          title: "Schmidt & Hunter (1998) — The validity and utility of selection methods in personnel psychology, Psychological Bulletin 124(2)",
+          url: "https://doi.org/10.1037/0033-2909.124.2.262",
+          lastVerified: "2026-11-13",
         },
       ],
       disclaimer: DISCLAIMERS.itarSafeTrial,

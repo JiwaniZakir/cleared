@@ -3,7 +3,7 @@ import type { EstimateTimelineOutput } from "@/lib/try-tool-types";
 
 /**
  * Renders estimate_timeline output as a RANGE, never a single confident
- * number (R2 §3.5) — a horizontal bar from min→max with the median marked
+ * number — a horizontal bar from min→max with the median marked
  * when one exists, key drivers as plain-text bullets, and a caption-sized
  * uncertainty line. A single point is only ever shown when min===max, i.e.
  * when the source data genuinely gives one number, not a range.

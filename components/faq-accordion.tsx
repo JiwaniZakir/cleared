@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 
 const FAQ_ITEMS = [
   {
-    question: "What is Clearance Lens?",
+    question: "What is cleared?",
     answer:
       "An MCP server your AI agent calls directly. It returns public defense-tech role data and plain-English clearance/ITAR rule explanations, so your agent can help you evaluate a role entirely inside your own conversation.",
   },
@@ -16,9 +16,9 @@ const FAQ_ITEMS = [
       "No. Clearance and export-control rules have real exceptions, so every rule explanation links to its primary source and is framed as general information — always verify your specific situation with your Facility Security Officer (FSO) or an attorney before acting on it.",
   },
   {
-    question: "Does Clearance Lens store my data?",
+    question: "Does cleared store my data?",
     answer:
-      "Almost nothing, and nothing about who you are. There are no accounts and no log of what you asked. The one exception is opt-in: if you explicitly choose to contribute to the anonymous signal pool, it stores the few general answers you picked (like a clearance level), with no name, contact, or identifier attached, and only ever shows them as rounded percentages once at least 5 people have contributed. Every request is scanned, and identifying details — SSNs, dates of birth, ID numbers, contact details, clearance records — are rejected outright, never stored or forwarded.",
+      "Almost nothing. There are no accounts and no log of what you asked. Public data a tool looks up, such as a GitHub profile you ask it to check, is cached for up to 10 minutes. The one store of what you share is opt-in: if you explicitly choose to contribute to the anonymous signal pool, it stores the few general answers you picked (like a clearance level), with no name, contact, or identifier attached, and only ever shows them as rounded percentages once at least 5 people have contributed. Every request is scanned, and identifying details — SSNs, dates of birth, ID numbers, contact details, clearance records — are rejected outright, never stored or forwarded.",
   },
   {
     question: "How do agents actually use it?",
@@ -38,8 +38,7 @@ const FAQ_ITEMS = [
 ] as const;
 
 /**
- * FAQ (research/R2-design-system.md §5's `/` wireframe: "5–6 items, all
- * closed by default"). `type="single" collapsible` with no `defaultValue`
+ * FAQ: 5–6 items, all closed by default. `type="single" collapsible` with no `defaultValue`
  * means nothing is open on load.
  */
 export function FaqAccordion() {

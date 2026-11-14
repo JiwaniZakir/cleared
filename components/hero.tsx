@@ -12,12 +12,12 @@ import rulesData from "@/data/rules.json";
 // rather than hand-copied, so the hero can never drift out of sync with the
 // actual source of truth (task brief: "cite something real, not invented").
 //
-// Found via the spec §6 judging panel round 9 (4 of 4 judges): this answered
+// This once answered
 // "Yes — green card holders qualify as U.S. persons under ITAR" for a role
 // whose postings require a Secret clearance. A green card satisfies ITAR,
 // but clearances are limited to U.S. citizens (EO 12968 § 3.1(b); 32 CFR
 // 117.10(k)) — so the flagship example gave a green card holder the wrong
-// answer. It now cites the citizenship rule (DECISIONS.md D-046).
+// answer. It now cites the citizenship rule.
 const CLEARANCE_CITIZENSHIP_RULE = rulesData.rules.find((rule) => rule.id === "clearance-citizenship");
 const HERO_CITATION = CLEARANCE_CITIZENSHIP_RULE?.sources[0] ?? {
   title: "Executive Order 12968 — Access to Classified Information, §§ 2.6 and 3.1(b) (Federal Register)",
@@ -33,8 +33,8 @@ const ASSISTANT_TEXT =
 type Stage = 0 | 1 | 2 | 3;
 
 /**
- * Drives the transcript's one-time reveal (R2 §3.1: "On first paint the
- * transcript may type out once"). Fully respects prefers-reduced-motion by
+ * Drives the transcript's one-time reveal: on first paint the transcript
+ * may type out once. Fully respects prefers-reduced-motion by
  * skipping straight to the final state with no stagger and no typing loop —
  * required explicitly because a JS setTimeout loop isn't stopped by the
  * global CSS reduced-motion override in app/globals.css (that override only
@@ -88,9 +88,9 @@ function revealClass(active: boolean) {
 }
 
 /**
- * The above-the-fold statement of what this is, plus proof it's real (R2
- * §3.1). A real, rendered chat-transcript panel — never a screenshot or
- * mockup (Do-Don't #6).
+ * The above-the-fold statement of what this is, plus proof it's real. A
+ * real, rendered chat-transcript panel — never a screenshot or
+ * mockup.
  */
 export function Hero() {
   const { stage, assistantText, isAssistantDone } = useTranscriptReveal();
@@ -99,7 +99,7 @@ export function Hero() {
     <section className="mx-auto max-w-[1120px] px-6 pt-16 pb-16 sm:pt-20 lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 lg:pt-28 lg:pb-24">
       <div>
         <p className="text-[0.75rem] leading-[1.3] font-semibold tracking-[0.04em] text-neutral-10 uppercase">
-          Stateless MCP server
+          Remote MCP server
         </p>
         <h1 className="mt-4 text-[2.75rem] leading-[1.1] font-semibold tracking-[-0.015em] text-neutral-12 sm:text-[3.5rem] sm:leading-[1.05] sm:tracking-[-0.02em]">
           Pursue defense-tech roles from inside your own agent.
@@ -127,8 +127,7 @@ export function Hero() {
             example agent transcript
           </div>
           <div className="flex flex-col gap-3 p-4">
-            {/* Found live via the spec §6 judging panel round 8 (product_designer):
-                a screen reader reading this region mid-animation got a half-typed
+            {/* A screen reader reading this region mid-animation got a half-typed
                 answer, with nothing announcing the change. aria-live would be worse
                 (it would announce the typing character by character), so assistive
                 tech gets the complete, static conversation here instead, and the

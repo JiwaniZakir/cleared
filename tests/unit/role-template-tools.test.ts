@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/speedrun/client", () => ({ getJob: vi.fn() }));
 import { getJob } from "@/lib/speedrun/client";
@@ -119,7 +119,7 @@ describe("fit_debrief", () => {
 });
 
 describe("prepare_consented_card", () => {
-  it("templates ONLY the fields the user explicitly approved — nothing added (D-047: names only, never values)", async () => {
+  it("templates ONLY the fields the user explicitly approved — nothing added (names only, never values)", async () => {
     mockJob("desc");
     const result = await prepareConsentedCardTool.handler({ role_id: "job-1", approved_fields: ["headline"] });
     expect(result.cardTemplate.fields.map((f) => f.name)).toEqual(["headline"]);
@@ -156,10 +156,10 @@ describe("prepare_consented_card", () => {
   });
 });
 
-// BLOCKERS.md B-001 / D-042 guarded against PII split across sibling card
-// fields. Since D-047 the card receives field NAMES only, so there are no
-// values to split: the old shape is refused outright and never echoed.
-describe("prepare_consented_card — no values accepted, so nothing to split across fields (D-047)", () => {
+// A cross-field check once guarded against PII split across sibling card
+// fields. The card now receives field NAMES only, so there are no values to
+// split: the old shape is refused outright and never echoed.
+describe("prepare_consented_card — no values accepted, so nothing to split across fields", () => {
   it("refuses field values sent the old way, without echoing any of them", async () => {
     mockJob("desc");
     const result = await callTool(prepareConsentedCardTool, {
@@ -175,5 +175,37 @@ describe("prepare_consented_card — no values accepted, so nothing to split acr
     mockJob("desc");
     const result = await callTool(prepareConsentedCardTool, { role_id: "job-1", approved_fields: ["headline", "availability"] });
     expect(result.ok).toBe(true);
+  });
+});
+
+// readiness_brief once added four clearance and FCL questions to every role,
+// including postings that state no clearance.
+describe("readiness_brief clearance questions follow the role's signals", () => {
+  // Earlier tests in this file queue mocks that a rejected call never consumes.
+  beforeEach(() => vi.mocked(getJob).mockReset());
+
+  it("a posting that states no clearance gets no clearance-process or FCL questions, only one confirming question", async () => {
+    mockJob("Must be a U.S. Person due to ITAR requirements.\n- Build autonomy software for surface vessels.");
+    const result = await readinessBriefTool.handler({ role_id: "job-1" });
+    const questions = result.questionsToAskTheRecruiter.join(" ");
+    expect(questions).not.toMatch(/Facility Clearance|FCL|investigation|interim|waiting on a clearance/i);
+    expect(result.questionsToAskTheRecruiter.filter((q) => /clearance/i.test(q))).toHaveLength(1);
+    expect(questions).toMatch(/doesn't mention a security clearance/);
+    // The citizenship question still follows its own signal.
+    expect(questions).toMatch(/citizenship\/US-person status/);
+  });
+
+  it.each([
+    ["states a clearance", "Active Secret clearance required."],
+    ["implies one", "You will support DoD customers on government programs."],
+    ["requires a polygraph", "Candidates must pass a polygraph."],
+  ])("a posting that %s gets the four clearance and FCL questions", async (_label, text) => {
+    mockJob(text);
+    const result = await readinessBriefTool.handler({ role_id: "job-1" });
+    const questions = result.questionsToAskTheRecruiter.join(" ");
+    expect(questions).toMatch(/Facility Clearance \(FCL\)/);
+    expect(questions).toMatch(/first 90 days/);
+    expect(questions).toMatch(/flexibility on start date/);
+    expect(questions).toMatch(/require an active clearance/);
   });
 });

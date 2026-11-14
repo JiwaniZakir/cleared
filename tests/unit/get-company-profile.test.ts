@@ -45,21 +45,20 @@ describe("get_company_profile", () => {
     expect(result.gaps.some((g) => g.includes("not independently sourced"))).toBe(true);
   });
 
-  // Regression for DECISIONS.md (judging panel round 7, candidate_user): the
-  // existing "not independently sourced" gap above is scoped to hiring-
-  // criteria/"fit" claims specifically -- company.stage/size/industries
-  // themselves had no caveat at all, so a reader could mistake a possibly
-  // stale upstream field (e.g. funding stage) for a freshly-verified fact.
+  // Regression: the existing "not independently sourced" gap above is scoped to
+  // hiring-criteria/"fit" claims specifically -- company.stage/size/industries
+  // themselves had no caveat at all, so a reader could mistake a possibly stale
+  // upstream field (e.g. funding stage) for a freshly-verified fact.
   it("always includes a freshness caveat for the company-profile fields themselves (stage/size/industries), not just hiring criteria", async () => {
     vi.mocked(getCompany).mockResolvedValueOnce(company([{}]));
     const result = await getCompanyProfileTool.handler({ company_slug: "acme-defense" });
     expect(result.gaps.some((g) => g.toLowerCase().includes("stage") && g.toLowerCase().includes("lag"))).toBe(true);
   });
 
-  // Regression for DECISIONS.md (judging panel round 2): the "fit"/criteria
-  // sentence was split out of the shared noDemographicInference disclaimer
-  // (since it was a non-sequitur on verify_evidence) — this tool is the one
-  // place it actually applies and must keep it.
+  // Regression: the "fit"/criteria sentence was split out of the shared
+  // noDemographicInference disclaimer (since it was a non-sequitur on
+  // verify_evidence) — this tool is the one place it actually applies and must
+  // keep it.
   it("still states the 'fit' reflects only published, sourced criteria (the addendum this tool specifically needs)", async () => {
     vi.mocked(getCompany).mockResolvedValueOnce(company([{}]));
     const result = await getCompanyProfileTool.handler({ company_slug: "acme-defense" });
@@ -81,13 +80,13 @@ describe("get_company_profile", () => {
     expect(result.gaps.some((g) => g.includes("sample of 2 of this company's 500"))).toBe(true);
   });
 
-  // Regression for DECISIONS.md (judging panel round 3): a judge cross-checked
-  // Anduril's live 2,586 "open roles" against its own 1,001-5,000 employee
-  // label and flagged the ratio as implausible. Confirmed directly against
-  // the upstream API this is a general characteristic of its own listing
-  // count (every company in the network shows a similarly high ratio), not a
-  // bug in this tool's aggregation -- so a plain caveat is added rather than
-  // a "fix" to a number this tool is faithfully passing through.
+  // Regression: a reviewer cross-checked Anduril's live 2,586 "open roles"
+  // against its own 1,001-5,000 employee label and flagged the ratio as
+  // implausible. Confirmed directly against the upstream API this is a general
+  // characteristic of its own listing count (every company in the network shows
+  // a similarly high ratio), not a bug in this tool's aggregation -- so a plain
+  // caveat is added rather than a "fix" to a number this tool is faithfully
+  // passing through.
   it("adds a listing-count caveat when open_roles is large enough to strain credulity against headcount", async () => {
     vi.mocked(getCompany).mockResolvedValueOnce(company([{}, {}], 2586));
     const result = await getCompanyProfileTool.handler({ company_slug: "acme-defense" });
@@ -114,11 +113,11 @@ describe("get_company_profile", () => {
     expect(result.workRealities.compRangeObserved).toBeNull();
   });
 
-  // Regression for DECISIONS.md D-016/D-017: a naive min/max across
-  // different comp_period values produced an absurd range (observed live:
-  // an hourly intern rate mixed with annual senior-engineer salaries into
-  // one "$19-$303,600"-style figure). Reproduced live against the real feed
-  // on 2026-11-11 with exactly this hour/week/year/null mix.
+  // Regression: a naive min/max across different comp_period values produced an
+  // absurd range (observed live: an hourly intern rate mixed with annual
+  // senior-engineer salaries into one "$19-$303,600"-style figure). Reproduced
+  // live against the real feed on 2026-11-11 with exactly this
+  // hour/week/year/null mix.
   it("annualizes hourly and weekly comp before computing the range, instead of mixing raw units", async () => {
     vi.mocked(getCompany).mockResolvedValueOnce(
       company([
@@ -156,5 +155,15 @@ describe("get_company_profile", () => {
     vi.mocked(getCompany).mockResolvedValueOnce(company([{ comp_min: 100000, comp_max: 150000 }]));
     const result = await getCompanyProfileTool.handler({ company_slug: "acme-defense" });
     expect(result.workRealities.compRangeObserved?.currency).toBeNull();
+  });
+});
+
+// Every tool shares one described company_slug schema.
+describe("get_company_profile uses the shared company_slug schema", () => {
+  it("is the same schema object role-shared exports, with its description", async () => {
+    const { CompanySlugSchema } = await import("@/lib/tools/role-shared");
+    const shape = (getCompanyProfileTool.inputSchema as unknown as { shape: Record<string, unknown> }).shape;
+    expect(shape.company_slug).toBe(CompanySlugSchema);
+    expect(CompanySlugSchema.description).toMatch(/search_defense_roles/);
   });
 });

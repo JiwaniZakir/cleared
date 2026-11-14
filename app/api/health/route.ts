@@ -6,7 +6,7 @@ import { TIMELINES_LAST_VERIFIED } from "@/lib/timelines-data";
 export async function GET() {
   return NextResponse.json({
     ok: true,
-    service: "clearance-lens",
+    service: "cleared",
     toolCount: TOOL_REGISTRY.length,
     dataLastVerified: { rules: RULES_LAST_VERIFIED, timelines: TIMELINES_LAST_VERIFIED },
     timestamp: new Date().toISOString(),

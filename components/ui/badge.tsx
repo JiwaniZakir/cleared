@@ -3,10 +3,10 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/cn";
 
 /**
- * Badge / StatusPill (R2 §3.0). `subtle` = step-2 bg + step-11 text; `solid`
- * = step-9 bg + the on-solid text rule from R2 §2.1. Status has exactly
+ * Badge / StatusPill. `subtle` = step-2 bg + step-11 text; `solid`
+ * = step-9 bg + the design system's on-solid text rule. Status has exactly
  * three tones for a fit result — success/caution/neutral — danger is
- * reserved for system errors, never a verdict on a person (Do/Don't #9).
+ * reserved for system errors, never a verdict on a person.
  */
 const badgeVariants = cva(
   "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.8125rem] font-medium leading-[1.4] whitespace-nowrap",
@@ -32,7 +32,7 @@ const badgeVariants = cva(
       { tone: "success", appearance: "subtle", class: "bg-success-2 text-success-11" },
       { tone: "success", appearance: "solid", class: "bg-success-9 text-on-solid-light dark:text-on-solid-dark" },
       { tone: "caution", appearance: "subtle", class: "bg-caution-2 text-caution-11" },
-      // Caution is the one exception to "light=white, dark=ink" (R2 §2.1):
+      // Caution is the one exception to "light=white, dark=ink":
       // ink text in BOTH modes, computed — white-on-caution-9 fails AA badly
       // in light mode too (2.54:1).
       { tone: "caution", appearance: "solid", class: "bg-caution-9 text-on-solid-dark" },

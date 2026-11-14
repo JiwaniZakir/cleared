@@ -14,10 +14,9 @@ export type RequirementKind = "clearance_level" | "citizenship" | "polygraph" | 
 export type RequirementBasis = "stated" | "inferred";
 
 /** For a clearance signal, WHEN the posting needs it — the difference that
- *  tells a new grad whether they can apply at all. Found via the spec §6
- *  judging panel round 9: "Eligible to obtain and maintain an active Top
- *  Secret clearance" (no clearance needed to apply) was being reported as a
- *  bare "Top Secret security clearance". Absent when the sentence doesn't say. */
+ *  tells a new grad whether they can apply at all. "Eligible to obtain and
+ *  maintain an active Top Secret clearance" (no clearance needed to apply)
+ *  used to be reported as a bare "Top Secret security clearance". Absent when the sentence doesn't say. */
 export type ClearanceStage = "must_already_hold" | "must_be_able_to_obtain" | "may_be_required";
 
 export interface RequirementSignal {
@@ -32,9 +31,8 @@ export interface RequirementSignal {
 
 const MAX_EXCERPT_LENGTH = 300;
 
-/** Words whose trailing period belongs to the word, not the sentence. Found
- *  via the spec §6 judging panel round 9: 41 of 119 "stated" quotes (34%)
- *  were cut mid-sentence at an abbreviation — "Must be a U.S. Person due to
+/** Words whose trailing period belongs to the word, not the sentence. In a
+ *  sample of 119 "stated" quotes, 41 (34%) were cut mid-sentence at an abbreviation — "Must be a U.S. Person due to
  *  required access to U." — because any "." counted as a sentence end. */
 const ABBREVIATIONS = new Set([
   "u.s", "u.s.a", "u.s.c", "e.g", "i.e", "etc", "vs", "approx", "inc", "co", "corp", "ltd", "llc", "jr", "sr",
@@ -88,8 +86,7 @@ function sentenceAround(text: string, matchIndex: number, matchLength: number): 
  * Expand to the containing sentence/bullet-line where reasonable, else a
  * fixed window — always truncated and always a direct substring, never
  * paraphrased. Bounded by the NEARER of a period or a newline on each side,
- * not period alone: found live via the spec §5 agent-in-the-loop persona
- * eval (DECISIONS.md D-016/D-018) that real postings commonly format
+ * not period alone: real postings commonly format
  * requirements as newline-separated bullets with no trailing period on each
  * item — period-only boundary search then walks past the current bullet
  * entirely, either bleeding forward into unrelated later bullets (no period
@@ -138,39 +135,36 @@ interface StatedPattern {
 const STATED_PATTERNS: StatedPattern[] = [
   { kind: "clearance_level", value: "ts_sci", pattern: /\btop secret\s*\/?\s*sci\b|\bts\s*\/\s*sci\b/i },
   { kind: "clearance_level", value: "ts", pattern: /\btop secret\b(?!\s*\/?\s*sci)/i },
-  // The common "TS clearance" abbreviation — found while writing the D-046
-  // tests: "Must hold an active TS clearance" produced no clearance signal at
-  // all. Case-sensitive on purpose (no `i` flag) so "ts" inside ordinary text
+  // The common "TS clearance" abbreviation: "Must hold an active TS
+  // clearance" used to produce no clearance signal at all. Case-sensitive on purpose (no `i` flag) so "ts" inside ordinary text
   // can't match; only a standalone "TS" within a few words of "clearance".
   { kind: "clearance_level", value: "ts", pattern: /\bTS\b(?!\s*\/\s*SCI)(?=[^.\n]{0,25}\b[Cc]learance\b)/ },
-  // "security" made optional between "secret" and "clearance": found live
-  // via the spec §6 judging panel round 3 — "Secret security clearance" (a
-  // common real phrasing) failed this pattern's old strict adjacency
+  // "security" made optional between "secret" and "clearance": "Secret
+  // security clearance" (a common real phrasing) failed this pattern's old strict adjacency
   // requirement, falling through to only the generic
   // clearance_required_unspecified fallback below instead of "secret".
-  // `(?<!top )` added: found live via round 4 — that same widening made
+  // `(?<!top )` added because that same widening made
   // this pattern ALSO match inside "Top Secret security clearance" (a
   // literal substring starting at "Secret"), double-counting one phrase as
-  // both "ts" and "secret" with identical evidence text — the exact
-  // redundant-signal bug D-028 already fixed once for ts+unspecified,
-  // reintroduced here between ts+secret instead.
+  // both "ts" and "secret" with identical evidence text — the same
+  // redundant-signal bug already fixed once for ts+unspecified (see
+  // SPECIFIC_CLEARANCE_LEVELS below), reintroduced between ts+secret.
   {
     kind: "clearance_level",
     value: "secret",
     pattern: /\b(?:active\s+)?(?<!top )secret (?:security\s+)?clearance\b/i,
   },
-  // "clearance eligibility"/"clearable" added: found via the spec §6 judging
-  // panel round 9 — "U.S. clearance eligibility may be required depending on
-  // program" produced no clearance signal at all.
+  // "clearance eligibility"/"clearable" added: "U.S. clearance eligibility
+  // may be required depending on program" used to produce no clearance
+  // signal at all.
   {
     kind: "clearance_level",
     value: "clearance_required_unspecified",
     pattern: /\b(?:security clearance|active clearance|current clearance|clearance eligibility|clearable)\b/i,
   },
   // "us_citizen_required" excludes the case where "citizen" is itself one
-  // branch of a broader citizen/national/permanent-resident disjunction —
-  // found live via the spec §5 agent-in-the-loop eval (DECISIONS.md D-016/
-  // D-018): "must be a citizen, national, or lawful permanent resident" is
+  // branch of a broader citizen/national/permanent-resident disjunction:
+  // "must be a citizen, national, or lawful permanent resident" is
   // the ITAR "US person" test (22 CFR 120.62) stated in its own words, not a
   // citizen-only requirement, and was being misclassified as the narrower
   // category. "us_person_required" below now also matches that disjunction
@@ -192,8 +186,7 @@ const STATED_PATTERNS: StatedPattern[] = [
 ];
 
 // Specific clearance levels whose detection makes the generic
-// "clearance_required_unspecified" fallback redundant — found live via the
-// spec §6 judging panel round 2 (DECISIONS.md): "an active Top Secret
+// "clearance_required_unspecified" fallback redundant: "an active Top Secret
 // security clearance" independently matches BOTH the `ts` pattern (via
 // "Top Secret") AND the `clearance_required_unspecified` pattern (via
 // "security clearance"), citing the same evidence quote twice as if they
@@ -231,8 +224,7 @@ export function extractStatedSignals(descriptionText: string): RequirementSignal
   return signals;
 }
 
-// Found live via the spec §6 judging panel round 2 (DECISIONS.md): a real
-// Anduril posting based in Sydney, Australia (asking for an Australian NV2
+// A real Anduril posting based in Sydney, Australia (asking for an Australian NV2
 // clearance, not a US one) was tagged with the same inferred
 // "us_person_likely" ITAR flag this function applies to domestic roles —
 // ITAR's "US person" test (22 CFR 120.62) is a US-law-specific concept
@@ -244,8 +236,7 @@ export function extractStatedSignals(descriptionText: string): RequirementSignal
 // the description text (which is how the Australian NV2 mention itself
 // was found — a foreign clearance-system name is a stronger, more direct
 // signal than the location string alone).
-// "\bgb\b" added: found live via the spec §6 judging panel round 5
-// (candidate_user) — a real UK posting's location field used the ISO
+// "\bgb\b" added: a real UK posting's location field used the ISO
 // country code form ("Newcastle, GB"), not a spelled-out country/city name,
 // so the existing checks (which required "united kingdom" or bare "uk")
 // missed it. Scoped to the location field specifically (this regex is never
@@ -281,9 +272,8 @@ export function extractInferredSignals(
 
   const looksNonUs = looksNonUsLocation(context.location) || FOREIGN_CLEARANCE_SYSTEM.test(descriptionText);
 
-  // Found via the spec §6 judging panel round 9 (4 of 4 judges): a stated
-  // clearance requirement was never connected to citizenship, so a green
-  // card holder was told only that a role "likely" needed U.S.-person status
+  // A stated clearance requirement used to be unconnected to citizenship, so
+  // a green card holder was told only that a role "likely" needed U.S.-person status
   // — which they have — on roles that require a clearance they can't hold.
   // A U.S. clearance requires U.S. citizenship (EO 12968 § 3.1(b); 32 CFR
   // 117.10(k)); a green card satisfies ITAR, not this. That's a rule of law

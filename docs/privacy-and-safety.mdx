@@ -1,0 +1,54 @@
+---
+title: "Privacy and safety"
+description: "What the server receives and keeps today, what it never holds, what it refuses on every input, and what the designed pipeline would change."
+---
+
+## What the server receives
+
+**Available.** Each tool call sends only the small input that tool needs: a role id, a search keyword, a rule topic, or a general status such as "green card holder". For an intro card, only the names of the fields you approved. If you ask for them, a public GitHub, GitLab or Cosign username to look up, or a status claim with its signature and public key (never the private key).
+
+## What the server keeps
+
+**Available.** There are no accounts, and no tool or page reads or writes a database of users or past queries. Three things persist:
+
+- **The anonymous interest pool, opt-in.** `contribute_anonymous_signal` adds one record to a shared pool for a role: a clearance level and a years-of-experience bucket, with no name, contact or identifier. It is the only tool marked as a write, and the server's instructions tell the agent to call it only after the person agrees, every time. `get_aggregated_signal` reads the pool back only once five people have contributed, in steps of five, with percentages rounded to the nearest 5. The pool does not collect citizenship status.
+- **Short caches of public data.** Talent Network postings are cached for 5 minutes. The public GitHub or GitLab profile of a username you ask `verify_evidence` to check is cached for 10 minutes, and a Cosign directory entry for 1 minute.
+- **Logs of failures.** A failed call logs the tool's name, an error category and a short error detail. Request bodies are never logged.
+
+## What the server never holds
+
+- Social Security numbers, dates of birth, government ID numbers, home addresses, or the text of any clearance record.
+- Anything from a government clearance system. The server never queries or imitates DISS, NBIS or DCSA.
+- Export-controlled technical data or classified material. Generated content comes only from the public posting.
+- Protected characteristics, or anything inferred about them.
+
+## What the guard refuses
+
+Every input to every tool, on both endpoints, passes through `lib/guard/pii.ts` before anything else. On `/mcp`, the route also scans the raw request, including tool names, prompt arguments, resource URIs and key names, before the MCP SDK parses it. The guard refuses:
+
+| Category | Examples |
+| --- | --- |
+| Identity numbers | Social Security, passport, driver's licence, DoD ID, USCIS A-number |
+| Clearance material | Case numbers, clearance-record and adjudication text, classification markings |
+| Contact details | Emails, phone numbers, street addresses, names |
+| Financial and secret | Card numbers, access tokens, passwords, private keys |
+| Sensitive disclosures | Arrests, health, finances, polygraph results, religion, age |
+| Files | Images, screenshots, embedded binary data |
+
+The guard reads each string five ways: normalised (Unicode NFKC, other digit scripts folded, invisible characters stripped), ROT13, HTML-entity decoded, percent-decoded, and with each embedded base64 token decoded. It scans key names too, and refuses input nested deeper than 8 levels, so it fails closed. A refusal names the category and never echoes what matched. To ask how a rule treats something, ask in general terms: "How does SEAD 4 treat a past DUI?"
+
+The guard prefers a false refusal to a missed identifier. A refused request costs one rephrase; a leaked Social Security number cannot be taken back.
+
+## Web security
+
+**Available.** HSTS, a Content Security Policy, `nosniff`, `X-Frame-Options: DENY`, `frame-ancestors 'none'` and a restrictive Permissions-Policy, set in `next.config.ts`. The CSP allows inline scripts because Next.js emits inline hydration scripts. The app renders no user-supplied HTML, and a test enforces that.
+
+## What the designed pipeline would change
+
+**Not built yet.** The designed pipeline uses accounts. If it ships, the server would hold your name and email address and your sign-in records; your applications and the evidence you submit to one employer; judgments, ratings, decisions and their reasons; and consent records and an audit log. It would still never hold the items under "never holds" above: a candidate would give identity details to a background-check provider or the employer's security officer directly. The privacy page, the server's instructions and this page would change with it.
+
+## Limits and reporting
+
+cleared gives general information, not legal advice. It does not verify anyone's immigration status, citizenship or security clearance, and it does not guarantee an interview, an offer or a job.
+
+To report a vulnerability, see `SECURITY.md` at the root of the repository.

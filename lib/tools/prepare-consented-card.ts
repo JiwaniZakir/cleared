@@ -1,13 +1,12 @@
 import { z } from "zod";
-import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema } from "@/lib/tools/role-shared";
+import { resolveRole, SPEEDRUN_SOURCE, RoleIdSchema, HowToApplySchema, howToApply } from "@/lib/tools/role-shared";
 import { DISCLAIMERS } from "@/lib/disclaimers";
 import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
 
 /**
- * D-047 (spec §6 judging panel round 9, plus rounds 2, 4, 5, 7 and 8 before
- * it): this tool used to take the card's field VALUES and echo them verbatim
- * into a shareable card. Every round, a judge found the next PII variant the
- * guard missed in those free-text fields — round 9 alone got 38 of 80
+ * This tool used to take the card's field VALUES and echo them verbatim
+ * into a shareable card. Review after review found the next PII variant the
+ * guard missed in those free-text fields — one pass alone got 38 of 80
  * refuse-list payloads through (CUI markings, ID numbers, a name and street
  * address, religion, health details), all echoed back. Pattern-matching free
  * text can't win that race. So the card is now built the way the rest of
@@ -61,6 +60,17 @@ const CARD_FIELDS = [
     kind: "text",
     guidance: "Anything else the user wants this company to know about the role fit.",
   },
+  // The card and a signed statement sent with it used to be impossible to
+  // tie together. The card names the statement by its key fingerprint only
+  // — no claim values — and, like every field here, the agent fills it in
+  // locally, so the server never sees even the fingerprint.
+  {
+    name: "signed_statement_key_fingerprint",
+    label: "Signed statement (key fingerprint)",
+    kind: "text",
+    guidance:
+      "Only the 16-character keyFingerprint (credential.proof.keyFingerprint) of the signed statement from prepare_signed_attestation that the user is sending with this card — never the claims, the public key, or the signature. The company checks the statement with verify_signed_attestation and confirms its keyFingerprint matches this one.",
+  },
 ] as const;
 
 type CardFieldName = (typeof CARD_FIELDS)[number]["name"];
@@ -79,7 +89,7 @@ const OLD_CONTRACT_MESSAGE =
 // guard still scans it first). Done as a refinement on a passthrough object,
 // not a `z.undefined()` field: the MCP SDK converts this schema to JSON
 // Schema for tools/list, which can't represent `undefined` — that broke
-// tools/list for every client in a local build (D-047).
+// tools/list for every client in a local build.
 const InputSchema = z
   .object({
     role_id: RoleIdSchema,
@@ -123,6 +133,7 @@ const OutputSchema = z.object({
   instructionsForAgent: z.string(),
   notVerifiedNote: z.string(),
   applyLink: z.object({ url: z.string(), label: z.string() }).nullable(),
+  howToApply: HowToApplySchema,
   sources: z.array(SourceRefSchema),
   disclaimer: z.string(),
 });
@@ -150,13 +161,19 @@ export const prepareConsentedCardTool: ToolDef<z.infer<typeof InputSchema>, z.in
       if (f.kind === "list") lines.push(`**${f.label}:**`, f.placeholder);
       else lines.push(`**${f.label}:** ${f.placeholder}`);
     }
+    if (approved.has("signed_statement_key_fingerprint")) {
+      lines.push(
+        "",
+        "A signed statement goes with this card. Check it with cleared's verify_signed_attestation: its keyFingerprint should match the one above.",
+      );
+    }
     lines.push("", `Interested in: [${role.title}](${role.url})`);
 
     const selfReported = fields.filter((f) => f.name.endsWith("_self_reported")).map((f) => f.label);
     const notVerifiedNote =
       selfReported.length > 0
-        ? `${selfReported.join(" and ")} ${selfReported.length === 1 ? "is" : "are"} self-reported by the candidate and NOT verified by Clearance Lens. Clearance status in particular can only be verified by the employer's Facility Security Officer (FSO) at the offer stage — never from a self-report or a screenshot. ${DISCLAIMERS.neverVerifiesClearance}`
-        : `Nothing on this card is verified by Clearance Lens — it reflects only what the candidate chose to share. ${DISCLAIMERS.neverVerifiesClearance}`;
+        ? `${selfReported.join(" and ")} ${selfReported.length === 1 ? "is" : "are"} self-reported by the candidate and NOT verified by cleared. Clearance status in particular can only be verified by the employer's Facility Security Officer (FSO) at the offer stage — never from a self-report or a screenshot. ${DISCLAIMERS.neverVerifiesClearance}`
+        : `Nothing on this card is verified by cleared — it reflects only what the candidate chose to share. ${DISCLAIMERS.neverVerifiesClearance}`;
 
     return {
       roleTitle: role.title,
@@ -164,9 +181,10 @@ export const prepareConsentedCardTool: ToolDef<z.infer<typeof InputSchema>, z.in
       cardTemplate: { markdown: lines.join("\n"), fields, neverInclude: NEVER_INCLUDE },
       evaluate_locally: true,
       instructionsForAgent:
-        "Fill in each {{placeholder}} in cardTemplate.markdown yourself, locally, with what the user approved for THIS company, following each field's guidance and cardTemplate.neverInclude. Don't add anything they didn't approve. Show them the finished card and get a final yes before they send it themselves. Never send the filled-in values back to Clearance Lens — nothing here needs them.",
+        "Fill in each {{placeholder}} in cardTemplate.markdown yourself, locally, with what the user approved for THIS company, following each field's guidance and cardTemplate.neverInclude. Don't add anything they didn't approve. Show them the finished card and get a final yes before they send it themselves. Never send the filled-in values back to cleared — nothing here needs them.",
       notVerifiedNote,
       applyLink: { url: role.url, label: `Apply via ${role.company}'s listing` },
+      howToApply: howToApply(role),
       sources: [SPEEDRUN_SOURCE],
       disclaimer: DISCLAIMERS.neverSubmitsOnUserBehalf,
     };

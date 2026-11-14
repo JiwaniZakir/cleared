@@ -8,7 +8,7 @@ import { scanValueForPiiCui, buildFriendlyRejectionMessage, type PiiCategory } f
 export const metadata: Metadata = {
   title: "Privacy",
   description:
-    "What Clearance Lens receives, stores, refuses, and logs. No account, no PII, and almost nothing stored — one opt-in, anonymous exception.",
+    "What cleared receives, stores, refuses, and logs. No account, no PII, and almost nothing stored — one opt-in, anonymous exception.",
 };
 
 /**
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
       <Nav />
       {/* One narrow column, ~680px max-width, left-aligned, no sidebar — no
           disclaimer-banner wrapper here, the whole page already is the
-          disclaimer (R2 §5's own note; Do/Don't #3). */}
+          disclaimer. */}
       <main id="main-content" className="mx-auto w-full max-w-[680px] flex-1 px-6 py-16 sm:py-20">
         <h1 className="text-[1.875rem] leading-[1.25] font-semibold tracking-[-0.005em] text-neutral-12">Privacy</h1>
         <p className="mt-3 text-[1.125rem] leading-[1.6] text-neutral-11">
@@ -93,7 +93,7 @@ export default function PrivacyPage() {
           </h2>
           <p className="mt-3 text-base leading-[1.6] text-neutral-11">
             {
-              "A role ID, a search keyword, a rule topic, or a general status you choose to share (for example \u201cgreen card holder\u201d or \u201cSecret\u201d). For an intro card, only the names of the fields you want on it \u2014 your agent fills in your answers locally, so they never reach the server. Nothing else: each tool call sends exactly the small, specific input that tool needs, never everything your agent happens to know about you."
+              "A role ID, a search keyword, a rule topic, or a general status you choose to share (for example \u201cgreen card holder\u201d or \u201cSecret\u201d). For an intro card, only the names of the fields you want on it \u2014 your agent fills in your answers locally, so they never reach the server. If you ask for them: a public GitHub, GitLab or Cosign username to look up, or a signed status claim (a status code, its signature and your public key, never the private key) to wrap or check. Nothing else: each tool call sends exactly the small, specific input that tool needs, never everything your agent happens to know about you."
             }
           </p>
         </section>
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
           </h2>
           <p className="mt-3 text-base leading-[1.6] text-neutral-11">
             {
-              "Almost nothing. There is no database of users, accounts, or past queries — every request is handled and immediately forgotten, with one specific, opt-in exception: if you explicitly call "
+              "Almost nothing. There are no accounts, and no tool or page reads or writes a database of users or past queries. One specific, opt-in exception: if you explicitly call "
             }
             <code className="rounded bg-neutral-3 px-1 py-0.5 font-mono text-[0.9em]">contribute_anonymous_signal</code>
             {
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
             }
             <code className="rounded bg-neutral-3 px-1 py-0.5 font-mono text-[0.9em]">get_aggregated_signal</code>
             {
-              " can read back later as a rounded percentage — never calling either tool means none of this applies to you at all. Beyond that, the only other thing that persists on this server at all is the public rules and timelines data every visitor can already see on "
+              " can read back later as a rounded percentage — never calling either tool means none of this applies to you at all. Public data a tool looks up is cached briefly: Talent Network postings for 5 minutes, and the public GitHub, GitLab or Cosign profile of a username you ask it to check for up to 10 minutes. Beyond that, the only other thing that persists on this server at all is the public rules and timelines data every visitor can already see on "
             }
             <Link href="/sources" className="text-accent-11 underline underline-offset-2 hover:text-accent-10">
               Sources
@@ -139,7 +139,7 @@ export default function PrivacyPage() {
             }
           </p>
           {/* tabIndex/aria-label: same scrollable-region-focusable fix as
-              components/install-snippet.tsx (DECISIONS.md) — overflow-x-auto
+              components/install-snippet.tsx — overflow-x-auto
               with no way for a keyboard-only user to reach and scroll it. */}
           <pre
             tabIndex={0}

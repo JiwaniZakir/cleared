@@ -6,8 +6,7 @@ import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
 
 const InputSchema = z.object({
   role_id: RoleIdSchema,
-  // Explicit error message: found live via the spec §6 judging panel round
-  // 4 — a numeric literal union's default error ("Invalid input") doesn't
+  // Explicit error message: a numeric literal union's default error ("Invalid input") doesn't
   // name the allowed values the way a string z.enum's does elsewhere in
   // this file.
   minutes: z.union([z.literal(60), z.literal(90), z.literal(180)], {
@@ -51,13 +50,13 @@ type ScopeSpec = {
   why: string;
 };
 
-// research/R5-assessment-science.md §B4 — "no study measures optimal
-// minute-counts; this translates the fixed-shape/scaled-scope standardization
-// principle" [inference, explicitly labeled as such in the source research].
+// No study measures optimal minute-counts; this translates the
+// fixed-shape, scaled-scope standardization principle from the work-sample
+// literature (an inference, not a measured result).
 const SCOPE_BY_MINUTES: Record<60 | 90 | 180, ScopeSpec> = {
   60: {
     taskShape:
-      "One narrow, already-decomposed task tied directly to a single named responsibility below — not an open-ended project.",
+      "One narrow, already-decomposed task tied directly to a single named responsibility from the posting — not an open-ended project.",
     predictorAnalogue: "job-knowledge test (applied, correct use of domain concepts under time pressure)",
     rubricCount: 3,
     why: "Matches tight time to a bounded, gradable unit of work; avoids penalizing candidates for lacking a large uninterrupted block.",
@@ -98,12 +97,12 @@ export const buildTrialAssessmentTool: ToolDef<z.infer<typeof InputSchema>, z.in
     const sections = extractSections(role.descriptionText);
     const scope = SCOPE_BY_MINUTES[minutes];
 
-    // Prefer responsibilities (the "sample, not sign" principle, R5 §B1);
+    // Prefer responsibilities (the "sample, not sign" principle);
     // fall back to qualifications, then any bullet, so a thinly-structured
     // posting still produces a usable, job-specific rubric rather than an
     // empty one.
-    // Eligibility/credential lines aren't work to sample (round 9: a rubric
-    // criterion read "Addresses: 'Eligible to obtain… clearance'") — D-050.
+    // Eligibility/credential lines aren't work to sample (a rubric criterion
+    // once read "Addresses: 'Eligible to obtain… clearance'").
     const resp = sections.responsibilities.filter(isJobContentBullet);
     const pool =
       resp.length >= scope.rubricCount
@@ -133,14 +132,17 @@ export const buildTrialAssessmentTool: ToolDef<z.infer<typeof InputSchema>, z.in
 
     const briefLines = [
       `Hey — welcome to a quick trial project modeled on the "${role.title}" role at ${role.company}.`,
-      `Time box: ${minutes} minutes. ${scope.taskShape}`,
+      // The task shape is stated once, in "Your task" after the list: it used
+      // to be here too, and its "responsibility below" was
+      // read again after the list, where the responsibilities are above.
+      `Time box: ${minutes} minutes.`,
       "",
-      "This is built only from the public job posting below — nothing here asks for or should produce export-controlled technical data, drawings, or specifications.",
+      "This is built only from the role's public job posting — nothing here asks for or should produce export-controlled technical data, drawings, or specifications.",
       "",
       "Named responsibilities this exercise is scoped against (quoted from the posting):",
       ...chosen.map((q) => `  - "${q}"`),
       "",
-      // Round 9: the brief listed responsibilities but never said what to do.
+      // The brief used to list responsibilities but never say what to do.
       chosen.length > 0
         ? `Your task: pick the responsibility above closest to your experience, and within the time box produce one concrete artifact for a realistic, unclassified version of it — ${scope.taskShape.charAt(0).toLowerCase()}${scope.taskShape.slice(1)}`
         : "This posting lists no role-specific responsibilities to scope a task against — the hiring team should supply one before sending this.",
@@ -167,13 +169,16 @@ export const buildTrialAssessmentTool: ToolDef<z.infer<typeof InputSchema>, z.in
         "Work-sample tests are a strong predictor of job performance in the research literature when professionally built, standardized, and behaviorally scored at scale (Sackett, Zhang, Berry & Lievens, 2022 — see sources[]) — that evidence licenses the design choices above (job-specific, traceable, behaviorally anchored), not a claim that this specific generated exercise reproduces any particular validity number.",
       sources: [
         SPEEDRUN_SOURCE,
+        // DOI links, not mirrors or encyclopedia pages.
         {
-          title: "Sackett, Zhang, Berry & Lievens (2022) — revisited meta-analytic validity estimates",
-          url: "https://gwern.net/doc/statistics/meta-analysis/2021-sackett.pdf",
+          title: "Sackett, Zhang, Berry & Lievens (2022) — Revisiting meta-analytic estimates of validity in personnel selection, Journal of Applied Psychology 107(11)",
+          url: "https://doi.org/10.1037/apl0000994",
+          lastVerified: "2026-11-13",
         },
         {
-          title: "Callinan & Robertson (2000) — Work sample testing design principles",
-          url: "https://psychology.iresearchnet.com/industrial-organizational-psychology/individual-differences/work-samples/",
+          title: "Callinan & Robertson (2000) — Work sample testing, International Journal of Selection and Assessment 8(4)",
+          url: "https://doi.org/10.1111/1468-2389.00154",
+          lastVerified: "2026-11-13",
         },
       ],
       disclaimer: DISCLAIMERS.itarSafeTrial,

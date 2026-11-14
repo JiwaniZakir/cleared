@@ -4,13 +4,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/cn";
 
 /**
- * Foundational atom (research/R2-design-system.md §3.0). Built on Radix Slot
+ * Foundational atom. Built on Radix Slot
  * so it renders as a native <button> or, via asChild, as a Next.js <Link> —
- * styling never forks between the two cases (§4, the Slot row).
+ * styling never forks between the two cases.
  */
 const buttonVariants = cva(
   // box-shadow deliberately excluded from the transitioned properties —
-  // found live via the spec §6 judging panel round 4 (product_designer):
   // reproduced via getComputedStyle immediately after a keyboard Tab vs.
   // after a 250ms wait — the focus ring IS correctly defined (the
   // underlying --tw-ring-* variables were set correctly in both captures)

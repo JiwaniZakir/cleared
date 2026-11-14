@@ -10,7 +10,7 @@ const BASE_URL = "https://speedrun-talent-network.com/api/v1";
 /** Identifies us to the upstream per their fair-use docs ("optional ?source= for
  * attribution and better treatment") — never the user's query text, just our
  * own app name. This is the only "identifier" that crosses this boundary. */
-const SOURCE = "clearance-lens";
+const SOURCE = "cleared";
 /** Matches the upstream's own edge-cache window (1-5 min per their docs), so we
  * are never serving staler data than they would anyway. */
 const REVALIDATE_SECONDS = 300;
@@ -36,8 +36,7 @@ function buildUrl(path: string, params: Record<string, string | number | boolean
 }
 
 /** An attempt slower than this is treated as failed. The upstream is normally
- *  sub-second; found by a self-run probe between judging panel rounds 8 and 9
- *  (DECISIONS.md D-045) that there was no per-request timeout at all, so one
+ *  sub-second; before this there was no per-request timeout at all, so one
  *  stalled request held a whole tool call open (measured: 33s for a single
  *  failing page). Does not affect Next's data cache — a signal opts a fetch
  *  out of render memoization only, which never applies in route handlers. */
@@ -80,7 +79,7 @@ async function fetchJson<T>(url: string, notFoundMessage?: string, { maxAttempts
 
     // 5xx is the upstream's own failure, not ours — retry a bounded number of
     // times before surfacing it. Verified live: a transient 500 here is real,
-    // not hypothetical (see DECISIONS.md D-006).
+    // not hypothetical.
     if (res.status >= 500 && attempt < maxAttempts - 1) {
       lastError = new SpeedrunApiError(`Speedrun API returned ${res.status}`, res.status);
       if (!(await backoffWithin(attempt, maxAttempts, deadline))) break;
@@ -114,7 +113,7 @@ async function fetchJson<T>(url: string, notFoundMessage?: string, { maxAttempts
   // Every exhausted path ends as an UpstreamApiError. A raw fetch/timeout
   // exception used to escape from here, which the tool pipeline (correctly)
   // doesn't recognize as an upstream failure — so the user saw a generic
-  // "something went wrong" instead of "temporarily unavailable" (D-045).
+  // "something went wrong" instead of "temporarily unavailable".
   if (lastError instanceof SpeedrunApiError) throw lastError;
   throw new SpeedrunApiError("Speedrun API unreachable or too slow to respond", 504);
 }
@@ -141,9 +140,14 @@ export async function searchJobs(
     q: params.q,
     industry: params.industry,
     loc: params.loc,
-    remote: params.remote,
+    // The upstream takes remote=1; "true" is ignored (checked live).
+    remote: params.remote ? 1 : undefined,
     page: params.page,
     scope: params.scope,
+    lvl: params.lvl,
+    yoe: params.yoe,
+    eng: params.eng,
+    company: params.company,
   });
   return fetchJson<SpeedrunJobSearchResponse>(url, undefined, options);
 }

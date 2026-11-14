@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 /**
- * Shape-matched loading placeholders (R2 §3.14) — never a generic spinner.
+ * Shape-matched loading placeholders — never a generic spinner.
  * Each export mirrors the real box layout of the component it stands in
  * for. `motion-safe:animate-pulse` pulses opacity on a neutral-3 box when
  * motion is allowed, and freezes to a static neutral-3 box under

@@ -12,8 +12,8 @@ interface SceneAnswer {
 }
 
 /**
- * Renders run_job_preview's scenes ONE AT A TIME (R2 §3.8) — a stepper
- * above a single stage. Critically, `whatRealTeamsReportByChoice` is never
+ * Renders run_job_preview's scenes ONE AT A TIME — a stepper
+ * above a single stage. Critically, `possibleOutcomeByChoice` is never
  * rendered until the viewer actually clicks a choice (the tool's own
  * `instructionsForAgent` says exactly this; this component enforces the
  * same rule in code, not just by convention): the outcome text for a scene
@@ -132,7 +132,7 @@ export function JobPreviewScenePlayer({
         {pendingChoiceId && !isAnswered && (
           <div className="flex flex-col gap-2 rounded-md border border-accent-7 bg-accent-1 p-3">
             <label htmlFor="rationale" className="text-sm font-medium text-neutral-12">
-              Before we reveal what real teams report — state your one-sentence rationale.
+              Before we reveal what could happen — state your one-sentence rationale.
             </label>
             <textarea
               id="rationale"
@@ -160,9 +160,10 @@ export function JobPreviewScenePlayer({
             )}
             <div className="flex flex-col gap-1.5 rounded-md bg-neutral-2 p-3">
               <p className="text-[0.75rem] font-semibold uppercase tracking-wide text-neutral-10">
-                What real teams report
+                What could happen
               </p>
-              <p className="text-sm leading-[1.6] text-neutral-12">{scene.whatRealTeamsReportByChoice[answer.choiceId]}</p>
+              <p className="text-sm leading-[1.6] text-neutral-12">{scene.possibleOutcomeByChoice[answer.choiceId]}</p>
+              <p className="text-[0.75rem] leading-[1.5] text-neutral-10">Written by cleared as a plausible consequence, not survey data.</p>
             </div>
             <div className="flex flex-col gap-2">
               <p className="text-[0.75rem] font-semibold uppercase tracking-wide text-neutral-10">Debrief</p>

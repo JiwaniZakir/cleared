@@ -66,7 +66,7 @@ const TOOL_CARD_META: Record<string, { blurb: string; fields: string[] }> = {
   },
   prepare_signed_attestation: {
     blurb:
-      "Wraps a self-asserted claim (clearance level, citizenship status, or availability) in a credential your own agent signs locally — proves who signed it and when, never that the claim itself is true.",
+      "Wraps a self-asserted claim (clearance level, citizenship status, or availability) in a credential your own agent signs locally — proves which key signed it and that it hasn't changed, not when (the time is the signer's own statement), and never that the claim itself is true.",
     fields: ["claims", "signature_base64", "credential"],
   },
   contribute_anonymous_signal: {
@@ -123,7 +123,7 @@ export default function Home() {
 
         <section className="mx-auto max-w-[1120px] px-6 pb-16 sm:pb-20 lg:pb-24">
           <DisclaimerBanner href="/privacy" linkLabel="Privacy →">
-            Clearance Lens is not legal advice and never touches DISS/NBIS/DCSA.
+            cleared is not legal advice and never touches DISS/NBIS/DCSA.
           </DisclaimerBanner>
         </section>
 

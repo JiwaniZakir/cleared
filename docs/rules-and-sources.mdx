@@ -1,0 +1,58 @@
+---
+title: "Rules and sources"
+description: "The rule topics explain_rule answers, the clearance timelines, the recruiter guide, and how the sources are kept current."
+---
+
+**Available.** `explain_rule` answers from `data/rules.json`: 23 topics, last verified 2026-11-13. Each topic has a summary, key points and primary sources, each source with the date it was last opened and checked. Call it with a topic id below, or with everyday words ("green card", "I-9", "offer letter"); a miss returns the list of topics. The whole dataset is also an MCP resource, `cleared://rules.json`.
+
+## Eligibility, export control and clearances
+
+| Topic id | Title | Sources |
+| --- | --- | --- |
+| `itar-us-person` | ITAR "U.S. Person" Definition | 3 |
+| `clearance-citizenship` | Security Clearances Require U.S. Citizenship: a Green Card Is Not Enough | 3 |
+| `laa-non-citizen` | Limited Access Authorization (LAA) for Non-U.S. Citizens | 3 |
+| `deemed-export` | EAR "Deemed Export" vs. ITAR | 2 |
+| `sf86-eapp` | SF-86 and the eApp Filing System | 3 |
+| `nbis-diss` | NBIS vs. DISS: Current System of Record | 3 |
+| `sead4` | SEAD 4: The 13 Adjudicative Guidelines | 3 |
+| `sead7` | SEAD 7: Clearance Reciprocity | 4 |
+| `continuous-vetting` | Continuous Vetting (Trusted Workforce 2.0) | 2 |
+| `interim-clearance` | Interim (Temporary) Clearance Eligibility | 2 |
+| `fcl-sponsorship` | Facility Clearance (FCL) Sponsorship for a New Company | 3 |
+| `dcsa-timeliness` | Current DCSA Clearance Timeliness (FY2026 Q3) | 2 |
+| `zkp-credentials` | Zero-Knowledge Passport Proofs (Self, zkPassport) | 2 |
+| `w3c-vc` | W3C Verifiable Credentials 2.0 and SD-JWT | 5 |
+| `mdl-iso18013` | Mobile Driver's License (mDL) / ISO 18013-5 | 1 |
+
+## After an offer
+
+For the steps a recruiter takes after an offer. Each key point cites a primary source opened on 2026-11-13.
+
+| Topic id | Title | Sources |
+| --- | --- | --- |
+| `fcra-background-check` | Background Checks: the FCRA Sequence | 5 |
+| `fcra-adverse-action` | Adverse Action After a Background Check | 6 |
+| `fair-chance-timing` | Fair-Chance Laws: When Criminal History May Be Checked | 6 |
+| `form-i9` | Form I-9: Employment Eligibility Verification | 3 |
+| `e-verify` | E-Verify for New Hires | 3 |
+| `offer-contingencies` | Conditional Offers and Their Contingencies | 5 |
+| `confidentiality-invention-assignment` | Confidentiality and Invention-Assignment Agreements | 4 |
+| `export-determination-after-offer` | Export-Control Check After an Offer | 4 |
+
+## Clearance timelines
+
+`estimate_timeline` reads `data/timelines.json` (last verified 2026-11-12): the Defense Counterintelligence and Security Agency's most recent published quarterly averages, by level, plus modifiers for an employer with or without a facility clearance and for an existing, interim or lapsed clearance. A quarterly average is a mean, not a median. Where no primary source publishes a number, the tool returns none. For a non-citizen it returns the citizenship rule, not a day count. The dataset is also the resource `cleared://timelines.json`.
+
+## The recruiter guide
+
+The page [`/docs/recruiter`](https://cleared-mcp.vercel.app/docs/recruiter) is **available**, but most of what it describes is **not built yet**. It walks through the 38 steps from opening a role to day one, generated from `data/pipeline-steps.json`: what happens, what cleared would do, what a named person must do and why, and what must never happen before what, with every legal point linked to its source and date. Each part that is not built is marked "Not built yet". The parts that work today are the `explain_rule` topics it links to.
+
+## How sources stay honest
+
+- `SOURCES.md` and the `/sources` page list every source. The parts drawn from the data files are printed by `scripts/generate-sources.ts`.
+- `tests/unit/data-integrity.test.ts` fails if a URL cited in the data, or by a tool, is missing from `SOURCES.md` or `/sources`.
+- `pnpm linkcheck` opens every cited URL.
+- When a source and the product disagree, the product changes. Three timeline ranges that no cited source contained were removed this way.
+
+None of this is legal advice. Verify anything that matters with the employer's Facility Security Officer or a lawyer.

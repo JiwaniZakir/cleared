@@ -14,7 +14,7 @@ describe("estimate_timeline", () => {
     expect(result.estimate.minDays).toBe(TIMELINES.investigations.secret.medianDays ?? TIMELINES.investigations.secret.meanDays);
   });
 
-  it("current_status=none: surfaces the interim-eligibility driver (regression for DECISIONS.md D-016 — a zero-history caller used to never see this)", async () => {
+  it("current_status=none: surfaces the interim-eligibility driver (regression — a zero-history caller used to never see this)", async () => {
     const result = await estimateTimelineTool.handler({
       target_level: "secret",
       current_status: "none",
@@ -27,11 +27,10 @@ describe("estimate_timeline", () => {
     expect(result.estimate.minDays).toBe(result.estimate.maxDays);
   });
 
-  // Regression for DECISIONS.md (judging panel round 2): current_status=
-  // "interim" used to produce output nearly identical to "none" (same
-  // baseline estimate, same interim-modifier driver content), misleadingly
-  // implying someone who already holds interim eligibility faces the same
-  // remaining wait as someone starting from zero.
+  // Regression: current_status="interim" used to produce output nearly
+  // identical to "none" (same baseline estimate, same interim-modifier driver
+  // content), misleadingly implying someone who already holds interim
+  // eligibility faces the same remaining wait as someone starting from zero.
   it("current_status=interim gets its own distinct driver reframing the baseline as a reference point, not their own expected wait", async () => {
     const none = await estimateTimelineTool.handler({ target_level: "secret", current_status: "none", employer_has_fcl: "unknown", citizenship_status: "unknown" });
     const interim = await estimateTimelineTool.handler({ target_level: "secret", current_status: "interim", employer_has_fcl: "unknown", citizenship_status: "unknown" });
@@ -85,10 +84,10 @@ describe("estimate_timeline", () => {
       current_status: "none",
       employer_has_fcl: "no", citizenship_status: "unknown",
     });
-    // Round 8 (D-042) made "no" add a 90–270-day wait to the number. A
-    // source-by-source check (D-049) found that range in no cited source —
-    // DCSA publishes no FCL duration — so the estimates are equal again, and
-    // the difference lives in the driver, where it's sourced.
+    // "no" once added a 90–270-day wait to the number. A source-by-source check
+    // found that range in no cited source — DCSA publishes no FCL duration — so
+    // the estimates are equal again, and the difference lives in the driver,
+    // where it's sourced.
     expect(withNoFcl.estimate).toEqual(withUnknownFcl.estimate);
     expect(withNoFcl.keyDrivers.some((d) => d.label.toLowerCase().includes("no facility clearance"))).toBe(true);
     expect(withUnknownFcl.keyDrivers.some((d) => d.label.toLowerCase().includes("fcl status unknown"))).toBe(true);
@@ -124,11 +123,10 @@ describe("estimate_timeline", () => {
     expect(parsed.success).toBe(false);
   });
 
-  // Regression for DECISIONS.md (judging panel rounds 3 and 5): several
-  // judges' sampled inputs always landed on a no-range case and read the
-  // identical min/max as the tool never delivering the range its own
-  // description promises -- the output now explains this explicitly rather
-  // than leaving it to be inferred.
+  // Regression: some sampled inputs always landed on a no-range case and read
+  // the identical min/max as the tool never delivering the range its own
+  // description promises -- the output now explains this explicitly rather than
+  // leaving it to be inferred.
   it("says what the figure is — DCSA's quarterly average, a mean, not a median", async () => {
     const result = await estimateTimelineTool.handler({
       target_level: "secret",
@@ -140,10 +138,10 @@ describe("estimate_timeline", () => {
     expect(result.uncertaintyNote).toMatch(/a mean, not a median/);
   });
 
-  // D-049 (judging panel round 9, trust_skeptic and recruiter_user; confirmed against the
-  // NISPPAC slides): lapsed_gt_2y returned 180–270 for every level, a range
-  // no cited source contains. It's processed as a new initial investigation,
-  // so the target level's own published baseline applies.
+  // Confirmed against the NISPPAC slides: lapsed_gt_2y once returned 180–270
+  // for every level, a range no cited source contains. It's processed as a new
+  // initial investigation, so the target level's own published baseline
+  // applies.
   it("lapsed > 2 years uses the target level's own baseline, not one shared invented range", async () => {
     const secret = await estimateTimelineTool.handler({ target_level: "secret", current_status: "lapsed_gt_2y", employer_has_fcl: "unknown", citizenship_status: "unknown" });
     const ts = await estimateTimelineTool.handler({ target_level: "ts", current_status: "lapsed_gt_2y", employer_has_fcl: "unknown", citizenship_status: "unknown" });
@@ -160,11 +158,11 @@ describe("estimate_timeline", () => {
     expect(r.sources.some((s) => s.url.includes("sead-7"))).toBe(true);
   });
 
-  // Round 8 (candidate_user) asked for the no-FCL wait in the structured
-  // number. D-049 then found its 90–270 days in no cited source (and DCSA
-  // publishes no FCL duration), so the honest structured answer is "no
-  // published figure": employerFclWaitDays stays null until a primary
-  // source publishes one, and the driver says why.
+  // The no-FCL wait was once requested in the structured number, but its 90–270
+  // days were then found in no cited source (and DCSA publishes no FCL
+  // duration), so the honest structured answer is "no published figure":
+  // employerFclWaitDays stays null until a primary source publishes one, and
+  // the driver says why.
   describe("employer_has_fcl: no invented sponsorship-wait number", () => {
     it("'no' adds no day count, and says no primary source publishes one", async () => {
       const no = await estimateTimelineTool.handler({ target_level: "secret", current_status: "none", employer_has_fcl: "no", citizenship_status: "unknown" });

@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { getJob } from "@/lib/speedrun/client";
 import { extractRequirementSignals, looksNonUsLocation, type RequirementSignal } from "@/lib/speedrun/infer";
-import type { SpeedrunJobLabels } from "@/lib/speedrun/types";
+import type { SpeedrunJobApply, SpeedrunJobLabels } from "@/lib/speedrun/types";
 import type { SourceRef } from "@/lib/tools/wrap";
 
 /** Every role/company-derived tool cites the platform data came from — not a
  * statistic, just provenance, but included in `sources[]` for consistency. */
 /** Every role-based tool's role_id. Described once so an agent learns where
- *  ids come from even on clients that never surface MCP prompts (D-048). */
+ *  ids come from even on clients that never surface MCP prompts. */
 export const RoleIdSchema = z
   .string()
   .min(1)
@@ -41,6 +41,8 @@ export interface ResolvedRole {
   publishedAt: string;
   descriptionText: string;
   labels: SpeedrunJobLabels;
+  /** The posting's own "how to apply": resolveRole used to drop it. */
+  apply: SpeedrunJobApply | null;
   signals: RequirementSignal[];
 }
 
@@ -73,7 +75,41 @@ export async function resolveRole(roleId: string): Promise<ResolvedRole> {
     publishedAt: job.published_at,
     descriptionText: job.description_text,
     labels: job.labels,
+    apply: job.apply ?? null,
     signals,
+  };
+}
+
+/** How to apply for a role, as the posting gives it. The
+ *  upstream detail carries `apply: { kind, url }` (every one of 60 live
+ *  defense postings checked on 2026-11-13 had kind "external", a link to the
+ *  company's own applicant-tracking page); resolveRole used to drop it, so
+ *  no tool could say where the application actually goes. */
+export const HowToApplySchema = z.object({
+  listingUrl: z.string(),
+  applicationUrl: z.string().nullable(),
+  kind: z.string().nullable(),
+  note: z.string(),
+});
+export type HowToApply = z.infer<typeof HowToApplySchema>;
+
+export function howToApply(role: Pick<ResolvedRole, "url" | "company" | "apply">): HowToApply {
+  // Only a plain web link is passed on: the value is upstream data, and a
+  // consumer may render it as a link.
+  const applicationUrl = role.apply && /^https?:\/\//i.test(role.apply.url) ? role.apply.url : null;
+  if (applicationUrl) {
+    return {
+      listingUrl: role.url,
+      applicationUrl,
+      kind: role.apply?.kind ?? null,
+      note: `Applications go through ${role.company}'s own application page (applicationUrl). cleared never applies or submits anything — the user applies there themselves.`,
+    };
+  }
+  return {
+    listingUrl: role.url,
+    applicationUrl: null,
+    kind: null,
+    note: "The posting gives no separate application link — apply from the listing page. cleared never applies or submits anything.",
   };
 }
 
@@ -96,8 +132,7 @@ export function matchesClearanceFilter(
   const levels = signals.filter((s) => s.kind === "clearance_level").map((s) => s.value);
   if (clearance === "none") return levels.length === 0;
   if (levels.includes(clearance)) return true;
-  // Found live via the spec §6 judging panel round 5 (candidate_user,
-  // reproduced twice): a UK Leonardo posting's generic "Security Clearance"
+  // A UK Leonardo posting's generic "Security Clearance"
   // mention (clearance_required_unspecified — the UK has its own, different
   // vetting system) matched a "secret" filter query as if it meant the US
   // DoD Secret clearance this product is entirely about. The fallback below
@@ -109,6 +144,21 @@ export function matchesClearanceFilter(
   return false;
 }
 
+/** True when the posting states a clearance, or implies one: an inferred
+ *  "clearance possibly required" (government, DoD or classified work), a
+ *  polygraph, or a SCIF. The clearance-wait and SCIF job-preview scenes and
+ *  readiness_brief's clearance and FCL questions depend on it: a posting with
+ *  only a U.S.-person requirement has no clearance to wait for. */
+export function roleImpliesClearance(signals: RequirementSignal[]): boolean {
+  return signals.some(
+    (s) =>
+      s.kind === "clearance_level" ||
+      s.kind === "polygraph" ||
+      s.kind === "facility_access" ||
+      s.value === "us_citizen_required_for_clearance",
+  );
+}
+
 export function looksItarRestricted(signals: RequirementSignal[]): boolean {
   return signals.some(
     (s) =>
@@ -116,7 +166,7 @@ export function looksItarRestricted(signals: RequirementSignal[]): boolean {
       (s.value === "us_person_required" ||
         s.value === "us_citizen_required" ||
         s.value === "us_person_likely" ||
-        // A clearance requires citizenship, which implies U.S.-person status (D-046).
+        // A clearance requires citizenship, which implies U.S.-person status.
         s.value === "us_citizen_required_for_clearance"),
   );
 }

@@ -37,7 +37,7 @@ function humanizeSignal(signal: RequirementSignal): string {
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
   // "Secret · able to obtain" tells a new grad they can apply; "Secret · must
-  // hold" tells them they can't yet (D-046). "May be required" is already
+  // hold" tells them they can't yet. "May be required" is already
   // in the value's own label, or reads as a preference.
   const stage = signal.clearanceStage ? STAGE_LABELS[signal.clearanceStage] : undefined;
   if (stage) return `${base} · ${stage}`;
@@ -54,11 +54,10 @@ function signalPriority(signal: RequirementSignal): number {
   return 2;
 }
 
-/** A popover, not a tooltip: found via the spec §6 judging panel round 9
- *  follow-up — Radix tooltips don't open on touch, so on a phone a chip's
+/** A popover, not a tooltip: Radix tooltips don't open on touch, so on a phone a chip's
  *  "stated vs inferred" evidence (the whole point of the chip) was
  *  unreachable; tapping just closed it. A popover opens on tap, click, Enter,
- *  or Space, and closes on Escape or tapping elsewhere (D-051). */
+ *  or Space, and closes on Escape or tapping elsewhere. */
 function RequirementChip({ signal }: { signal: RequirementSignal }) {
   const stated = signal.basis === "stated";
   return (
@@ -99,7 +98,7 @@ function formatComp(role: RoleResult): string | null {
 }
 
 /**
- * One role in /try's search results (R2 §3.4). Company name, role title,
+ * One role in /try's search results. Company name, role title,
  * 2-3 requirement chips distinguishing stated (solid border) from inferred
  * (dashed border + tooltip), and a source-citation-chip back to the
  * original posting. Clicking opens the matching company-profile-card —
@@ -121,8 +120,8 @@ export function RoleSearchResultCard({
   const comp = formatComp(role);
 
   return (
-    // Found live via Playwright + axe against a real production build
-    // (DECISIONS.md): role="button"/tabIndex on this whole card while it
+    // Found via Playwright + axe against a real production build:
+    // role="button"/tabIndex on this whole card while it
     // also contains its own focusable descendants (each requirement chip's
     // tooltip trigger, the source-citation link) is axe's "no-focusable-
     // content" violation — a widget with role="button" must be atomic, not

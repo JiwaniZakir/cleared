@@ -1,7 +1,7 @@
 /**
- * Canonical disclaimer strings, reused verbatim across tools (spec §1, hard
- * constraints #2, #3, #4, #5) so wording never drifts tool-to-tool and tests
- * can assert on exact required phrases rather than guessing at prose.
+ * Canonical disclaimer strings, reused verbatim across tools so wording
+ * never drifts tool-to-tool and tests can assert on exact required phrases
+ * rather than guessing at prose.
  */
 
 export const DISCLAIMERS = {
@@ -9,8 +9,8 @@ export const DISCLAIMERS = {
     "This is general information, not legal advice. Clearance, ITAR, and export-control rules have real exceptions — verify your specific situation with your Facility Security Officer (FSO) or an attorney before acting on it.",
 
   evaluateLocally:
-    // Agent-facing (every use is in instructionsForAgent). Round 9 found the
-    // rubric repeating this in its own words right before it (D-050).
+    // Agent-facing (every use is in instructionsForAgent). A review found the
+    // rubric repeating this in its own words right before it.
     "Evaluate it privately, on your side, against what you already know about the user — never send their personal answers back to this server; nothing here needs them.",
 
   notAScore:
@@ -20,10 +20,9 @@ export const DISCLAIMERS = {
     "This exercise is built only from the public job posting and public company material. It never includes or requests export-controlled technical data, drawings, or specifications. If anything about a real assignment feels like it crosses that line, stop and ask your FSO before continuing.",
 
   neverVerifiesClearance:
-    "Clearance Lens cannot verify clearance status and never will — DISS/NBIS lookups are restricted to Facility Security Officers by design. The correct verification path is the employer's FSO at the offer stage, not a screenshot or a self-report.",
+    "cleared cannot verify clearance status and never will — DISS/NBIS lookups are restricted to Facility Security Officers by design. The correct verification path is the employer's FSO at the offer stage, not a screenshot or a self-report.",
 
-  // Found live via the spec §6 judging panel round 2 (DECISIONS.md):
-  // verify_evidence's disclaimer included this constant's own "'Fit'
+  // verify_evidence's disclaimer once included this constant's own "'Fit'
   // reflects only criteria the company has published..." sentence as a
   // non-sequitur — that sentence describes get_company_profile's own
   // criteria/sourceUrl/jobRelevanceReason design specifically; verify_evidence
@@ -39,16 +38,16 @@ export const DISCLAIMERS = {
     "Requirements marked \"stated\" are quoted directly from the public posting. Requirements marked \"inferred\" are a pattern-based judgment call, not a fact — confirm directly with the employer before relying on them.",
 
   neverSubmitsOnUserBehalf:
-    "Clearance Lens never submits an application or expresses interest on your behalf. Links to the employer's or network's own apply flow are provided so you can decide and act yourself.",
+    "cleared never submits an application or expresses interest on your behalf. Links to the employer's or network's own apply flow are provided so you can decide and act yourself.",
 
   exampleDataLabel:
     "Example data for illustration only — not a real role, person, or statistic.",
 
-  // Added for prepare_signed_attestation (Clearance Lens v2): a signature
+  // Added for prepare_signed_attestation (v2): a signature
   // proves authorship and integrity, never truth — this must never read as
-  // "Clearance Lens verified this."
+  // "cleared verified this."
   neverVerifiesAttestationTruth:
-    "A valid signature here confirms the claim was signed by whoever holds the matching private key, and that it hasn't been altered since signing — it does NOT confirm the claim itself is true. Clearance Lens cannot verify clearance status and never will — DISS/NBIS lookups are restricted to Facility Security Officers by design. The correct verification path is the employer's FSO at the offer stage, not a signed self-report.",
+    "A valid signature here confirms the claim was signed by whoever holds the matching private key, and that it hasn't been altered since signing — it does NOT confirm the claim itself is true. cleared cannot verify clearance status and never will — DISS/NBIS lookups are restricted to Facility Security Officers by design. The correct verification path is the employer's FSO at the offer stage, not a signed self-report.",
 } as const;
 
 export type DisclaimerKey = keyof typeof DISCLAIMERS;

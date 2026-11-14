@@ -1,6 +1,6 @@
 /**
- * Metadata-only structured logging. Hard constraint (spec §1.1): "Logs must be
- * scrubbed (no request bodies)." Every call site here passes a tool/route name
+ * Metadata-only structured logging. Logs never carry request bodies. Every
+ * call site here passes a tool/route name
  * and small, enumerable metadata (status, latency, error code) — never the
  * input payload, never free text that could contain what a user typed.
  */

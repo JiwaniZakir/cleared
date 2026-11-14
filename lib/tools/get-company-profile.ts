@@ -2,12 +2,11 @@ import { z } from "zod";
 import { getCompany } from "@/lib/speedrun/client";
 import type { SpeedrunCompanyJobSummary } from "@/lib/speedrun/types";
 import { getCuratedCriteria } from "@/lib/companies-data";
-import { SPEEDRUN_SOURCE } from "@/lib/tools/role-shared";
+import { SPEEDRUN_SOURCE, CompanySlugSchema } from "@/lib/tools/role-shared";
 import { DISCLAIMERS } from "@/lib/disclaimers";
 import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
 
-// Found live via the spec §5 agent-in-the-loop eval (DECISIONS.md D-016):
-// a naive min/max across every job's comp_min/comp_max mixed different pay
+// A naive min/max across every job's comp_min/comp_max mixed different pay
 // periods into one meaningless figure (observed live: $29/hour, $1,925/week,
 // and $200,000+/year postings at real companies on the same feed — a naive
 // range across those would read as roughly "$29–$415,000," which is not a
@@ -63,9 +62,9 @@ function computeCompRangeObserved(sample: SpeedrunCompanyJobSummary[]): {
   };
 }
 
-const InputSchema = z.object({
-  company_slug: z.string().min(1).max(100).describe("The company's speedrun-talent-network.com slug, e.g. \"anduril-industries\"."),
-});
+// The shared, described slug schema every tool uses — this one used to keep
+// its own, which never told an agent where slugs come from.
+const InputSchema = z.object({ company_slug: CompanySlugSchema });
 
 const OutputSchema = z.object({
   company: z.object({
@@ -133,11 +132,10 @@ export const getCompanyProfileTool: ToolDef<z.infer<typeof InputSchema>, z.infer
     }
     if (criteria.length === 0) {
       gaps.push(
-        "Clearance Lens has not independently sourced published hiring criteria for this company. Treat any \"culture fit\" claims you see elsewhere with skepticism — ask the recruiter directly what they evaluate for and why, and ask for a source.",
+        "cleared has not independently sourced published hiring criteria for this company. Treat any \"culture fit\" claims you see elsewhere with skepticism — ask the recruiter directly what they evaluate for and why, and ask for a source.",
       );
     }
-    // Found live via the spec §6 judging panel round 7 (candidate_user):
-    // the EXISTING caveat above is scoped to hiring-criteria/"fit" claims,
+    // The EXISTING caveat above is scoped to hiring-criteria/"fit" claims,
     // not to the company.stage/size fields themselves — a reader skimming
     // for exactly "how early/risky is this startup" could walk away with a
     // wrong read if that field has gone stale upstream since this was last
@@ -154,11 +152,10 @@ export const getCompanyProfileTool: ToolDef<z.infer<typeof InputSchema>, z.infer
         : `Work realities below are computed from a sample of ${sample.length} of this company's ${company.open_roles} listed open role(s), not a census of all of them.`,
     );
     // "Open role(s)" is the upstream network's own listing count, not a
-    // deduplicated distinct-requisition count — found live via the spec §6
-    // judging panel round 3 (function_engineer independently cross-checked
-    // Anduril's 2,586 listed roles against its own 1,001-5,000 employee
-    // label and flagged the ratio as implausible). Checked directly against
-    // the upstream API across dozens of companies: every one of them shows a
+    // deduplicated distinct-requisition count (Anduril listed 2,586 roles
+    // against its own 1,001-5,000 employee label, a ratio that looks
+    // implausible). Checked directly against the upstream API across dozens
+    // of companies: every one of them shows a
     // similarly high roles-to-headcount ratio, consistent with the listing
     // count including multiple postings for the same or a similar position
     // across locations/teams rather than one row per distinct req — a

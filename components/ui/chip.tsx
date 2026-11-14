@@ -2,11 +2,10 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/cn";
 
-/** Small radius-full pill (R2 §3.0), used by source-citation-chip and filter
+/** Small radius-full pill, used by source-citation-chip and filter
  * tags. `dashed` is used specifically for inferred-vs-stated distinctions
  * (role-search-result-card) — a dashed border means "inferred, not stated". */
-// Wraps instead of `whitespace-nowrap`: found via the spec §6 judging panel
-// round 9 — a long chip label ("Clearance required (level unspecified)")
+// Wraps instead of `whitespace-nowrap`: a long chip label ("Clearance required (level unspecified)")
 // couldn't shrink, so /try overflowed horizontally at 320px (WCAG 1.4.10
 // reflow). `max-w-full` + `[overflow-wrap:anywhere]` let a chip break onto a
 // second line only when its container is actually too narrow.

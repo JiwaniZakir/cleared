@@ -1,16 +1,15 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 
 /**
- * E2E coverage for /try (spec §5: "every R3 persona scenario"). Rather than
- * 40 near-duplicate tests that mostly differ by persona backstory — which
- * doesn't change UI behavior, since the UI doesn't know or care which
- * persona is typing — this covers the DISTINCT interaction paths the R3
- * personas actually exercise across all 16 tabs (all 16 tools, one each),
- * plus one chained integration journey.
+ * E2E coverage for /try. Rather than near-duplicate tests that mostly differ
+ * by user persona — which doesn't change UI behavior, since the UI doesn't
+ * know or care which persona is typing — this covers the DISTINCT
+ * interaction paths users exercise across all 16 tabs (all 16 tools, one
+ * each), plus one chained integration journey.
  * Persona-specific judgment (should an agent broaden a search, how should
- * it phrase a debrief) was already exercised directly against the MCP
- * tools by the agent-in-the-loop eval (DECISIONS.md D-016); this suite
- * verifies the UI itself renders and gates each tool correctly.
+ * it phrase a debrief) is exercised against the MCP tools themselves, not
+ * here; this suite verifies the UI itself renders and gates each tool
+ * correctly.
  *
  * Runs against the REAL live speedrun API — data rotates — so assertions
  * are structural ("at least one result card," "a heading exists") rather
@@ -29,7 +28,7 @@ async function expectActiveTab(page: Page, label: string) {
 }
 
 async function switchToTab(page: Page, label: string) {
-  // Phones get a native picker instead of the 16-tab strip (D-051).
+  // Phones get a native picker instead of the 16-tab strip.
   const picker = page.getByLabel("Tool", { exact: true });
   if (await picker.isVisible()) await picker.selectOption({ label });
   else await page.getByRole("tab", { name: label }).click();
@@ -47,20 +46,18 @@ async function pickFirstRole(container: Locator) {
   await roleButtons.first().click();
 }
 
-// Regression for DECISIONS.md (judging panel rounds 1, 3, and 4 -- the SAME
-// finding reported by a different fresh judge each time, costing the
-// hard-constraint cap repeatedly): a bare element.click() (no pointerdown/
-// mousedown first) didn't reach whatever internal event Radix Tabs' own
-// activation listened on, so some judges' lesser browser-automation tools
-// never switched panels even though a real click/touch/keyboard interaction
-// (and this suite's own .click() calls) always did. The tab strip is now
+// Regression: a bare element.click() (no pointerdown/mousedown first)
+// didn't reach whatever internal event Radix Tabs' own activation listened
+// on, so simpler browser-automation tools never switched panels even though
+// a real click/touch/keyboard interaction (and this suite's own .click()
+// calls) always did. The tab strip is now
 // explicitly controlled with a belt-and-suspenders onClick on each trigger
 // that fires on ANY click event, bare or full pointer sequence.
 test.describe("/try — tab switching is robust to a bare click (not just a real pointer sequence)", () => {
   test("a bare element.click(), with no pointerdown/mousedown first, still switches the active tab", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1280, height: 800 }); // the tab strip is the ≥sm control (D-051)
+    await page.setViewportSize({ width: 1280, height: 800 }); // the tab strip is the ≥sm control
     await page.goto("/try");
     await expect(page.getByRole("tab", { name: "Search roles", selected: true })).toBeVisible(); // hydrated
     await page.evaluate(() => {
@@ -80,11 +77,11 @@ test.describe("/try — Search roles", () => {
     await page.goto("/try");
     const resultsRegion = page.locator("main");
     // Initial unfiltered search runs on mount.
-    await expect(resultsRegion.getByText(/Scanned \d+ posting/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
+    await expect(resultsRegion.getByText(/\d+ postings? match(?:es)? your search terms/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
     const cards = page.locator("h3").filter({ hasNotText: "" });
     await expect(cards.first()).toBeVisible();
 
-    // Regression (DECISIONS.md D-019): the whole card must NOT be a single
+    // Regression: the whole card must NOT be a single
     // role="button" — each card's own interactive children (chip tooltips,
     // source link, profile button) must be independently reachable, not
     // nested inside one atomic widget.
@@ -96,11 +93,11 @@ test.describe("/try — Search roles", () => {
     page,
   }) => {
     await page.goto("/try");
-    await expect(page.getByText(/Scanned \d+ posting/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
+    await expect(page.getByText(/\d+ postings? match(?:es)? your search terms/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
 
     // A free-text keyword typo isn't reliably zero-result (the upstream
-    // search's own narrow-field matching, DECISIONS.md D-018, can still
-    // return something unexpected) — a structured clearance+ITAR filter
+    // search's own narrow-field matching can still return something
+    // unexpected) — a structured clearance+ITAR filter
     // combined with an unlikely location is a far more deterministic way
     // to drive toward the genuine empty-results path this test needs.
     await page.getByLabel("Clearance level").selectOption("ts_sci");
@@ -114,14 +111,14 @@ test.describe("/try — Search roles", () => {
     const clearButton = page.getByRole("button", { name: "Clear filters" });
     await expect(clearButton).toBeVisible();
     await clearButton.click();
-    await expect(page.getByText(/Scanned \d+ posting/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
+    await expect(page.getByText(/\d+ postings? match(?:es)? your search terms/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
   });
 
   test("a requirement chip reveals its stated/inferred evidence on tap or click, without navigating or opening the company dialog", async ({
     page,
   }) => {
     await page.goto("/try");
-    await expect(page.getByText(/Scanned \d+ posting/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
+    await expect(page.getByText(/\d+ postings? match(?:es)? your search terms/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
 
     // Every requirement chip's tooltip-trigger button's accessible name IS
     // its visible chip text (humanizeSignal's vocabulary) — query by role,
@@ -131,7 +128,7 @@ test.describe("/try — Search roles", () => {
       .getByRole("button", { name: /clearance|secret|citizen|person|sponsorship|polygraph|scif/i })
       .first();
     if ((await chipTrigger.count()) === 0) test.skip(true, "no requirement signals on the current live postings");
-    // A popover since D-051 (tooltips never opened on touch): tap on a
+    // A popover, not a tooltip (tooltips never opened on touch): tap on a
     // phone, click on desktop.
     await chipTrigger.click();
     await expect(page.getByRole("dialog").getByText(/Stated directly in the posting\.|Inferred from the job post/)).toBeVisible();
@@ -145,7 +142,7 @@ test.describe("/try — Search roles", () => {
     page,
   }) => {
     await page.goto("/try");
-    await expect(page.getByText(/Scanned \d+ posting/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
+    await expect(page.getByText(/\d+ postings? match(?:es)? your search terms/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
 
     const profileButton = page.getByRole("button", { name: /^View .+ profile →$/ }).first();
     if ((await profileButton.count()) === 0) {
@@ -171,7 +168,7 @@ test.describe("/try — Timeline", () => {
     await expect(page.getByText(/not legal advice/i).first()).toBeVisible({ timeout: LONG_TIMEOUT });
   });
 
-  test("current_status=none surfaces the interim-eligibility driver (regression for DECISIONS.md D-017)", async ({
+  test("current_status=none surfaces the interim-eligibility driver (regression)", async ({
     page,
   }) => {
     await page.goto("/try");
@@ -254,7 +251,7 @@ async function answerCurrentScene(page: Page) {
     await rationaleBox.fill("Stated rationale for this gated scene.");
     await page.getByRole("button", { name: "Reveal outcome" }).click();
   }
-  await expect(page.getByText("What real teams report", { exact: true })).toBeVisible();
+  await expect(page.getByText("What could happen", { exact: true })).toBeVisible();
 }
 
 test.describe("/try — Job preview", () => {
@@ -269,7 +266,7 @@ test.describe("/try — Job preview", () => {
     await expect(page.getByText("Scene 1 /")).toBeVisible({ timeout: LONG_TIMEOUT });
     // Regression: outcome text must be completely absent from the DOM
     // before any choice is recorded, not just visually hidden.
-    await expect(page.getByText("What real teams report", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("What could happen", { exact: true })).toHaveCount(0);
     await answerCurrentScene(page);
 
     // Walk through all 4 scenes (the default 20-minute length), confirming
@@ -280,7 +277,7 @@ test.describe("/try — Job preview", () => {
     for (let i = 0; i < 3; i++) {
       const nextOrFinish = page.getByRole("button", { name: /^(Next scene|Finish)$/ });
       await nextOrFinish.click();
-      await expect(page.getByText("What real teams report", { exact: true })).toHaveCount(0);
+      await expect(page.getByText("What could happen", { exact: true })).toHaveCount(0);
       await answerCurrentScene(page);
     }
     await page.getByRole("button", { name: "Finish" }).click();
@@ -319,7 +316,7 @@ test.describe("/try — Job preview", () => {
       await page.getByRole("button", { name: "Next scene" }).click();
     }
     await expect(page.getByText("Scene 3 /")).toBeVisible();
-    await expect(page.getByText("What real teams report", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("What could happen", { exact: true })).toHaveCount(0);
 
     const stage = page.locator("h4").locator("..");
     await stage.getByRole("button").first().click();
@@ -327,11 +324,11 @@ test.describe("/try — Job preview", () => {
     await expect(rationaleBox).toBeVisible();
     // Gated: still withheld after the choice click, before the rationale
     // is submitted.
-    await expect(page.getByText("What real teams report", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("What could happen", { exact: true })).toHaveCount(0);
 
     await rationaleBox.fill("Decline and explain why, in one sentence.");
     await page.getByRole("button", { name: "Reveal outcome" }).click();
-    await expect(page.getByText("What real teams report", { exact: true })).toBeVisible();
+    await expect(page.getByText("What could happen", { exact: true })).toBeVisible();
     // The submitted rationale itself is echoed back, not silently dropped.
     await expect(page.getByText(/decline and explain why/i)).toBeVisible();
   });
@@ -348,7 +345,7 @@ test.describe("/try — Explain a rule", () => {
     await expect(page.getByText(/not legal advice/i).first()).toBeVisible({ timeout: LONG_TIMEOUT });
   });
 
-  test('"nbis-diss" resolves through the UI, not just the raw API (regression for DECISIONS.md D-016)', async ({
+  test('"nbis-diss" resolves through the UI, not just the raw API (regression)', async ({
     page,
   }) => {
     await page.goto("/try");
@@ -373,10 +370,9 @@ test.describe("/try — Explain a rule", () => {
   });
 });
 
-// The next 3 tabs were added after the spec §6 judging panel (DECISIONS.md)
-// found that readiness_brief, verify_evidence, and prepare_consented_card
-// had no UI path anywhere in /try, despite the README's "try every tool
-// directly" claim.
+// The next 3 tabs were added when readiness_brief, verify_evidence, and
+// prepare_consented_card were found to have no UI path anywhere in /try,
+// despite the README's "try every tool directly" claim.
 test.describe("/try — Readiness brief", () => {
   test("picking a role renders the agent-fills-this-in template, focus areas, and recruiter questions", async ({
     page,
@@ -429,7 +425,7 @@ test.describe("/try — Consented card", () => {
     await expect(page.getByText(/clearance_status_self_reported/)).toHaveCount(0);
   });
 
-  // D-047: the card is filled in locally. What reaches the server must be the
+  // The card is filled in locally. What reaches the server must be the
   // field NAMES only — checked on the real network request, not assumed.
   test("sends only the names of the filled-in fields — never what the user typed", async ({ page }) => {
     await page.goto("/try");
@@ -454,11 +450,10 @@ test.describe("/try — Consented card", () => {
   });
 });
 
-// Regression for DECISIONS.md D-029 (judging panel rounds 1 and 3): these
-// 2 tools previously had no dedicated tab at all (only reachable via an
-// embedded flow) — fresh judges in both rounds, independently, flagged this
-// as "no UI entry point" against the README's "try every tool directly"
-// claim, so each now gets its own standalone tab too.
+// Regression: these 2 tools previously had no dedicated tab at all (only
+// reachable via an embedded flow) — "no UI entry point" against the
+// README's "try every tool directly" claim — so each now gets its own
+// standalone tab too.
 test.describe("/try — Company profile", () => {
   test("looking up a real company slug renders its live profile", async ({ page }) => {
     await page.goto("/try");
@@ -486,10 +481,9 @@ test.describe("/try — Fit debrief", () => {
 });
 
 test.describe("/try — tab strip overflow affordance", () => {
-  // Regression for DECISIONS.md D-029 (judging panel round 3): the tab
-  // strip's native scrollbar is hidden for a cleaner look, which previously
-  // removed the only visual cue that more tabs exist off-screen at mobile/
-  // tablet widths, with zero replacement affordance.
+  // Regression: the tab strip's native scrollbar is hidden for a cleaner
+  // look, which previously removed the only visual cue that more tabs exist
+  // off-screen at mobile/tablet widths, with zero replacement affordance.
   test("the tablist has a non-trivial mask-image fade at a narrow-tablet width, and phones get a tool picker instead", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/try");
@@ -504,20 +498,16 @@ test.describe("/try — tab strip overflow affordance", () => {
   });
 });
 
-// Found via the spec §6 judging panel round 2 (DECISIONS.md D-028):
 // components/tool-card.tsx's homepage "Try it" buttons link to
-// /try?tool=<registry-tool-name> for all 11 tools, but /try never read
-// that query param at all, so every one of those links silently landed on
-// the default Search roles tab. This is a genuine missing feature, not the
-// click-simulation artifact other round-1/2 findings turned out to be.
-// Regression for DECISIONS.md (judging panel round 7 -- 3 of 5 fresh judges
-// independently): these 3 newest tools (Clearance Lens v2) had no UI entry
-// point in /try at all, despite the README's "try every tool directly"
-// claim. prepare_signed_attestation's tool design assumes the CALLING
-// AGENT generates and signs with a keypair -- /try has no agent, so this
-// tab does the identical thing with the browser's own Web Crypto API
-// (Ed25519), verifying the real mechanism end to end rather than stubbing
-// it out.
+// /try?tool=<registry-tool-name> for every tool, but /try at first never
+// read that query param at all, so every one of those links silently landed
+// on the default Search roles tab.
+// Regression: these 3 newest tools (v2) had no UI entry point in /try at
+// all, despite the README's "try every tool directly" claim.
+// prepare_signed_attestation's tool design assumes the CALLING AGENT
+// generates and signs with a keypair -- /try has no agent, so this tab does
+// the identical thing with the browser's own Web Crypto API (Ed25519),
+// verifying the real mechanism end to end rather than stubbing it out.
 test.describe("/try — Signed attestation", () => {
   test("generating a keypair in-browser, then signing and verifying a claim, round-trips correctly", async ({
     page,
@@ -573,9 +563,9 @@ test.describe("/try — Aggregated signal", () => {
   });
 });
 
-// The full two-party flow judging panel round 8 found was half-built: sign
-// in one tab, hand over exactly what's shared, verify it as a recipient in
-// another — in a real browser, with a real in-browser Ed25519 keypair.
+// The full two-party flow, once half-built: sign in one tab, hand over
+// exactly what's shared, verify it as a recipient in another — in a real
+// browser, with a real in-browser Ed25519 keypair.
 test.describe("/try — Verify attestation", () => {
   test("a credential generated in Signed attestation verifies when pasted into Verify attestation; an edited one doesn't", async ({
     page,
@@ -635,9 +625,9 @@ test.describe("/try — per-tool deep links (?tool=)", () => {
     await expectActiveTab(page, "Consented card");
   });
 
-  // Regression for DECISIONS.md (judging panel round 3, D-029): these two
-  // tools previously had no dedicated tab (fell back to Job preview /
-  // Search roles, where they were embedded) -- now each gets its own.
+  // Regression: these two tools previously had no dedicated tab (fell back
+  // to Job preview / Search roles, where they were embedded) -- now each
+  // gets its own.
   test("?tool=fit_debrief and ?tool=get_company_profile pre-select their own dedicated tabs", async ({ page }) => {
     await page.goto("/try?tool=fit_debrief");
     await expectActiveTab(page, "Fit debrief");
@@ -652,10 +642,10 @@ test.describe("/try — per-tool deep links (?tool=)", () => {
     await expectActiveTab(page, "Search roles");
   });
 
-  // Regression for DECISIONS.md (judging panel round 7, trust_skeptic):
-  // before these 3 tabs existed, ?tool= for any of them silently fell back
-  // to Search roles with no error or "coming soon" notice -- indistinguishable
-  // from a typo in the URL. Now each has its own dedicated tab to land on.
+  // Regression: before these 3 tabs existed, ?tool= for any of them silently
+  // fell back to Search roles with no error or "coming soon" notice --
+  // indistinguishable from a typo in the URL. Now each has its own dedicated
+  // tab to land on.
   test("?tool=prepare_signed_attestation, ?tool=contribute_anonymous_signal, and ?tool=get_aggregated_signal each pre-select their own dedicated tab", async ({
     page,
   }) => {
@@ -679,7 +669,7 @@ test.describe("/try — chained persona journey", () => {
     await page.goto("/try");
 
     // 1. Search (default, auto-loaded).
-    await expect(page.getByText(/Scanned \d+ posting/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
+    await expect(page.getByText(/\d+ postings? match(?:es)? your search terms/).first()).toBeVisible({ timeout: LONG_TIMEOUT });
 
     // 2. Timeline for a new-grad-shaped query.
     await switchToTab(page, "Timeline");
@@ -704,10 +694,10 @@ test.describe("/try — chained persona journey", () => {
   });
 });
 
-// D-051 (judging panel round 9, product_designer): at 390px the search
-// filters were a 1,293px horizontal scroller with the button off-screen, the
-// page overflowed at 320px (WCAG 1.4.10), and Enter didn't submit.
-test.describe("/try — narrow screens (D-051)", () => {
+// Regression: at 390px the search filters were a 1,293px horizontal
+// scroller with the button off-screen, the page overflowed at 320px (WCAG
+// 1.4.10), and Enter didn't submit.
+test.describe("/try — narrow screens", () => {
   for (const width of [320, 390]) {
     test(`no horizontal overflow at ${width}px, and the Search button is on screen`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });

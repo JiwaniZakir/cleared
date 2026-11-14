@@ -6,7 +6,7 @@ import { DISCLAIMERS } from "@/lib/disclaimers";
 import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
 
 /**
- * Clearance Lens v2: extends the one existing "already-public evidence"
+ * v2: extends the one existing "already-public evidence"
  * pattern (previously GitHub-only) to GitLab and Cosign, per the
  * "candidate-initiated, evidence-only" alternative to continuous
  * "AI twin" monitoring — the candidate explicitly points the agent at one
@@ -20,9 +20,8 @@ import { SourceRefSchema, type ToolDef } from "@/lib/tools/wrap";
  * Cosign is surfaced only as this candidate-supplied, consent-based
  * evidence source — never as a ranking/prioritization input, and never via
  * Cosign's separate OAuth-gated "member" API that would expose private
- * endorsement/"would hire" data. That distinction, and why a referral/
- * ranking mechanism built on Cosign was explicitly declined, is recorded in
- * DECISIONS.md D-035/D-036.
+ * endorsement/"would hire" data. A referral or ranking mechanism built on
+ * Cosign was explicitly declined.
  */
 
 type Platform = "github" | "gitlab" | "cosign";
@@ -47,13 +46,12 @@ function looksLikeValidUsernameOrUrl(input: string): boolean {
 }
 
 const InputSchema = z.object({
-  // Format-checked here, not just inside the handler — found live via the
-  // spec §5 judging panel (DECISIONS.md): a syntactically invalid value
-  // (parseGitHubUsername throwing a plain Error) previously fell through
-  // to callTool()'s generic catch-all, producing a misleading "Something
-  // went wrong, please try again" that wrongly invites retrying input that
-  // will deterministically fail again. Validating the format at the zod
-  // layer gives it the same clear, specific "invalid_input" treatment
+  // Format-checked here, not just inside the handler: a syntactically
+  // invalid value (parseGitHubUsername throwing a plain Error) previously
+  // fell through to callTool()'s generic catch-all, producing a misleading
+  // "Something went wrong, please try again" that wrongly invites retrying
+  // input that will deterministically fail again. Validating the format at
+  // the zod layer gives it the same clear, specific "invalid_input" treatment
   // every other bad-input case already gets, before the handler even runs.
   github_username_or_url: z
     .string()
@@ -151,7 +149,7 @@ export const verifyEvidenceTool: ToolDef<z.infer<typeof InputSchema>, z.infer<ty
         recentActivity: entry.recentActivity,
         sources: [{ title: `Cosign: ${entry.profileUrl}`, url: entry.profileUrl }],
         disclaimer:
-          "This reflects only the same thin public directory entry (name, a linked handle, a photo) anyone can already see on Cosign right now — never that platform's separate, OAuth-gated endorsement or \"would hire\" data, and never used here to rank or prioritize this or any other candidate (see DECISIONS.md D-035/D-036). Cosign's public API doesn't expose repos, languages, followers, or an account-creation date at all. " +
+          "This reflects only the same thin public directory entry (name, a linked handle, a photo) anyone can already see on Cosign right now — never that platform's separate, OAuth-gated endorsement or \"would hire\" data, and never used here to rank or prioritize this or any other candidate. Cosign's public API doesn't expose repos, languages, followers, or an account-creation date at all. " +
           DISCLAIMERS.noDemographicInference,
       };
     }

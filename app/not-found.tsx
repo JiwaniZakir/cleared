@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 
-// Round 9 (product_designer): unknown URLs hit the unbranded default
-// Next.js 404 (D-051).
+// A branded 404: without it, unknown URLs hit the unbranded default
+// Next.js 404.
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col">

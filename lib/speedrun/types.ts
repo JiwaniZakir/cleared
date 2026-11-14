@@ -2,8 +2,7 @@
  * Types for the a16z speedrun Talent Network public API.
  * Base URL: https://speedrun-talent-network.com/api/v1 — no auth, open CORS,
  * edge-cached 1-5 min server-side. Verified directly against live responses
- * (not guessed) — see DECISIONS.md and research/R1-leverage.md for the
- * verification trail. OpenAPI spec: GET /api/v1/openapi.json (title
+ * (not guessed). OpenAPI spec: GET /api/v1/openapi.json (title
  * "speedrun talent network API", confirmed reachable).
  *
  * Fields are intentionally loose (nullable / string rather than strict enum)
@@ -22,7 +21,7 @@ export interface SpeedrunJobSummary {
   company: string;
   // Nullable: a stealth posting (stealth: true) has no public company page to
   // link, so these come back null rather than a placeholder string — found
-  // live during the Gate R→B review (research/R1-leverage.md), not guessed.
+  // in live responses, not guessed.
   company_slug: string | null;
   company_url: string | null;
   url: string;
@@ -61,7 +60,7 @@ export interface SpeedrunJobApply {
 // Omits "cohort" too: a live GET /jobs/{id} response genuinely does not
 // include it (confirmed by direct fetch, not assumed) — inheriting it from
 // SpeedrunJobSummary would type a field as always-present that is actually
-// always `undefined` here, a type lie caught during the Gate R→B review.
+// always `undefined` here, a type lie.
 export interface SpeedrunJobDetail extends Omit<SpeedrunJobSummary, "function" | "cohort"> {
   status: string;
   function: string | null;
@@ -144,8 +143,9 @@ export interface SpeedrunApiErrorBody {
 }
 
 /** Search params this app exposes through search_defense_roles. A subset of the
- * full upstream filter list (q, industry, loc, remote, page, scope) — the ones
- * actually useful for this product's defense/clearance framing. */
+ * full upstream filter list — the ones useful for this product's
+ * defense/clearance framing, including the level, experience, engagement and
+ * company filters (openapi.json, checked live 2026-11-13). */
 export interface SpeedrunJobSearchParams {
   q?: string;
   industry?: string;
@@ -153,4 +153,12 @@ export interface SpeedrunJobSearchParams {
   remote?: boolean;
   page?: number;
   scope?: "speedrun" | "portfolio" | "everywhere";
+  /** Classified level ladder, comma-separated (intern, new_grad, junior, mid, senior, …). */
+  lvl?: string;
+  /** Classified minimum-experience band, comma-separated (0, under_1, 1_2, 3_5, 6_9, 10_14, 15_plus). */
+  yoe?: string;
+  /** Classified engagement type, comma-separated (full_time, part_time, contract, internship). */
+  eng?: string;
+  /** Exact company name, as the posting gives it (e.g. "Anduril Industries"). */
+  company?: string;
 }

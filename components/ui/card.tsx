@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 
-/** Card shell (R2 §3.0): elevation-1 + radius-lg at rest; elevation-2 on
+/** Card shell: elevation-1 + radius-lg at rest; elevation-2 on
  * hover ONLY when the whole card is a click target (pass `interactive`). */
 export function Card({
   className,

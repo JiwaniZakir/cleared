@@ -10,7 +10,7 @@ export interface SourceRef {
 }
 
 /**
- * The atomic trust unit (R2 §3.11), modeled on Perplexity's citation
+ * The atomic trust unit, modeled on Perplexity's citation
  * pattern — used everywhere a number/rule/claim appears. A small Chip that
  * on hover/focus shows the full title + URL + last-verified date, and on
  * click opens the URL in a new tab. On /sources it renders as a full row
@@ -20,10 +20,13 @@ export function SourceCitationChip({
   source,
   className,
   expanded = false,
+  missingDateLabel,
 }: {
   source: SourceRef;
   className?: string;
   expanded?: boolean;
+  /** Shown in the expanded row when the source has no checked date (/sources). */
+  missingDateLabel?: string;
 }) {
   if (expanded) {
     return (
@@ -38,7 +41,11 @@ export function SourceCitationChip({
       >
         <span className="text-neutral-12">{source.title}</span>
         <span className="flex items-center gap-3 font-mono text-[0.8125rem] text-neutral-10">
-          {source.lastVerified && <span>verified {source.lastVerified}</span>}
+          {source.lastVerified ? (
+            <span>verified {source.lastVerified}</span>
+          ) : (
+            missingDateLabel && <span>{missingDateLabel}</span>
+          )}
           <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         </span>
       </a>

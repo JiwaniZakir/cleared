@@ -1,30 +1,23 @@
 import { z } from "zod";
 import { createMcpHandler } from "mcp-handler";
 import { TOOL_REGISTRY } from "@/lib/tools/registry";
-import { callTool } from "@/lib/tools/wrap";
+import { advertisedOutputSchema, callTool } from "@/lib/tools/wrap";
+import { collectRawToolCalls, rawArgumentsFor, rawToolCalls } from "@/lib/tools/raw-tool-calls";
 import { assertNoPiiCui, PiiCuiError } from "@/lib/guard/pii";
 import { RULES, RULES_LAST_VERIFIED } from "@/lib/rules-data";
 import { TIMELINES, TIMELINES_LAST_VERIFIED } from "@/lib/timelines-data";
 import { DISCLAIMERS } from "@/lib/disclaimers";
-
-const SERVER_INSTRUCTIONS = [
-  "Clearance Lens helps someone pursue defense-tech roles at a16z speedrun companies — and helps those startups hire — from inside their own agent.",
-  "Start with search_defense_roles; its roles[].id is the role_id and roles[].companySlug the company_slug every other tool takes.",
-  "Everything about the user stays with you: get_role_rubric and readiness_brief are for you to evaluate privately; prepare_consented_card returns a template you fill in locally. Never send names, contact details, ID numbers, dates of birth, or clearance records — every input is scanned and rejected if it contains them. Pass status only in general terms (e.g. citizenship_status: \"green_card\").",
-  "A U.S. security clearance requires U.S. citizenship; a green card satisfies ITAR's U.S.-person test, not a clearance (explain_rule \"clearance-citizenship\").",
-  "contribute_anonymous_signal writes to a shared anonymous pool: call it only after the user explicitly agrees, every time.",
-  "For a hiring team: generate_interview_guide, build_trial_assessment, and run_job_preview are built from the posting alone; verify_signed_attestation checks a credential a candidate shares. Nothing here scores or ranks people.",
-].join(" ");
+import { SERVER_INSTRUCTIONS } from "@/lib/server-instructions";
 
 function promptMessage(text: string) {
   return { messages: [{ role: "user" as const, content: { type: "text" as const, text } }] };
 }
 
 /**
- * The remote MCP server (spec §3.1-3.2): Streamable HTTP, mounted at /mcp by
- * virtue of this file's path (app/mcp/route.ts). Stateless by default — see
- * DECISIONS.md D-003b for why this is built on @modelcontextprotocol/server
- * v2 (via mcp-handler) rather than the legacy v1 @modelcontextprotocol/sdk.
+ * The remote MCP server: Streamable HTTP, mounted at /mcp by virtue of this
+ * file's path (app/mcp/route.ts). Stateless by default. Built on
+ * @modelcontextprotocol/server v2 (via mcp-handler) rather than the legacy
+ * v1 @modelcontextprotocol/sdk.
  *
  * Every tool call goes through the exact same `callTool` pipeline the /api
  * playground route uses — PII/CUI guard, zod validation, structured errors —
@@ -39,19 +32,23 @@ const handler = createMcpHandler(
           title: def.title,
           description: def.description,
           inputSchema: def.inputSchema,
-          outputSchema: def.outputSchema,
+          outputSchema: advertisedOutputSchema(def.outputSchema),
           // Every tool in this registry only reads/computes — none mutates
-          // external state on the user's behalf (spec §3: the server never
-          // submits an application, never writes to the Speedrun network,
-          // never calls its express_interest tool). Declared here, not just
-          // in prose, so a calling agent's own tool-use policy can rely on
-          // it structurally. Flagged as missing by the spec's own plan and
-          // independently by the judging panel (round 3). The one exception,
-          // contribute_anonymous_signal, declares its own (D-048).
+          // external state on the user's behalf (the server never submits
+          // an application, never writes to the Speedrun network, never
+          // calls its express_interest tool). Declared here, not just in
+          // prose, so a calling agent's own tool-use policy can rely on it
+          // structurally. The one exception, contribute_anonymous_signal,
+          // declares its own.
           annotations: def.annotations ?? { readOnlyHint: true },
         },
-        async (input: unknown) => {
-          const result = await callTool(def, input);
+        async (input: unknown, ctx: { mcpReq?: { id?: unknown } }) => {
+          // The SDK has already stripped unknown keys from
+          // `input`; callTool gets the raw arguments the route captured, so
+          // it can list what it ignored. It re-runs the guard and the parse
+          // on them, so nothing is processed that the guard hasn't seen.
+          const raw = rawArgumentsFor(ctx?.mcpReq?.id, def.name);
+          const result = await callTool(def, raw.found ? raw.value : input);
           if (!result.ok) {
             return {
               content: [{ type: "text" as const, text: result.error.message }],
@@ -68,7 +65,7 @@ const handler = createMcpHandler(
 
     server.registerResource(
       "rules",
-      "clearance-lens://rules.json",
+      "cleared://rules.json",
       {
         title: "Clearance & ITAR rules dataset",
         description: `Machine-readable rules dataset backing explain_rule, last verified ${RULES_LAST_VERIFIED}.`,
@@ -87,7 +84,7 @@ const handler = createMcpHandler(
 
     server.registerResource(
       "timelines",
-      "clearance-lens://timelines.json",
+      "cleared://timelines.json",
       {
         title: "Clearance investigation timelines dataset",
         description: `Machine-readable timelines dataset backing estimate_timeline, last verified ${TIMELINES_LAST_VERIFIED}.`,
@@ -100,7 +97,7 @@ const handler = createMcpHandler(
 
     server.registerResource(
       "disclaimers",
-      "clearance-lens://disclaimers.json",
+      "cleared://disclaimers.json",
       {
         title: "Standard disclaimers",
         description: "The canonical disclaimer strings used across every tool output.",
@@ -111,7 +108,7 @@ const handler = createMcpHandler(
       }),
     );
 
-    // One-click flows for clients that support MCP prompts (spec §3.1). Each
+    // One-click flows for clients that support MCP prompts. Each
     // just gives the agent a clear multi-tool sequence to run — all private
     // reasoning still happens in the agent, never here.
     server.registerPrompt(
@@ -163,9 +160,9 @@ const handler = createMcpHandler(
         ),
     );
 
-    // Clearance Lens v2 piece #3 (D-034/D-036): prepare_consented_card has
-    // no persistence by design -- every call needs fresh, explicit consent
-    // tied to that one role_id, with no shortcut around that. This prompt
+    // prepare_consented_card has no persistence by design -- every call
+    // needs fresh, explicit consent tied to that one role_id, with no
+    // shortcut around that. This prompt
     // makes RE-asking fast for the human, not optional: it tells the agent
     // to remember the field VALUES the person already gave earlier in this
     // same conversation (ordinary conversational memory on the agent's own
@@ -182,13 +179,13 @@ const handler = createMcpHandler(
       },
       ({ role_id }) =>
         promptMessage(
-          `I want to share an intro card for role_id="${role_id}". If you already know what I'm comfortable sharing (clearance_status_self_reported, citizenship_status_self_reported, headline, highlights, github_username, availability, notes) from earlier in this conversation, don't re-run the whole interview -- just read back what you'd use, let me quickly say "yes" or tell you what to change for this specific company. Then call prepare_consented_card with role_id="${role_id}" and approved_fields set to the NAMES of the fields I approved for THIS company (never their values), fill in the template it returns yourself, locally, show me the finished card, and get my final yes before I send it. If this is the first time, ask me which of those fields I want to share first. Every card needs my explicit approval again, even if the values are identical to last time -- this server never sees or remembers my answers (see DECISIONS.md D-034, D-047).`,
+          `I want to share an intro card for role_id="${role_id}". If you already know what I'm comfortable sharing (clearance_status_self_reported, citizenship_status_self_reported, headline, highlights, github_username, availability, notes) from earlier in this conversation, don't re-run the whole interview -- just read back what you'd use, let me quickly say "yes" or tell you what to change for this specific company. Then call prepare_consented_card with role_id="${role_id}" and approved_fields set to the NAMES of the fields I approved for THIS company (never their values), fill in the template it returns yourself, locally, show me the finished card, and get my final yes before I send it. If this is the first time, ask me which of those fields I want to share first. Every card needs my explicit approval again, even if the values are identical to last time -- this server never sees or remembers my answers.`,
         ),
     );
   },
   {
-    serverInfo: { name: "clearance-lens", version: "0.1.0" },
-    // Connector research (D-048): grok.com, Grok Bot, and the Muse app don't
+    serverInfo: { name: "cleared", version: "0.1.0" },
+    // grok.com, Grok Bot, and the Muse app don't
     // surface MCP prompts, so the workflow they encode has to reach the agent
     // here too, or nothing tells it to search first.
     instructions: SERVER_INSTRUCTIONS,
@@ -207,8 +204,8 @@ const handler = createMcpHandler(
  * (Claude Desktop, Claude Code, curl, this project's own tests) are
  * unaffected by CORS at all — which is exactly why this gap wasn't caught by
  * any of the many direct @modelcontextprotocol/client smoke tests run during
- * build; none of them run in a browser. Spec §3.3 explicitly requires
- * correct CORS for MCP clients, so this is fixed here rather than left.
+ * build; none of them run in a browser. MCP clients need correct CORS, so
+ * this is fixed here rather than left.
  */
 const ALLOWED_REQUEST_HEADERS = [
   "Content-Type",
@@ -221,8 +218,7 @@ const ALLOWED_REQUEST_HEADERS = [
 function withCors(response: Response): Response {
   const merged = new Headers(response.headers);
   merged.set("Access-Control-Allow-Origin", "*");
-  // GET deliberately excluded here — found live via the spec §6 judging
-  // panel round 6 (product_designer): this preflight used to advertise
+  // GET deliberately excluded here: this preflight used to advertise
   // GET as allowed, but a real GET on /mcp always 405s in this stateless
   // deployment (the SDK's GET path is for server-initiated SSE on a
   // session-ful server, which this one, by design, never has). Still
@@ -238,8 +234,7 @@ function withCors(response: Response): Response {
 }
 
 /**
- * Found live via the spec §6 judging panel round 5 (trust_skeptic, directly
- * reproduced): the MCP SDK's own `registerTool()` machinery validates
+ * The MCP SDK's own `registerTool()` machinery validates
  * `tools/call`'s `arguments` against each tool's zod `inputSchema` BEFORE
  * invoking this file's own per-tool handler callback — and a plain
  * (non-`.strict()`) zod object schema's own default behavior is to silently
@@ -256,18 +251,20 @@ function withCors(response: Response): Response {
  * the body stream so the original request, consumed by `handler()` below,
  * is unaffected.
  */
-/** Round 9 (D-047) found the rest of the MCP surface unguarded: prompts/get
+/** The rest of the MCP surface was once unguarded too: prompts/get
  *  echoed an SSN passed as role_id into its prompt text, and unknown-tool and
  *  resource-not-found errors echoed whatever name or URI was sent. Every
  *  request's params — tool names, arguments, prompt arguments, resource URIs,
  *  and key names — are now scanned before the SDK sees any of it. */
-async function rejectPiiInRawRequest(request: Request): Promise<Response | null> {
-  let body: unknown;
+async function readJsonBody(request: Request): Promise<{ ok: true; body: unknown } | { ok: false }> {
   try {
-    body = await request.clone().json();
+    return { ok: true, body: await request.clone().json() };
   } catch {
-    return null; // Not JSON (or no body) — nothing to pre-scan; the SDK's own parser reports this.
+    return { ok: false }; // Not JSON (or no body) — the SDK's own parser reports this.
   }
+}
+
+function rejectPiiInRawRequest(body: unknown): Response | null {
   const messages = Array.isArray(body) ? body : [body];
   for (const message of messages) {
     if (!message || typeof message !== "object") continue;
@@ -295,7 +292,7 @@ async function rejectPiiInRawRequest(request: Request): Promise<Response | null>
 /** The Streamable HTTP spec has clients accept both JSON and SSE; this server
  *  answers 406 otherwise. An agent that writes its own client (Muse builds
  *  custom connectors itself) may send just one, or none, so the header is
- *  normalized rather than rejected (D-048). */
+ *  normalized rather than rejected. */
 async function withAcceptNormalized(request: Request): Promise<Request> {
   const accept = request.headers.get("accept") ?? "";
   if (/application\/json/i.test(accept) && /text\/event-stream/i.test(accept)) return request;
@@ -310,9 +307,15 @@ async function corsGET(request: Request) {
   return withCors(await handler(request));
 }
 async function corsPOST(request: Request) {
-  const rejected = await rejectPiiInRawRequest(request);
-  if (rejected) return withCors(rejected);
-  return withCors(await handler(await withAcceptNormalized(request)));
+  const parsed = await readJsonBody(request);
+  if (parsed.ok) {
+    const rejected = rejectPiiInRawRequest(parsed.body);
+    if (rejected) return withCors(rejected);
+  }
+  const normalized = await withAcceptNormalized(request);
+  // The raw tools/call arguments, for this request only.
+  const calls = parsed.ok ? collectRawToolCalls(parsed.body) : new Map();
+  return withCors(await rawToolCalls.run(calls, () => handler(normalized)));
 }
 function OPTIONS() {
   return withCors(new Response(null, { status: 204 }));

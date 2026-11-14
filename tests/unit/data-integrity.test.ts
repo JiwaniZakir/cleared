@@ -6,7 +6,7 @@ import path from "node:path";
 
 const IS_TRIPWIRE = (url: string) => url.includes(".invalid") || url.includes("example.invalid");
 
-describe("data/rules.json integrity (spec §1.6: every statistic/claim needs a real source)", () => {
+describe("data/rules.json integrity (every statistic/claim needs a real source)", () => {
   it("is not the tripwire placeholder", () => {
     for (const rule of RULES) {
       for (const source of rule.sources) {
@@ -69,9 +69,8 @@ describe("SOURCES.md cross-check", () => {
   it("every unique source URL cited in rules.json/timelines.json appears somewhere in SOURCES.md", () => {
     const sourcesMdPath = path.join(process.cwd(), "SOURCES.md");
     if (!fs.existsSync(sourcesMdPath)) {
-      // SOURCES.md is produced once Phase R's output is consolidated — this
-      // test is a no-op tripwire reminder until that file exists, not a
-      // false failure during early build.
+      // Without SOURCES.md this test is a no-op tripwire reminder, not a false
+      // failure.
       return;
     }
     const sourcesMd = fs.readFileSync(sourcesMdPath, "utf8");
@@ -86,12 +85,11 @@ describe("SOURCES.md cross-check", () => {
   });
 });
 
-// Found via the spec §6 judging panel round 8 (trust_skeptic flagged one
-// tool-cited source missing from /sources; a systematic check then found the
-// a16z speedrun Talent Network — cited by nearly every tool — was missing
-// too). The /sources page keeps its own row list instead of generating from
-// SOURCES.md, so the two can drift silently. This walks every URL literal any
-// tool cites and requires it in BOTH places.
+// One tool-cited source was once missing from /sources, and a systematic check
+// then found the a16z speedrun Talent Network — cited by nearly every tool —
+// was missing too. The /sources page keeps its own row list instead of
+// generating from SOURCES.md, so the two can drift silently. This walks every
+// URL literal any tool cites and requires it in BOTH places.
 describe("every URL a tool cites inline is listed on /sources and in SOURCES.md", () => {
   const toolsDir = path.join(process.cwd(), "lib/tools");
   const cited = new Map<string, string>();
@@ -103,7 +101,7 @@ describe("every URL a tool cites inline is listed on /sources and in SOURCES.md"
   // What /sources actually renders: its own static rows, plus every rule
   // and timeline source (rendered dynamically from these data files).
   const pageRendered = [
-    fs.readFileSync(path.join(process.cwd(), "app/sources/page.tsx"), "utf8"),
+    fs.readFileSync(path.join(process.cwd(), "lib/sources-rows.ts"), "utf8"),
     ...RULES.flatMap((r) => r.sources.map((s) => s.url)),
     ...Object.values(TIMELINES.investigations).map((i) => i.source.url),
     ...TIMELINES.modifiers.flatMap((m) => [m.source, ...(m.additionalSources ?? [])].map((s) => s.url)),

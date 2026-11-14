@@ -1,13 +1,12 @@
 /**
- * Clearance Lens v2 piece #4: storage for the aggregated, anonymized
- * recruiter-facing signal tool (DECISIONS.md D-032's "aggregated signal, not
- * ranking" design, chosen explicitly over literal candidate scoring/ranking,
- * which this project has declined three times — D-032, D-035, D-036).
+ * Storage for the aggregated, anonymized recruiter-facing signal tool: an
+ * "aggregated signal, not ranking" design, chosen deliberately over scoring
+ * or ranking individual candidates, which this project does not do.
  *
  * This is the first and only piece of this product that is NOT stateless
- * (see DECISIONS.md D-001/D-002 for why every other tool deliberately has no
- * persistence) — an aggregate across multiple candidates' contributions, by
- * definition, requires remembering something across separate tool calls.
+ * (every other tool deliberately has no persistence) — an aggregate across
+ * multiple candidates' contributions, by definition, requires remembering
+ * something across separate tool calls.
  * That tradeoff was made explicitly, not by accident: a single contribution
  * carries no name, contact info, or identifier of any kind, only a handful
  * of closed-enum buckets (see ContributionSchema in
@@ -30,20 +29,54 @@
  * names — so this constructs the client explicitly from the KV_* names
  * rather than calling Redis.fromEnv(), which looks for the native names and
  * would find nothing.
+ *
+ * Citizenship status: the pool no longer collects or shows it. Contributions written before that change may
+ * still carry a `citizenship_status` field in Redis until the owner runs
+ * scripts/strip-pool-citizenship.ts; every read passes through
+ * sanitizeContribution, which keeps only the fields below, so that stored
+ * field never reaches an aggregate or a tool output.
  */
 
 import { Redis } from "@upstash/redis";
 
 export const MIN_CONTRIBUTORS = 5;
 
-export type ClearanceLevel = "none" | "interim" | "secret" | "ts" | "ts_sci";
-export type CitizenshipStatus = "us_citizen" | "green_card" | "other_protected_individual" | "not_us_person";
-export type ExperienceBucket = "0-2" | "3-5" | "6-10" | "10+";
+/** The closed value lists. The contribute tool's input schema is built from
+ *  these, and sanitizeContribution keeps nothing else. */
+export const CLEARANCE_LEVELS = ["none", "interim", "secret", "ts", "ts_sci"] as const;
+export const EXPERIENCE_BUCKETS = ["0-2", "3-5", "6-10", "10+"] as const;
+
+export type ClearanceLevel = (typeof CLEARANCE_LEVELS)[number];
+export type ExperienceBucket = (typeof EXPERIENCE_BUCKETS)[number];
 
 export interface SignalContribution {
   clearance_level?: ClearanceLevel;
-  citizenship_status?: CitizenshipStatus;
   years_experience_bucket?: ExperienceBucket;
+}
+
+/** The fields a contribution may carry, and nothing else. Anything a stored
+ *  record has beyond these (today: a legacy `citizenship_status`) or any
+ *  value outside the closed lists is dropped. */
+export function sanitizeContribution(raw: unknown): SignalContribution {
+  if (typeof raw === "string") {
+    try {
+      return sanitizeContribution(JSON.parse(raw));
+    } catch {
+      return {};
+    }
+  }
+  if (typeof raw !== "object" || raw === null) return {};
+  const record = raw as Record<string, unknown>;
+  const out: SignalContribution = {};
+  const clearance = record.clearance_level;
+  if (typeof clearance === "string" && (CLEARANCE_LEVELS as readonly string[]).includes(clearance)) {
+    out.clearance_level = clearance as ClearanceLevel;
+  }
+  const experience = record.years_experience_bucket;
+  if (typeof experience === "string" && (EXPERIENCE_BUCKETS as readonly string[]).includes(experience)) {
+    out.years_experience_bucket = experience as ExperienceBucket;
+  }
+  return out;
 }
 
 export interface SignalScope {
@@ -66,7 +99,6 @@ export interface AggregateBreakdown {
   totalContributions: number;
   meetsFloor: boolean;
   clearanceLevel: Partial<Record<ClearanceLevel | "otherBelowFloor", number>> | null;
-  citizenshipStatus: Partial<Record<CitizenshipStatus | "otherBelowFloor", number>> | null;
   yearsExperience: Partial<Record<ExperienceBucket | "otherBelowFloor", number>> | null;
 }
 
@@ -74,28 +106,34 @@ export interface SignalStore {
   readonly backend: "upstash" | "in-memory";
   addContribution(scope: SignalScope, contribution: SignalContribution): Promise<void>;
   getRawContributions(key: "role" | "company", id: string): Promise<SignalContribution[]>;
-  /** Found live via the spec §6 judging panel round 7 (recruiter_user,
-   * directly demonstrated): with no accounts or auth of any kind, nothing
-   * stopped one script from pushing a role's pool from 0 to 10
+  /** With no accounts or auth of any kind, nothing stopped one script from pushing a role's pool from 0 to 10
    * contributions in under 2 seconds, producing a plausible-looking but
    * entirely fabricated aggregate. A per-identity rate limit isn't
    * possible here (there is no identity), but a short, scope-level
    * cooldown directly defeats that exact burst pattern — returns false
    * (reject) if a contribution to this same role was accepted within the
    * last COOLDOWN_MS, true (allow) otherwise. Not a complete fix for a
-   * sufficiently patient adversary submitting one every few seconds — see
-   * DECISIONS.md for why a stronger fix isn't built here, and the
+   * sufficiently patient adversary submitting one every few seconds; a
+   * stronger fix needs identity, which this product does not have, and the
    * disclaimer this gates is honest about that remaining limit. */
   tryAcquireCooldown(roleId: string): Promise<boolean>;
 }
 
 export const COOLDOWN_MS = 2000;
 
+/** The Redis list prefixes contributions are appended under, one list per
+ *  role and per company. Exported for scripts/strip-pool-citizenship.ts.
+ *  They keep the product's former name, `clearance-lens`, on purpose: the
+ *  production pool is stored under these keys, and renaming them would
+ *  orphan every existing contribution. */
+export const ROLE_LIST_PREFIX = "clearance-lens:signal:role:";
+export const COMPANY_LIST_PREFIX = "clearance-lens:signal:company:";
+
 function roleKey(roleId: string): string {
-  return `clearance-lens:signal:role:${roleId}`;
+  return `${ROLE_LIST_PREFIX}${roleId}`;
 }
 function companyKey(companySlug: string): string {
-  return `clearance-lens:signal:company:${companySlug}`;
+  return `${COMPANY_LIST_PREFIX}${companySlug}`;
 }
 function cooldownKey(roleId: string): string {
   return `clearance-lens:signal:cooldown:${roleId}`;
@@ -111,15 +149,18 @@ class UpstashSignalStore implements SignalStore {
     });
   }
   async addContribution(scope: SignalScope, contribution: SignalContribution): Promise<void> {
-    const payload = JSON.stringify(contribution);
+    const payload = JSON.stringify(sanitizeContribution(contribution));
     const writes = [this.redis.rpush(roleKey(scope.roleId), payload)];
     if (scope.companySlug) writes.push(this.redis.rpush(companyKey(scope.companySlug), payload));
     await Promise.all(writes);
   }
   async getRawContributions(key: "role" | "company", id: string): Promise<SignalContribution[]> {
     const redisKey = key === "role" ? roleKey(id) : companyKey(id);
-    const raw = await this.redis.lrange<string>(redisKey, 0, -1);
-    return raw.map((r) => (typeof r === "string" ? (JSON.parse(r) as SignalContribution) : (r as SignalContribution)));
+    // The client parses JSON payloads itself, so an entry arrives as an
+    // object or, if it isn't valid JSON, as a string; sanitizeContribution
+    // takes either and drops any legacy citizenship_status.
+    const raw = await this.redis.lrange<unknown>(redisKey, 0, -1);
+    return raw.map(sanitizeContribution);
   }
   async tryAcquireCooldown(roleId: string): Promise<boolean> {
     // SET ... NX EX: atomically set-if-absent with a TTL in one round trip
@@ -135,19 +176,32 @@ class UpstashSignalStore implements SignalStore {
  * store per test rather than sharing the module-level singleton below. */
 export class InMemorySignalStore implements SignalStore {
   readonly backend = "in-memory" as const;
-  private data = new Map<string, SignalContribution[]>();
+  // Holds entries as stored, like the Redis lists: tests seed legacy records
+  // through seedRawEntry to check that reads drop fields the pool no longer keeps.
+  private data = new Map<string, unknown[]>();
   private cooldowns = new Map<string, number>();
   async addContribution(scope: SignalScope, contribution: SignalContribution): Promise<void> {
+    const stored = sanitizeContribution(contribution);
     const rk = roleKey(scope.roleId);
-    this.data.set(rk, [...(this.data.get(rk) ?? []), contribution]);
+    this.data.set(rk, [...(this.data.get(rk) ?? []), stored]);
     if (scope.companySlug) {
       const ck = companyKey(scope.companySlug);
-      this.data.set(ck, [...(this.data.get(ck) ?? []), contribution]);
+      this.data.set(ck, [...(this.data.get(ck) ?? []), stored]);
+    }
+  }
+  /** Test hook: appends an entry exactly as given, the way a record written
+   *  before the pool dropped citizenship status sits in Redis. Not part of SignalStore. */
+  seedRawEntry(scope: SignalScope, entry: unknown): void {
+    const rk = roleKey(scope.roleId);
+    this.data.set(rk, [...(this.data.get(rk) ?? []), entry]);
+    if (scope.companySlug) {
+      const ck = companyKey(scope.companySlug);
+      this.data.set(ck, [...(this.data.get(ck) ?? []), entry]);
     }
   }
   async getRawContributions(key: "role" | "company", id: string): Promise<SignalContribution[]> {
     const redisKey = key === "role" ? roleKey(id) : companyKey(id);
-    return this.data.get(redisKey) ?? [];
+    return (this.data.get(redisKey) ?? []).map(sanitizeContribution);
   }
   async tryAcquireCooldown(roleId: string): Promise<boolean> {
     const key = cooldownKey(roleId);
@@ -194,7 +248,55 @@ export async function getAggregate(store: SignalStore, key: "role" | "company", 
     totalContributions: contributions.length,
     meetsFloor,
     clearanceLevel: meetsFloor ? breakdownFor<ClearanceLevel>(contributions, "clearance_level") : null,
-    citizenshipStatus: meetsFloor ? breakdownFor<CitizenshipStatus>(contributions, "citizenship_status") : null,
     yearsExperience: meetsFloor ? breakdownFor<ExperienceBucket>(contributions, "years_experience_bucket") : null,
+  };
+}
+
+/**
+ * The floor alone didn't stop differencing. Above five
+ * contributors, the read side returned the exact total and percentages, so a
+ * read just before and just after one new contribution revealed that
+ * contributor's buckets (from N and the rounded percentages the counts are
+ * recoverable for small N, and the change between the two reads is the
+ * newcomer).
+ *
+ * The fix is a minimum change between releases: the read side reports only
+ * the oldest RELEASE_STEP * floor(n / RELEASE_STEP) contributions, so what
+ * it shows changes only when RELEASE_STEP new contributions have arrived,
+ * and the difference between any two releases is an aggregate of at least
+ * RELEASE_STEP people — the same k as the floor. The total is shown as that
+ * band ("at least 10, fewer than 15"), never the exact count, and the
+ * percentages are rounded to the nearest PERCENT_STEP points. Order inside a
+ * step carries no information, because a breakdown is a count.
+ *
+ * Coarser rounding alone was not enough: one new contribution can still tip
+ * a bucket across a rounding boundary and show which bucket it went to. What
+ * this does not stop is an "n − 1" attack, where the reader writes four of
+ * the five contributions in a step themselves; that needs authenticated or
+ * rate-limited writes, which this product does not have (see
+ * tryAcquireCooldown for the cooldown's limits).
+ */
+export const RELEASE_STEP = MIN_CONTRIBUTORS;
+export const PERCENT_STEP = 5;
+
+export interface ReleasedAggregate {
+  /** How many contributions the breakdown covers: a multiple of RELEASE_STEP; 0 below the floor. */
+  contributionsReflected: number;
+  meetsFloor: boolean;
+  clearanceLevel: Partial<Record<ClearanceLevel | "otherBelowFloor", number>> | null;
+  yearsExperience: Partial<Record<ExperienceBucket | "otherBelowFloor", number>> | null;
+}
+
+/** What the read side may show: the oldest whole steps of contributions only
+ *  (stores append, so a list reads oldest first). */
+export async function getReleasedAggregate(store: SignalStore, key: "role" | "company", id: string): Promise<ReleasedAggregate> {
+  const contributions = await store.getRawContributions(key, id);
+  const released = contributions.slice(0, Math.floor(contributions.length / RELEASE_STEP) * RELEASE_STEP);
+  const meetsFloor = released.length >= MIN_CONTRIBUTORS;
+  return {
+    contributionsReflected: released.length,
+    meetsFloor,
+    clearanceLevel: meetsFloor ? breakdownFor<ClearanceLevel>(released, "clearance_level") : null,
+    yearsExperience: meetsFloor ? breakdownFor<ExperienceBucket>(released, "years_experience_bucket") : null,
   };
 }

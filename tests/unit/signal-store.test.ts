@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { InMemorySignalStore, getAggregate, MIN_CONTRIBUTORS, COOLDOWN_MS } from "@/lib/signal/store";
 
-describe("tryAcquireCooldown (anti-burst safeguard, D-037)", () => {
+describe("tryAcquireCooldown (anti-burst safeguard)", () => {
   it("allows the first acquisition, rejects an immediate second one, and allows a third after the window passes", async () => {
     const store = new InMemorySignalStore();
     expect(await store.tryAcquireCooldown("role-a")).toBe(true);
@@ -71,11 +71,11 @@ describe("signal store aggregation (k-anonymity floor)", () => {
       await store.addContribution({ roleId: "r1", companySlug: "acme" }, { clearance_level: "secret" });
     }
     for (let i = 0; i < MIN_CONTRIBUTORS; i++) {
-      await store.addContribution({ roleId: "r1", companySlug: "acme" }, { citizenship_status: "us_citizen" });
+      await store.addContribution({ roleId: "r1", companySlug: "acme" }, { years_experience_bucket: "3-5" });
     }
     const agg = await getAggregate(store, "role", "r1");
     expect(agg.clearanceLevel).toEqual({ secret: MIN_CONTRIBUTORS });
-    expect(agg.citizenshipStatus).toEqual({ us_citizen: MIN_CONTRIBUTORS });
+    expect(agg.yearsExperience).toEqual({ "3-5": MIN_CONTRIBUTORS });
   });
 
   it("rolls contributions up to the company scope as well as the role scope", async () => {

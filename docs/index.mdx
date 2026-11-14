@@ -1,0 +1,50 @@
+---
+title: "Introduction"
+description: "cleared is a remote MCP server for your own AI agent. It finds defense and space roles in the a16z speedrun Talent Network and explains the rule behind each requirement, with sources."
+---
+
+cleared is a remote MCP server you add to the AI agent you already use. With it, your agent can find defense and space roles posted in the a16z speedrun Talent Network, read what each one requires, and explain the rule behind each requirement with a link to its source.
+
+Your agent does the private part. cleared returns postings, rules, checklists and templates, and your agent compares them with what it knows about you, inside your own conversation. The server refuses names, contact details, ID numbers and clearance records on every input.
+
+## Who it is for
+
+Students and new graduates who want to work in defense technology. Most of them do not know which rules apply to them. A green card holder can meet the U.S.-person test for export control and still not be eligible for a security clearance. A posting that says "no sponsorship" matters if you need a visa. cleared puts the rule, its source and the posting's own words in front of your agent so it can tell you.
+
+It also serves the hiring teams at those companies, with interview guides and work trials built only from the public posting.
+
+## What works today
+
+**Available.** With the connector added, you can ask your agent to:
+
+- Search open roles, filtered by seniority, experience, employment type, company, clearance level and export-control signals.
+- Check a role's stated requirements against what you have told your agent, privately.
+- Read the rule behind a requirement, with a link to the regulation.
+- Estimate how long a clearance might take, from published government data.
+- Preview a role's first week, or try a timed work sample.
+- Prepare an intro card with only the fields you approve, or a signed status claim.
+
+None of it needs an account or a key. When you decide to apply, you apply on the company's own page. The [Quickstart](/quickstart) connects your agent in about a minute.
+
+## What is not built yet
+
+**Not built yet.** A two-sided hiring pipeline is designed: the candidate's agent and the hiring team's agent work the same application, and a named person confirms every decision. Some groundwork for it is in the code, but no tool a client can call uses it. The [Roadmap](/roadmap) describes the design and what exists.
+
+## Status labels
+
+Every feature in these docs carries one label. They describe the code in this repository.
+
+| Label | Meaning |
+| --- | --- |
+| **Available** | Works today. A client can call it at `https://cleared-mcp.vercel.app/mcp`. |
+| **Groundwork** | Built and tested, but nothing a client can call uses it yet. |
+| **Not built yet** | Designed, not built. |
+
+## What cleared does not do
+
+- It gives general information, not legal advice.
+- It does not verify anyone's immigration status, citizenship or security clearance. The employer's Facility Security Officer does that, at the offer stage.
+- It never applies, submits or expresses interest on your behalf.
+- It does not guarantee an interview, an offer or a job.
+- It never queries or imitates the government's clearance systems (DISS, NBIS, DCSA).
+- It covers postings in the a16z speedrun Talent Network only, read from its public API.

@@ -1,23 +1,23 @@
 # Sources
 
-Every rule, statistic, and legal citation this product uses, with a primary or authoritative source and a last-verified date. If something here could change (a law, a timeline figure, an API version), it's cited rather than asserted from memory — see `DECISIONS.md` and `research/` for the full verification trail. This file backs the live [`/sources`](https://clearance-lens.vercel.app/sources) page; `tests/unit/data-integrity.test.ts` confirms every URL in `data/rules.json`/`data/timelines.json` appears somewhere below.
+Every rule, statistic, and legal citation cleared uses, with a primary or authoritative source and a last-verified date. If something here could change (a law, a timeline figure, an API version), it's cited rather than asserted from memory. This file backs the live [`/sources`](https://cleared-mcp.vercel.app/sources) page; `tests/unit/data-integrity.test.ts` confirms every URL in `data/rules.json`/`data/timelines.json` appears somewhere below.
 
 This project was built end-to-end in one concentrated session, and every citation below was actually opened and confirmed live as part of that build — which is why the dates cluster together rather than reflecting a staggered, ongoing audit. Treat each date as that content's build-time snapshot, not a promise of continuous re-checking.
 
 ---
 
-## From `data/rules.json` and `data/timelines.json`
+## From `data/rules.json`, `data/timelines.json` and `data/pipeline-steps.json`
 
-_Generated from `data/rules.json` (lastVerified 2026-11-12) and `data/timelines.json` (lastVerified 2026-11-12) by `scripts/generate-sources.ts`. Do not hand-edit this section — edit the data files and regenerate._
+_Generated from `data/rules.json` (lastVerified 2026-11-13), `data/timelines.json` (lastVerified 2026-11-12) and `data/pipeline-steps.json` (checked 2026-11-13) by `scripts/generate-sources.ts`. Do not hand-edit this section — edit the data files and regenerate._
 
-### ITAR & export control, eligibility, clearance process, sponsorship, reciprocity, continuous vetting, verification tech
+### ITAR & export control, eligibility, clearance process, sponsorship, reciprocity, continuous vetting, verification tech, pre-employment
 
 **ITAR "U.S. Person" Definition** (`itar-us-person`, itar)
   - [22 CFR § 120.62 — U.S. Person (eCFR)](https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M/part-120/subpart-C/section-120.62) — verified 2026-11-11
   - [22 CFR § 120.63 — Foreign Person (eCFR)](https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M/part-120/subpart-C/section-120.63) — verified 2026-11-11
   - [8 U.S.C. § 1324b(a)(3) — "Protected Individual" Defined (Cornell LII)](https://www.law.cornell.edu/uscode/text/8/1324b) — verified 2026-11-11
 
-**Security Clearances Require U.S. Citizenship (Green Card Holders Included)** (`clearance-citizenship`, eligibility)
+**Security Clearances Require U.S. Citizenship: a Green Card Is Not Enough** (`clearance-citizenship`, eligibility)
   - [Executive Order 12968 — Access to Classified Information, §§ 2.6 and 3.1(b) (Federal Register)](https://www.federalregister.gov/documents/1995/08/07/95-19654/access-to-classified-information) — verified 2026-11-12
   - [32 CFR § 117.10(k)–(l) — Non-U.S. citizens; temporary eligibility (eCFR)](https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.10) — verified 2026-11-12
   - [22 CFR § 120.62 — U.S. Person (eCFR)](https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M/part-120/subpart-C/section-120.62) — verified 2026-11-12
@@ -33,7 +33,7 @@ _Generated from `data/rules.json` (lastVerified 2026-11-12) and `data/timelines.
 
 **SF-86 and the eApp Filing System** (`sf86-eapp`, clearance-process)
   - [Federal Register — OPM Notice on SF-86/SF-85 Information Collection](https://www.govinfo.gov/content/pkg/FR-2026-07-09/html/2026-13868.htm) — verified 2026-11-11
-  - [DCSA — Electronic Questionnaires for Investigations Processing (e-QIP)](https://www.dcsa.mil/is/eqip) — verified 2026-11-11
+  - [DCSA — Electronic Questionnaires for Investigations Processing (e-QIP)](https://www.dcsa.mil/Systems-Applications/Electronic-Questionnaires-for-Investigations-Processing-e-QIP/) — verified 2026-11-14
   - [Trusted Workforce 2.0 Quarterly Progress Report, FY2026 Q3 (Performance Accountability Council)](https://assets.performance.gov/files/Personnel_Vetting_QPR_(FY26-Q3).pdf) — verified 2026-11-11
 
 **NBIS vs. DISS: Current System of Record** (`nbis-diss`, clearance-process)
@@ -58,7 +58,7 @@ _Generated from `data/rules.json` (lastVerified 2026-11-12) and `data/timelines.
 
 **Interim (Temporary) Clearance Eligibility** (`interim-clearance`, clearance-process)
   - [32 CFR § 117.10 — Determination of Eligibility for Access to Classified Information for Contractor Employees (Cornell LII)](https://www.law.cornell.edu/cfr/text/32/117.10) — verified 2026-11-11
-  - [DCSA — Interim Clearances](https://www.dcsa.mil/mc/pv/fso/interim_clearances) — verified 2026-11-11
+  - [DCSA — Interim Clearances](https://www.dcsa.mil/Industrial-Security/Entity-Vetting-Facility-Clearances-FOCI/Facility-Clearances/Interim-Clearances/) — verified 2026-11-14
 
 **Facility Clearance (FCL) Sponsorship for a New Company** (`fcl-sponsorship`, sponsorship)
   - [DCSA — Facility Clearance Orientation Handbook (August 2026)](https://www.dcsa.mil/Portals/128/Documents/CTP/fc/DCSA%20FCL_Orientation_Handbook_20260828.pdf) — verified 2026-11-11
@@ -83,6 +83,58 @@ _Generated from `data/rules.json` (lastVerified 2026-11-12) and `data/timelines.
 **Mobile Driver's License (mDL) / ISO 18013-5** (`mdl-iso18013`, verification-tech)
   - [ISO/IEC 18013-5:2021 — Personal Identification — ISO-compliant Driving Licence — Part 5: Mobile Driving Licence (mDL) Application](https://www.iso.org/standard/69084.html) — verified 2026-11-11
 
+**Background Checks: the FCRA Sequence** (`fcra-background-check`, pre-employment)
+  - [15 U.S.C. § 1681b — Permissible purposes of consumer reports; conditions for employment use (Cornell LII)](https://www.law.cornell.edu/uscode/text/15/1681b) — verified 2026-11-13
+  - [15 U.S.C. § 1681d — Disclosure of investigative consumer reports (Cornell LII)](https://www.law.cornell.edu/uscode/text/15/1681d) — verified 2026-11-13
+  - [15 U.S.C. § 1681c — Information excluded from consumer reports; $75,000 salary exception (Cornell LII)](https://www.law.cornell.edu/uscode/text/15/1681c) — verified 2026-11-13
+  - [15 U.S.C. § 1681n — Civil liability for willful noncompliance (Cornell LII)](https://www.law.cornell.edu/uscode/text/15/1681n) — verified 2026-11-13
+  - [FTC — Using Consumer Reports: What Employers Need to Know](https://www.ftc.gov/business-guidance/resources/using-consumer-reports-what-employers-need-know) — verified 2026-11-13
+
+**Adverse Action After a Background Check** (`fcra-adverse-action`, pre-employment)
+  - [15 U.S.C. § 1681b — Permissible purposes of consumer reports; conditions for employment use (Cornell LII)](https://www.law.cornell.edu/uscode/text/15/1681b) — verified 2026-11-13
+  - [15 U.S.C. § 1681m — Requirements on users of consumer reports: adverse action notice (Cornell LII)](https://www.law.cornell.edu/uscode/text/15/1681m) — verified 2026-11-13
+  - [FTC — Using Consumer Reports: What Employers Need to Know](https://www.ftc.gov/business-guidance/resources/using-consumer-reports-what-employers-need-know) — verified 2026-11-13
+  - [FTC staff — Advisory Opinion to Weisberg (June 27, 1997): waiting period before adverse action](https://www.ftc.gov/legal-library/browse/advisory-opinions/advisory-opinion-weisberg-06-27-97) — verified 2026-11-13
+  - [29 CFR § 1602.14 — Preservation of employment records (eCFR)](https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XIV/part-1602/subpart-C/section-1602.14) — verified 2026-11-13
+  - [California Government Code § 12946 — Four-year retention of applications and personnel records](https://california.public.law/codes/government_code_section_12946) — verified 2026-11-13
+
+**Fair-Chance Laws: When Criminal History May Be Checked** (`fair-chance-timing`, pre-employment)
+  - [41 U.S.C. § 4714 — Fair Chance Act: no criminal-history inquiries by civilian-agency contractors before a conditional offer (Cornell LII)](https://www.law.cornell.edu/uscode/text/41/4714) — verified 2026-11-13
+  - [10 U.S.C. § 4657 — Fair Chance Act: no criminal-history inquiries by defense contractors before a conditional offer (Cornell LII)](https://www.law.cornell.edu/uscode/text/10/4657) — verified 2026-11-13
+  - [California Civil Rights Department — Criminal History and Employment fact sheet (June 2025)](https://calcivilrights.ca.gov/wp-content/uploads/sites/32/2025/07/Fair-Chance-Act-Factsheet_English.pdf) — verified 2026-11-13
+  - [NYC Commission on Human Rights — Fair Chance Act legal guidance](https://www.nyc.gov/site/cchr/law/fair-chance-act.page) — verified 2026-11-13
+  - [775 ILCS 5/2-103.1 — Illinois Human Rights Act: conviction record and interactive assessment](https://ilga.gov/documents/legislation/ilcs/documents/077500050K2-103.1.htm) — verified 2026-11-13
+  - [Illinois Department of Human Rights — Conviction Record Protections FAQ](https://dhr.illinois.gov/about-us/idhr-faqs/know-your-rights-faqs/conviction-record-protections----faq.html) — verified 2026-11-13
+
+**Form I-9: Employment Eligibility Verification** (`form-i9`, pre-employment)
+  - [8 CFR § 274a.2 — Verification of identity and employment authorization (Form I-9) (eCFR)](https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-274a/subpart-A/section-274a.2) — verified 2026-11-13
+  - [USCIS — Form I-9, Employment Eligibility Verification (page updated 06/03/2026)](https://www.uscis.gov/i-9) — verified 2026-11-13
+  - [DOJ Civil Rights Division (IER) — Employer Fact Sheet: Avoiding Immigration-Related Discrimination when Complying with U.S. Export Control Laws (rev. March 2024)](https://www.justice.gov/crt/media/1287536/dl) — verified 2026-11-13
+
+**E-Verify for New Hires** (`e-verify`, pre-employment)
+  - [FAR 52.222-54 — Employment Eligibility Verification (Jan 2025)](https://www.acquisition.gov/far/52.222-54) — verified 2026-11-13
+  - [8 CFR § 214.2(f)(10)(ii)(C) — STEM OPT extension: employer E-Verify, Form I-983 and reporting duties (eCFR)](https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-214/section-214.2) — verified 2026-11-13
+  - [E-Verify — Tentative Nonconfirmations (Mismatches)](https://www.e-verify.gov/employers/verification-process/tentative-nonconfirmations-mismatches) — verified 2026-11-13
+
+**Conditional Offers and Their Contingencies** (`offer-contingencies`, pre-employment)
+  - [32 CFR § 117.10 — Eligibility for access to classified information: pre-employment action, SF 86 review, SF 312 (eCFR)](https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.10) — verified 2026-11-13
+  - [42 U.S.C. § 12112 — ADA: medical examinations and inquiries before and after an offer (Cornell LII)](https://www.law.cornell.edu/uscode/text/42/12112) — verified 2026-11-13
+  - [8 CFR § 274a.2 — Verification of identity and employment authorization (Form I-9) (eCFR)](https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-274a/subpart-A/section-274a.2) — verified 2026-11-13
+  - [22 CFR § 120.50 — Export, including release of technical data to a foreign person in the U.S. (Cornell LII)](https://www.law.cornell.edu/cfr/text/22/120.50) — verified 2026-11-13
+  - [California Civil Rights Department — Criminal History and Employment fact sheet (June 2025)](https://calcivilrights.ca.gov/wp-content/uploads/sites/32/2025/07/Fair-Chance-Act-Factsheet_English.pdf) — verified 2026-11-13
+
+**Confidentiality and Invention-Assignment Agreements** (`confidentiality-invention-assignment`, pre-employment)
+  - [18 U.S.C. § 1833(b) — Defend Trade Secrets Act whistleblower immunity and the notice requirement (Cornell LII)](https://www.law.cornell.edu/uscode/text/18/1833) — verified 2026-11-13
+  - [California Labor Code § 2870 — Limits on invention-assignment clauses](https://california.public.law/codes/labor_code_section_2870) — verified 2026-11-13
+  - [California Labor Code § 2872 — Written notice of the § 2870 limit](https://california.public.law/codes/labor_code_section_2872) — verified 2026-11-13
+  - [32 CFR § 117.10 — Eligibility for access to classified information: pre-employment action, SF 86 review, SF 312 (eCFR)](https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.10) — verified 2026-11-13
+
+**Export-Control Check After an Offer** (`export-determination-after-offer`, itar)
+  - [DOJ Civil Rights Division (IER) — Employer Fact Sheet: Avoiding Immigration-Related Discrimination when Complying with U.S. Export Control Laws (rev. March 2024)](https://www.justice.gov/crt/media/1287536/dl) — verified 2026-11-13
+  - [22 CFR § 120.50 — Export, including release of technical data to a foreign person in the U.S. (Cornell LII)](https://www.law.cornell.edu/cfr/text/22/120.50) — verified 2026-11-13
+  - [8 U.S.C. § 1324b — Unfair immigration-related employment practices (Cornell LII)](https://www.law.cornell.edu/uscode/text/8/1324b) — verified 2026-11-13
+  - [International Trade Administration — Consolidated Screening List](https://www.trade.gov/consolidated-screening-list) — verified 2026-11-13
+
 ### Clearance investigation timelines
 
 **Secret clearance investigation**
@@ -104,11 +156,48 @@ _Generated from `data/rules.json` (lastVerified 2026-11-12) and `data/timelines.
 **Modifier: no fcl**
   - [32 CFR § 117.9 — Entity eligibility determination for access to classified information (eCFR)](https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.9) — verified 2026-11-12
 
+### Recruiter guide: the 38 pipeline steps (`data/pipeline-steps.json`)
+
+- [32 CFR § 117.10 — Eligibility for access to classified information (eCFR)](https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.10) — verified 2026-11-13 — steps 1, 2, 14, 26, 27, 28, 29
+- [32 CFR § 117.12 — Security training and briefings (eCFR)](https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.12) — verified 2026-11-13 — step 29
+- [22 CFR § 120.50 — Export, including deemed export (Cornell LII)](https://www.law.cornell.edu/cfr/text/22/120.50) — verified 2026-11-13 — steps 1, 22, 23
+- [California Labor Code § 432.3 — Pay scale in postings; salary history](https://california.public.law/codes/labor_code_section_432.3) — verified 2026-11-13 — step 3
+- [DOJ Civil Rights Division (IER) — Employer Fact Sheet on export control laws (rev. March 2024)](https://www.justice.gov/crt/media/1287536/dl) — verified 2026-11-13 — steps 4, 8, 22, 23, 32
+- [California Civil Rights Department — Criminal History and Employment fact sheet (June 2025)](https://calcivilrights.ca.gov/wp-content/uploads/sites/32/2025/07/Fair-Chance-Act-Factsheet_English.pdf) — verified 2026-11-13 — steps 4, 16, 19, 20, 21
+- [NYC DCWP — Automated Employment Decision Tools (Local Law 144)](https://www.nyc.gov/site/dca/about/automated-employment-decision-tools.page) — verified 2026-11-13 — steps 4, 6, 10
+- [29 CFR § 1602.14 — Preservation of employment records (eCFR)](https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XIV/part-1602/subpart-C/section-1602.14) — verified 2026-11-13 — steps 5, 6, 9, 13, 38
+- [11 CCR § 7012 — Notice at collection (CCPA regulations, effective 2026-01-01, CPPA)](https://cppa.ca.gov/regulations/pdf/ccpa_statute_eff_20260101.pdf) — verified 2026-11-13 — step 6
+- [42 U.S.C. § 12112 — ADA: accommodation; medical inquiries before and after an offer (Cornell LII)](https://www.law.cornell.edu/uscode/text/42/12112) — verified 2026-11-13 — steps 7, 8, 9, 12, 14
+- [8 U.S.C. § 1324b — Unfair immigration-related employment practices (Cornell LII)](https://www.law.cornell.edu/uscode/text/8/1324b) — verified 2026-11-13 — step 8
+- [Title VII disparate-impact doctrine, 42 U.S.C. § 2000e-2(k) (Cornell LII)](https://www.law.cornell.edu/uscode/text/42/2000e-2) — verified 2026-11-11 — steps 9, 12
+- [15 U.S.C. § 1681b — Conditions for employment use of consumer reports (Cornell LII)](https://www.law.cornell.edu/uscode/text/15/1681b) — verified 2026-11-13 — steps 15, 17, 20
+- [15 U.S.C. § 1681m — Adverse action notice (Cornell LII)](https://www.law.cornell.edu/uscode/text/15/1681m) — verified 2026-11-13 — step 21
+- [FTC — Using Consumer Reports: What Employers Need to Know](https://www.ftc.gov/business-guidance/resources/using-consumer-reports-what-employers-need-know) — verified 2026-11-13 — steps 17, 20, 38
+- [FTC staff — Advisory Opinion to Weisberg (June 27, 1997)](https://www.ftc.gov/legal-library/browse/advisory-opinions/advisory-opinion-weisberg-06-27-97) — verified 2026-11-13 — step 21
+- [41 U.S.C. § 4714 — Fair Chance Act, civilian contractors (Cornell LII)](https://www.law.cornell.edu/uscode/text/41/4714) — verified 2026-11-13 — step 16
+- [10 U.S.C. § 4657 — Fair Chance Act, defense contractors (Cornell LII)](https://www.law.cornell.edu/uscode/text/10/4657) — verified 2026-11-13 — step 16
+- [NYC Commission on Human Rights — Fair Chance Act legal guidance](https://www.nyc.gov/site/cchr/law/fair-chance-act.page) — verified 2026-11-13 — steps 16, 19
+- [775 ILCS 5/2-103.1 — Illinois: conviction record and interactive assessment](https://ilga.gov/documents/legislation/ilcs/documents/077500050K2-103.1.htm) — verified 2026-11-13 — steps 19, 21
+- [International Trade Administration — Consolidated Screening List](https://www.trade.gov/consolidated-screening-list) — verified 2026-11-13 — step 24
+- [18 U.S.C. § 1833(b) — Defend Trade Secrets Act immunity notice (Cornell LII)](https://www.law.cornell.edu/uscode/text/18/1833) — verified 2026-11-13 — step 30
+- [California Labor Code § 2870 — Limits on invention assignment](https://california.public.law/codes/labor_code_section_2870) — verified 2026-11-13 — step 30
+- [California Labor Code § 2872 — Written notice of the § 2870 limit](https://california.public.law/codes/labor_code_section_2872) — verified 2026-11-13 — step 30
+- [8 CFR § 274a.2 — Form I-9 timing and retention (eCFR)](https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-274a/subpart-A/section-274a.2) — verified 2026-11-13 — steps 31, 32, 38
+- [USCIS — Form I-9, Employment Eligibility Verification](https://www.uscis.gov/i-9) — verified 2026-11-13 — step 31
+- [FAR 52.222-54 — Employment Eligibility Verification (Jan 2025)](https://www.acquisition.gov/far/52.222-54) — verified 2026-11-13 — step 33
+- [8 CFR § 214.2(f)(10)(ii)(C) — STEM OPT employer duties (eCFR)](https://www.ecfr.gov/current/title-8/chapter-I/subchapter-B/part-214/section-214.2) — verified 2026-11-13 — steps 33, 37
+- [E-Verify — Tentative Nonconfirmations (Mismatches)](https://www.e-verify.gov/employers/verification-process/tentative-nonconfirmations-mismatches) — verified 2026-11-13 — step 33
+- [42 U.S.C. § 653a — State new-hire reporting (Cornell LII)](https://www.law.cornell.edu/uscode/text/42/653a) — verified 2026-11-13 — step 34
+- [U.S. Department of Labor — Fact Sheet #71: Internship Programs Under the FLSA (Jan 2018)](https://www.dol.gov/agencies/whd/fact-sheets/71-flsa-internships) — verified 2026-11-13 — step 36
+- [California Government Code § 12946 — Four-year record retention](https://california.public.law/codes/government_code_section_12946) — verified 2026-11-13 — steps 6, 38
+- [Checkr API — Create a new Candidate (email is the only required field with Invitations)](https://docs.checkr.com/apis/openapi/candidates/createcandidate) — verified 2026-11-13 — step 16
+- [Checkr API — Create a new Adverse Action (post-adverse notice defaults to 7 days)](https://docs.checkr.com/apis/openapi/adverse-actions/createadverseaction) — verified 2026-11-13 — step 21
+
 ---
 
 ## Hiring compliance & bias law
 
-Backs Hard Constraint #4 (no hire/no-hire scores, no ranking, no demographic inference; "fit" is sourced work-style alignment only). Independently verified in a dedicated just-in-time research pass — full detail, caveats, and a confidence rating per item in [`research/jit/bias-compliance-law.md`](./research/jit/bias-compliance-law.md) (`DECISIONS.md` D-009). **Verified 2026-11-11.**
+Backs the rule that no tool scores or ranks a person or infers anything demographic; "fit" is sourced work-style alignment only. Independently verified in a dedicated research pass. **Verified 2026-11-11.**
 
 **Title VII disparate impact doctrine** — still valid, binding federal law; available to private plaintiffs regardless of current EEOC enforcement posture (EEOC's own AI-specific guidance was withdrawn in Jan. 2025).
   - [42 U.S.C. § 2000e-2(k) (Cornell LII)](https://www.law.cornell.edu/uscode/text/42/2000e-2) — verified 2026-11-11
@@ -135,14 +224,16 @@ Backs Hard Constraint #4 (no hire/no-hire scores, no ranking, no demographic inf
 
 ## Assessment science
 
-Backs `build_trial_assessment`, `run_job_preview`, and `generate_interview_guide`. Full design-guidance translation in [`research/R5-assessment-science.md`](./research/R5-assessment-science.md).
+Backs `build_trial_assessment`, `run_job_preview`, and `generate_interview_guide`. Each link is the paper's DOI, checked on 2026-11-13 against its Crossref record (title, authors, year, journal, volume and pages match).
 
-- [Sackett, Zhang, Berry & Lievens (2022) — revisited meta-analytic validity estimates, *J. Applied Psychology*](https://gwern.net/doc/statistics/meta-analysis/2021-sackett.pdf) — full text read
-- [Earnest, Allen & Landis (2011) — RJP mechanisms meta-analysis, *Personnel Psychology*](https://stevenmbrownportfolio.weebly.com/uploads/1/7/4/6/17469871/earnest_et_al._2011_rjp.pdf) — full text read
-- [Premack & Wanous (1985) — original RJP meta-analysis](https://www.researchgate.net/publication/232556638_A_Meta-Analysis_of_Realistic_Job_Preview_Experiments) — effect sizes relayed via Earnest et al. (2011)'s direct citation, not read as full primary text
-- [Campion, Palmer & Campion (1997) — structure in the selection interview, *Personnel Psychology*](https://core.ac.uk/download/234763785.pdf)
-- [Callinan & Robertson (2000) — work sample testing design principles](https://psychology.iresearchnet.com/industrial-organizational-psychology/individual-differences/work-samples/)
-- [Schmidt & Hunter (1998) — the validity and utility of selection methods in personnel psychology](https://stafforini.com/works/schmidt-1998-validity-and-utility/) — structured interviews .51 vs. unstructured .38; confirmed across multiple independent sources (backs `generate_interview_guide`)
+- [Sackett, Zhang, Berry & Lievens (2022) — revisiting meta-analytic estimates of validity in personnel selection, *Journal of Applied Psychology* 107(11)](https://doi.org/10.1037/apl0000994) — verified 2026-11-13 — structured interviews .42 vs. unstructured .19; work samples .33 (backs `generate_interview_guide` and `build_trial_assessment`)
+- [Sackett, Zhang, Berry & Lievens (2023) — revisiting the design of selection systems, *Industrial and Organizational Psychology* 16(3)](https://doi.org/10.1017/iop.2023.24) — verified 2026-11-13
+- [Schmidt & Hunter (1998) — the validity and utility of selection methods in personnel psychology, *Psychological Bulletin* 124(2)](https://doi.org/10.1037/0033-2909.124.2.262) — verified 2026-11-13 — structured interviews .51 vs. unstructured .38, the earlier estimates Sackett et al. (2022) revised
+- [Callinan & Robertson (2000) — work sample testing, *International Journal of Selection and Assessment* 8(4)](https://doi.org/10.1111/1468-2389.00154) — verified 2026-11-13
+- [Campion, Palmer & Campion (1997) — a review of structure in the selection interview, *Personnel Psychology* 50(3)](https://doi.org/10.1111/j.1744-6570.1997.tb00709.x) — verified 2026-11-13
+- [Smith & Kendall (1963) — retranslation of expectations: unambiguous anchors for rating scales, *Journal of Applied Psychology* 47(2)](https://doi.org/10.1037/h0047060) — verified 2026-11-13 — the origin of behaviorally anchored rating scales
+- [Premack & Wanous (1985) — a meta-analysis of realistic job preview experiments, *Journal of Applied Psychology* 70(4)](https://doi.org/10.1037/0021-9010.70.4.706) — verified 2026-11-13 — effect sizes relayed via Earnest et al. (2011)'s direct citation, not read as full primary text
+- [Earnest, Allen & Landis (2011) — mechanisms linking realistic job previews with turnover, *Personnel Psychology* 64(4)](https://doi.org/10.1111/j.1744-6570.2011.01230.x) — verified 2026-11-13 — full text read
 
 ---
 
@@ -150,11 +241,8 @@ Backs `build_trial_assessment`, `run_job_preview`, and `generate_interview_guide
 
 Not statistics, but attribution for where data and design patterns come from:
 
-- [a16z speedrun Talent Network](https://speedrun-talent-network.com) — the public API `search_defense_roles` and `get_company_profile` query
-- [GitHub public REST API](https://docs.github.com/en/rest) — `verify_evidence`'s data source
-- Full UI/UX reference-pattern citations (Linear, Vercel/Geist, Stripe, Radix, Anduril, and 9 others): [`research/R2-design-system.md`](./research/R2-design-system.md) §1 and its Sources section
-- Full leverage/library-choice citations (MCP SDK versions, PII-detection design precedent, testing toolchain): [`research/R1-leverage.md`](./research/R1-leverage.md)
+- [a16z speedrun Talent Network](https://speedrun-talent-network.com) — the public API `search_defense_roles` and `get_company_profile` query — verified 2026-11-13
+- [GitHub public REST API](https://docs.github.com/en/rest) — `verify_evidence`'s data source — verified 2026-11-13
+- [GitLab public REST API](https://docs.gitlab.com/api/rest/) — `verify_evidence`'s data source — verified 2026-11-13
+- [Cosign public directory API](https://cosign.co/docs) — `verify_evidence`'s data source — verified 2026-11-13
 
----
-
-_For the raw research behind every section above — including synthetic personas and real verbatim quotes, each clearly labeled — see [`research/`](./research/)._

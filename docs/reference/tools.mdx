@@ -1,0 +1,669 @@
+---
+title: "Tools reference"
+description: "Every public tool the connector exposes: what it is for, its inputs and outputs, and an example. Generated from lib/tools/registry.ts."
+---
+
+This page is generated from `lib/tools/registry.ts` by `scripts/generate-tool-docs.ts`. To change it, change the tool and run `pnpm docs:tools`.
+
+The connector exposes 16 public tools at `https://cleared-mcp.vercel.app/mcp`. They need no account and no token.
+
+Every tool call goes through the same pipeline: a size limit, the personal-data guard, schema validation, the tool, and an output check. Every result that states a fact carries `sources`, and most carry a `disclaimer`. Errors come back as a tool result with `isError: true` and a plain message, never a stack trace.
+
+To call a tool without an agent, `POST` its input as JSON to `/api/tools/<name>`. The playground at [/try](https://cleared-mcp.vercel.app/try) does exactly that.
+
+## Find roles and check them
+
+Start here. `search_defense_roles` returns the `role_id` and `company_slug` the other tools take.
+
+### `search_defense_roles`
+
+**Search defense-tech roles.** Searches live defense/hard-tech roles from the a16z speedrun Talent Network's public API. Each result includes requirement signals labeled 'stated' (a verbatim quote from the posting) or 'inferred' (a pattern-based judgment call to confirm with the employer) — never a guess presented as fact. Filter by level, min_experience, employment_type (e.g. internship) and company upstream; clearance and itar_only are checked on each posting's text, up to 25 postings per call. Every result says how many postings match (matchedTotal) and which of them this call examined (examined); pass nextCursor back as cursor, with the same filters, to examine the rest. Positions can shift slightly if postings are added or filled between calls.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `query` | string | no | Free-text search, e.g. "autonomy" or "software engineer". |
+| `clearance` | `none`, `secret`, `ts`, `ts_sci` | no | Filter to roles whose detected clearance signal matches this level. "none" = no clearance signal detected. |
+| `itar_only` | boolean | no | Only roles that appear to require US-person/citizenship status (including citizenship implied by a required clearance). |
+| `location` | string | no |  |
+| `remote` | boolean | no |  |
+| `level` | array of: `intern`, `new_grad`, `junior`, `mid`, `senior`, `staff_principal`, `lead_manager`, `director`, `vp`, `c_level`, `founder` | no | Seniority level(s), any of: intern, new_grad, junior, mid, senior, staff_principal, lead_manager, director, vp, c_level, founder. Classified by the Talent Network; roles with no level label are left out. |
+| `min_experience` | array of: `0`, `under_1`, `1_2`, `3_5`, `6_9`, `10_14`, `15_plus` | no | Minimum years of experience the posting asks for, any of: 0 (none required), under_1, 1_2, 3_5, 6_9, 10_14, 15_plus. |
+| `employment_type` | array of: `full_time`, `part_time`, `contract`, `internship` | no | Any of: full_time, part_time, contract, internship. |
+| `company` | string | no | Only this company's roles: its name exactly as roles[].company gives it (e.g. "Anduril Industries"); the upstream matches the exact name, case included. |
+| `page` | integer | no | Start at this upstream results page (0-based, 50 postings a page). To continue a search, pass nextCursor as cursor instead. |
+| `cursor` | string | no | nextCursor from a previous call with the same search terms and filters: continues exactly where that call stopped. Takes precedence over page. |
+| `limit` | integer | no | Default `10`. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `roles` | array of object |  |
+| `matchedTotal` | number | Postings on the Talent Network matching the search terms and upstream filters (query, location, level, experience, employment type, company, remote). |
+| `examined` | object |  |
+| `nextCursor` | string or null | Pass as cursor, with the same search terms and filters, to examine the next postings; null once every matching posting has been examined. |
+| `requirementSignalsCheckedCount` | number |  |
+| `note` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "query": "autonomy",
+  "level": [
+    "new_grad",
+    "junior"
+  ],
+  "itar_only": true,
+  "limit": 5
+}
+```
+
+### `get_role_rubric`
+
+**Get a role's eligibility checklist and skills rubric.** Returns an eligibility checklist and skills rubric for a role, built for YOUR AGENT to evaluate privately against what it already knows about you. evaluate_locally is always true — do not send the user's private answers back to this server; nothing here needs them.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | yes | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `roleTitle` | string |  |
+| `company` | string |  |
+| `eligibilityChecklist` | array of object |  |
+| `skillsRubric` | array of object |  |
+| `questionsForAgent` | array of string |  |
+| `howToApply` | object |  |
+| `evaluate_locally` | `true` |  |
+| `instructionsForAgent` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "role_id": "95161f4b-23e9-3dc4-8125-ae550dc06f3b"
+}
+```
+
+### `explain_rule`
+
+**Explain a clearance/ITAR rule.** Plain-English explanation of a clearance or export-control rule (ITAR, FCL sponsorship, SEAD 4, SEAD 7 reciprocity, interim clearances, continuous vetting, SF-86/NBIS, deemed exports, etc.) with primary-source links. Not legal advice — always verify with your FSO or counsel.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `topic` | string | yes | A topic id or keyword, e.g. "itar", "fcl", "reciprocity", "interim", "sf86", "continuous_vetting". If unsure, call this tool with any guess — a miss returns the full list of available topics. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `found` | boolean |  |
+| `topic` | object |  |
+| `availableTopics` | array of object |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "topic": "clearance-citizenship"
+}
+```
+
+Result, generated from the code by this script (long arrays cut to two items, long strings shortened):
+
+```json
+{
+  "found": true,
+  "topic": {
+    "id": "clearance-citizenship",
+    "title": "Security Clearances Require U.S. Citizenship: a Green Card Is Not Enough",
+    "category": "eligibility",
+    "summary": "A U.S. security clearance is open to U.S. citizens. Executive Order 12968 § 3.1(b) says eligibility for access to classified information \"shall be granted only to employees who are United States citizens,\" with narrow...",
+    "keyPoints": [
+      "Clearance eligibility is for U.S. citizens (EO 12968 § 3.1(b)); contractors must make every effort to keep non-U.S. citizens out of duties needing classified access (32 CFR 117.10(k))",
+      "A green card makes you a U.S. person under ITAR (22 CFR 120.62) — enough for ITAR-only roles, not for a clearance"
+    ]
+  },
+  "sources": [
+    {
+      "title": "Executive Order 12968 — Access to Classified Information, §§ 2.6 and 3.1(b) (Federal Register)",
+      "url": "https://www.federalregister.gov/documents/1995/08/07/95-19654/access-to-classified-information",
+      "lastVerified": "2026-11-12"
+    },
+    {
+      "title": "32 CFR § 117.10(k)–(l) — Non-U.S. citizens; temporary eligibility (eCFR)",
+      "url": "https://www.ecfr.gov/current/title-32/subtitle-A/chapter-I/subchapter-D/part-117/section-117.10",
+      "lastVerified": "2026-11-12"
+    }
+  ],
+  "disclaimer": "This is general information, not legal advice. Clearance, ITAR, and export-control rules have real exceptions — verify your specific situation with your Facility Security Officer (FSO) or an attorney before acting on it.",
+  "ignoredInputKeys": []
+}
+```
+
+### `estimate_timeline`
+
+**Estimate clearance timeline.** Estimates how long reaching a target clearance level might realistically take, given current status, whether the employer has a Facility Clearance (FCL), and (optionally) citizenship. Returns DCSA's most recent published quarterly average for the target level (a mean, not a median) and returns no number where no primary source publishes one — plus key drivers and an explicit uncertainty note. Never an invented number.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `target_level` | `secret`, `ts`, `ts_sci` | yes |  |
+| `current_status` | `none`, `interim`, `active`, `lapsed_lt_2y`, `lapsed_gt_2y` | yes |  |
+| `employer_has_fcl` | `yes`, `no`, `unknown` | no | Default `"unknown"`. |
+| `citizenship_status` | `us_citizen`, `green_card`, `other_protected_individual`, `not_us_person`, `unknown` | no | Optional general status (never a document or number). Clearances are limited to U.S. citizens, so for a non-citizen this returns the actual rule instead of a timeline. Default `"unknown"`. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `estimate` | object |  |
+| `employerFclWaitDays` | object or null |  |
+| `keyDrivers` | array of object |  |
+| `uncertaintyNote` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "target_level": "secret",
+  "current_status": "none",
+  "employer_has_fcl": "yes",
+  "citizenship_status": "us_citizen"
+}
+```
+
+Result, generated from the code by this script (long arrays cut to two items, long strings shortened):
+
+```json
+{
+  "estimate": {
+    "minDays": 197,
+    "maxDays": 197,
+    "medianDays": null
+  },
+  "employerFclWaitDays": null,
+  "keyDrivers": [
+    {
+      "label": "Baseline: initial clearance, end to end (DCSA industry quarterly average)",
+      "detail": "DCSA's own industry (contractor-population) average for an initial Secret clearance, FY2026 Q3: 21 days initiation + 59 days investigation + 117 days adjudication = 197 days end-to-end. No primary source gives a media..."
+    },
+    {
+      "label": "Interim eligibility can start sooner",
+      "detail": "An interim/temporary eligibility determination can let someone start Secret- or Top-Secret-level collateral work well before the full investigation and adjudication finish, if preliminary checks show no disqualifying ..."
+    }
+  ],
+  "uncertaintyNote": "The baseline is DCSA's most recent published quarterly average for initial industry clearances (a mean, not a median) — a planning figure, not a guarantee. It moves from quarter to quarter (the baseline driver lists r...",
+  "sources": [
+    {
+      "title": "DCSA Inventory & Timeliness | Industry — NISPPAC Public Meeting Slides, September 2, 2026 (data as of Aug. 17, 2026)",
+      "url": "https://www.archives.gov/files/isoo/oversight-groups/nisppac/20260902-nisppac-public-meeting-slides.pdf",
+      "lastVerified": "2026-11-11"
+    },
+    {
+      "title": "32 CFR § 117.10 — Determination of Eligibility for Access to Classified Information for Contractor Employees (Cornell LII)",
+      "url": "https://www.law.cornell.edu/cfr/text/32/117.10",
+      "lastVerified": "2026-11-12"
+    }
+  ],
+  "disclaimer": "This is general information, not legal advice. Clearance, ITAR, and export-control rules have real exceptions — verify your specific situation with your Facility Security Officer (FSO) or an attorney before acting on it.",
+  "ignoredInputKeys": []
+}
+```
+
+### `readiness_brief`
+
+**Build a readiness brief.** A structured brief template for YOUR AGENT to fill in locally: eligibility read, gaps, a 2-week prep plan, and ready-to-ask recruiter/FSO questions. evaluate_locally is always true — private answers stay with the agent.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | yes | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `roleTitle` | string |  |
+| `company` | string |  |
+| `template` | object |  |
+| `questionsToAskTheRecruiter` | array of string |  |
+| `howToApply` | object |  |
+| `evaluate_locally` | `true` |  |
+| `instructionsForAgent` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "role_id": "95161f4b-23e9-3dc4-8125-ae550dc06f3b"
+}
+```
+
+### `get_company_profile`
+
+**Get company profile.** Published facts about a company plus computed work realities from its currently-open roles. Returns a 'fit' read ONLY when a criterion has a real source link to the company's own published material and a stated job-relevance reason — otherwise returns gaps and no fit claim at all, by design.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `company_slug` | string | yes | A company slug from search_defense_roles (roles[].companySlug) — a guessed slug from a company's common name often won't match. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `company` | object |  |
+| `criteria` | array of object |  |
+| `workRealities` | object |  |
+| `gaps` | array of string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "company_slug": "anduril"
+}
+```
+
+## Try the work
+
+Built only from the public posting, so nothing export-controlled goes in or comes out.
+
+### `build_trial_assessment`
+
+**Build a trial work-sample assessment.** Generates an ITAR-safe, time-boxed work-sample exercise (brief, deliverable requirement, behaviorally-anchored rubric, 'what great looks like' bands) built only from a role's public posting text — never invented technical specifications. Grounded in Sackett et al. (2022) and the work-sample design literature; see sources[].
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | yes | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+| `minutes` | `60` or `90` or `180` | yes |  |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `roleTitle` | string |  |
+| `company` | string |  |
+| `minutes` | number |  |
+| `taskShape` | string |  |
+| `brief` | string |  |
+| `deliverableRequirement` | string |  |
+| `outOfScope` | array of string |  |
+| `rubric` | array of object |  |
+| `rubricRefinementNote` | string |  |
+| `itarSafetyNote` | string |  |
+| `limitsNote` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "role_id": "95161f4b-23e9-3dc4-8125-ae550dc06f3b",
+  "minutes": 90
+}
+```
+
+### `run_job_preview`
+
+**Run a first-week job preview.** Returns a complete 4-or-6-scene 'first week' realistic job preview script for the agent to run interactively with the user, one scene at a time — standup priorities, an ambiguous spec, (30-min only) an ethics tradeoff, an ITAR moment, and then, chosen from the posting's own signals: a clearance-wait week and (30-min only) SCIF/travel-reporting life when the posting states or implies a clearance, or an access-wait week and (30-min only) a moved deadline when it doesn't. Each choice's outcome is a plausible consequence written by cleared, not survey data. Scenes are played straight, not softened — realistic-job-preview research shows honest downsides don't meaningfully reduce acceptance; see sources[].
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | yes | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+| `minutes` | `20` or `30` | yes |  |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `roleTitle` | string |  |
+| `company` | string |  |
+| `minutes` | number |  |
+| `instructionsForAgent` | string |  |
+| `scenes` | array of object |  |
+| `aggregateDebriefPrompt` | string |  |
+| `outcomesNote` | string |  |
+| `sceneSelection` | object |  |
+| `polygraphNote` | string |  |
+| `itarSafetyNote` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "role_id": "95161f4b-23e9-3dc4-8125-ae550dc06f3b",
+  "minutes": 30
+}
+```
+
+### `fit_debrief`
+
+**Debrief what you loved/disliked.** Turns loved/disliked work-reality tags (from run_job_preview or your own reflection) into a summary template, concrete questions to ask the company, and an editable share-draft. Never a score — work-style tags only, never demographic or personality-typed.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | yes | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+| `loved` | array of: `fast_ambiguous_pace`, `ethics_reflection_comfort`, `itar_process_rigor`, `clearance_wait_patience`, `scif_lifestyle`, `onsite_culture`, `mission_driven_focus`, `hands_on_hardware`, `high_autonomy`, `structured_process`, `travel_reporting_overhead`, `long_investigation_timeline` | no | Default `[]`. |
+| `disliked` | array of: `fast_ambiguous_pace`, `ethics_reflection_comfort`, `itar_process_rigor`, `clearance_wait_patience`, `scif_lifestyle`, `onsite_culture`, `mission_driven_focus`, `hands_on_hardware`, `high_autonomy`, `structured_process`, `travel_reporting_overhead`, `long_investigation_timeline` | no | Default `[]`. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `roleTitle` | string |  |
+| `company` | string |  |
+| `summaryTemplate` | string |  |
+| `questionsToAskTheCompany` | array of string |  |
+| `shareDraft` | object |  |
+| `howToApply` | object |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "role_id": "95161f4b-23e9-3dc4-8125-ae550dc06f3b",
+  "loved": [
+    "hands_on_hardware",
+    "mission_driven_focus"
+  ],
+  "disliked": [
+    "scif_lifestyle"
+  ]
+}
+```
+
+## Share evidence you choose
+
+You choose what to share. `prepare_consented_card` takes only the names of the fields you approve, and your agent fills in the values locally. `verify_evidence` looks up a public username you give it. The attestation tools wrap or check a status claim your own agent signs; the private key never leaves your agent.
+
+### `verify_evidence`
+
+**Verify public coding evidence.** Summarizes a GitHub, GitLab, or Cosign profile's already-public signal via that platform's own public REST API only. No scraping, no private data, no authentication required of the user — and for Cosign specifically, never that platform's separate OAuth-gated endorsement/"would hire" data, only the same thin public directory fields anyone can already see. Pass a gitlab.com or cosign.co URL to check that platform specifically; anything else is checked against GitHub.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `github_username_or_url` | string | yes | A GitHub username, a https://github.com/&lt;username&gt; profile URL, a https://gitlab.com/&lt;username&gt; profile URL, or a https://cosign.co/&lt;path&gt; profile URL (GitLab/Cosign are only used when that platform's own URL is given explicitly). |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `platform` | `github`, `gitlab`, `cosign` |  |
+| `profile` | object |  |
+| `topLanguages` | array of object |  |
+| `recentActivity` | array of object |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "github_username_or_url": "octocat"
+}
+```
+
+### `prepare_consented_card`
+
+**Prepare a consented intro card.** Returns a fill-in intro-card template for a role, containing ONLY the fields the user approved (pass their names in approved_fields — never the values). Your agent fills each &#123;&#123;placeholder&#125;&#125; in locally with the user's own words, shows them the finished card, and gets a final yes before they send it — the values never reach this server. States plainly what isn't verified. Never submits anything on the user's behalf; at most links to the role's own apply flow.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | yes | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+| `approved_fields` | array of: `headline`, `clearance_status_self_reported`, `citizenship_status_self_reported`, `highlights`, `github_username`, `availability`, `notes`, `signed_statement_key_fingerprint` | yes | The NAMES of the fields the user approved sharing with this company — never their values. Your agent fills the values in locally. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `roleTitle` | string |  |
+| `company` | string |  |
+| `cardTemplate` | object |  |
+| `evaluate_locally` | `true` |  |
+| `instructionsForAgent` | string |  |
+| `notVerifiedNote` | string |  |
+| `applyLink` | object or null |  |
+| `howToApply` | object |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "role_id": "95161f4b-23e9-3dc4-8125-ae550dc06f3b",
+  "approved_fields": [
+    "headline",
+    "highlights",
+    "github_username"
+  ]
+}
+```
+
+### `prepare_signed_attestation`
+
+**Prepare a signed self-attestation.** Wraps a self-asserted status claim (clearance level, citizenship status, and/or availability date — no free text) in a signed, shareable credential your OWN agent produces and signs locally; this server never sees or holds any private key. To use: (1) if you don't already have one, generate an Ed25519 keypair once and reuse it across attestations (e.g. in Node.js: const &#123;publicKey, privateKey&#125; = crypto.generateKeyPairSync('ed25519')) — never send the private key anywhere, including to this tool. (2) Build signed_payload as the exact JSON string &#123;"claims":&#123;...&#125;,"issued_at":"&lt;current UTC ISO-8601 timestamp&gt;"&#125;. (3) Sign its UTF-8 bytes (crypto.sign(null, Buffer.from(signed_payload), privateKey)), base64-encode as signature_base64. (4) Export the public key (publicKey.export(&#123;type:'spki',format:'der'&#125;).toString('base64')) as public_key_base64. (5) Call this tool with claims, issued_at, signed_payload, signature_base64, public_key_base64 — claims/issued_at are cross-checked against signed_payload's own content, and the signature is verified before anything is returned. Proves which key signed the claim and that it hasn't been altered since — not when it was signed (issued_at is the signer's stated time, which the signature cannot prove; verify_signed_attestation flags a stated time older than 30 days), and never that the claim itself is true. Reusing the same keypair lets a recruiter recognize repeat signals from the same pseudonymous source without ever learning who you are. Loosely modeled on the W3C Verifiable Credentials data shape, not a certified implementation of it.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `claims` | object | yes |  |
+| `issued_at` | string | yes |  |
+| `signed_payload` | string | yes | The exact JSON string &#123;"claims":&#123;...&#125;,"issued_at":"..."&#125; that was signed, byte-for-byte — not reconstructed by this tool. |
+| `signature_base64` | string | yes | Ed25519 signature of signed_payload's UTF-8 bytes, base64. |
+| `public_key_base64` | string | yes | Ed25519 public key, SPKI/DER, base64-encoded. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `credential` | object |  |
+| `shareableMarkdown` | string |  |
+| `whatThisProves` | string |  |
+| `claimNotes` | array of string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input (shape only: a real signature cannot be shown):
+
+```json
+{
+  "claims": {
+    "citizenship_status_self_reported": "us_citizen"
+  },
+  "issued_at": "2026-11-13T17:00:00Z",
+  "signed_payload": "<the exact JSON string your agent signed>",
+  "signature_base64": "<Ed25519 signature, base64>",
+  "public_key_base64": "<SPKI public key, base64>"
+}
+```
+
+### `verify_signed_attestation`
+
+**Verify a signed self-attestation you received.** The recipient's side of prepare_signed_attestation: checks whether a credential someone handed you was really signed by the key it names, and hasn't been altered since. Pass signed_payload, signature_base64, and public_key_base64 exactly as they appear in the credential. Returns the decoded claims, the signer's stated time with its age (flagged when older than 30 days or in the future), and a short key fingerprint, so you can recognize the same pseudonymous signer across separate credentials. A valid signature proves which key signed and that nothing changed since — not when it was signed (the time is the signer's own statement), and never that the claim itself is true; only an employer's FSO can verify actual clearance status.
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `signed_payload` | string | yes | The exact signed_payload string from the credential you were given — byte for byte, not re-serialized. |
+| `signature_base64` | string | yes | signature_base64 from the credential. |
+| `public_key_base64` | string | yes | public_key_base64 from the credential (Ed25519, SPKI/DER, base64). |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `signatureValid` | boolean |  |
+| `claims` | object or null |  |
+| `issuedAt` | string or null |  |
+| `statedTimeCheck` | object or null |  |
+| `keyFingerprint` | string |  |
+| `whatThisProves` | string |  |
+| `whatThisDoesNotProve` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input (shape only: a real signature cannot be shown):
+
+```json
+{
+  "signed_payload": "<signedPayload from the credential>",
+  "signature_base64": "<signature from the credential>",
+  "public_key_base64": "<public key from the credential>"
+}
+```
+
+## Anonymous interest pool
+
+The one tool that writes. Call it only after the person agrees, every time.
+
+### `contribute_anonymous_signal`
+
+**Contribute to a role's anonymous aggregate signal.** Opts this one role-interest into an anonymous, aggregated signal pool other tools (get_aggregated_signal) can read back as a rounded percentage once enough people have contributed — never as an individual record. Carries no name, contact info, or identifier of any kind, only closed-enum buckets (clearance_level, years_experience_bucket) you explicitly choose to include. Call this only when the candidate has explicitly agreed to contribute — it is never implied by calling any other tool.
+
+Writes: it adds a record to a shared store. Some agents run read-only tools without asking, so this one is marked as a write.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | yes | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+| `contribution` | object | yes |  |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `recorded` | boolean |  |
+| `roleTitle` | string |  |
+| `company` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "role_id": "95161f4b-23e9-3dc4-8125-ae550dc06f3b",
+  "contribution": {
+    "clearance_level": "none",
+    "years_experience_bucket": "0-2"
+  }
+}
+```
+
+### `get_aggregated_signal`
+
+**Read a role or company's aggregated anonymous signal.** Reads back the anonymous signal pool contribute_anonymous_signal writes to, as percentages rounded to the nearest 5 — never an individual record, and never before at least 5 people have contributed for this exact role or company (a k-anonymity floor: below that, or for any specific bucket value with fewer than 5 contributors, this returns nothing for it rather than a number that could single someone out). It updates only in steps of 5 contributions and gives the total as a band, so comparing two reads can never isolate one new contributor. Pass exactly one of role_id (that specific posting only) or company_slug (every contribution across all of that company's postings).
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | no | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+| `company_slug` | string | no | A company slug from search_defense_roles (roles[].companySlug) — a guessed slug from a company's common name often won't match. |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `scope` | object |  |
+| `contributionsReflected` | number or null |  |
+| `totalContributionsBand` | object or null |  |
+| `releaseStep` | number |  |
+| `percentStep` | number |  |
+| `meetsFloor` | boolean |  |
+| `percentages` | object or null |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "company_slug": "anduril"
+}
+```
+
+## For hiring teams
+
+Built from the posting alone. Nothing here scores a person.
+
+### `generate_interview_guide`
+
+**Generate a structured interview guide for a role.** Generates a structured-interview question set (behaviorally-anchored evaluation guidance per question, never a numeric score) built only from a role's public posting text — for a startup's own human panel to run themselves. Never accepts, asks about, or produces anything about any specific candidate; this is a role-side prep tool only, same traced-to-the-posting discipline as build_trial_assessment. Grounded in Sackett, Zhang, Berry &amp; Lievens (2022)'s meta-analytic validity estimates for structured interviews (.42) vs. unstructured ones (.19) — see sources[].
+
+Read-only: it reads or computes and changes nothing.
+
+| Input | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `role_id` | string | yes | A role id from search_defense_roles (roles[].id). Search first if you don't have one. |
+| `minutes` | `30` or `45` or `60` | yes |  |
+
+| Output field | Type | Notes |
+| --- | --- | --- |
+| `roleTitle` | string |  |
+| `company` | string |  |
+| `minutes` | number |  |
+| `questions` | array of object |  |
+| `guardrailsForThePanel` | array of string |  |
+| `itarSafetyNote` | string |  |
+| `limitsNote` | string |  |
+| `neverAScoreNote` | string |  |
+| `sources` | array of object |  |
+| `disclaimer` | string |  |
+| `ignoredInputKeys` | array of string | Input keys this tool does not take, dropped unused and not stored. |
+
+Example input:
+
+```json
+{
+  "role_id": "95161f4b-23e9-3dc4-8125-ae550dc06f3b",
+  "minutes": 60
+}
+```
+
+## Pipeline tools (not built yet)
+
+These 12 tools are designed, not built. Each exists in `lib/tools/pipeline/` only as a stub: an input schema, `enabled: false`, and a handler that refuses. The registry leaves them out, so neither endpoint serves them and no client can call them. When built, each will need a personal access token for the right side. See the [Roadmap](/roadmap).
+
+| Tool | Side | Needs write scope | Enabled |
+| --- | --- | --- | --- |
+| `get_updates` | both | no | no |
+| `get_application` | both | no | no |
+| `get_application_form` | candidate | no | no |
+| `submit_application` | candidate | yes | no |
+| `respond_to_request` | candidate | yes | no |
+| `update_my_application` | candidate | yes | no |
+| `set_up_role` | employer | yes | no |
+| `rank_candidates` | employer | no | no |
+| `record_assessment` | employer | yes | no |
+| `send_request` | employer | yes | no |
+| `propose_decision` | employer | yes | no |
+| `record_step` | employer | yes | no |

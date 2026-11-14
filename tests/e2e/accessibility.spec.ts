@@ -2,10 +2,10 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 /**
- * Spec §5: axe on every page, zero serious/critical violations. Run against
- * a production build (R1-leverage.md §5: dev-mode HMR overlay can confuse
- * a11y scans) — playwright.config.ts's webServer runs `pnpm build && pnpm start`
- * for exactly this reason, not `pnpm dev`.
+ * axe on every page, zero serious/critical violations. Run against a
+ * production build (the dev-mode HMR overlay can confuse a11y scans) —
+ * playwright.config.ts's webServer runs `pnpm build && pnpm start` for
+ * exactly this reason, not `pnpm dev`.
  */
 const PAGES = ["/", "/try", "/privacy", "/sources"];
 
@@ -50,10 +50,10 @@ test("keyboard-only navigation never loses focus to the page body", async ({ pag
   // a real interactive element, never lost to <body>/null. The exact
   // sequence of elements is intentionally not pinned down to a fixed count
   // or a specific target — it has already legitimately shifted twice from
-  // genuine accessibility improvements (D-019's scrollable <code> blocks
-  // gaining tabIndex, and the skip-to-content link added after the spec §6
-  // judging panel) and will keep shifting as the page evolves; CODE is a
-  // real, valid tab stop here precisely because of that earlier fix.
+  // genuine accessibility improvements (scrollable <code> blocks gaining
+  // tabIndex, and the skip-to-content link) and will keep shifting as the
+  // page evolves; CODE is a real, valid tab stop here precisely because of
+  // that earlier fix.
   for (let i = 0; i < 15; i++) {
     await page.keyboard.press("Tab");
     const active = await page.evaluate(() => {
@@ -79,13 +79,12 @@ test("theme toggle works via keyboard (Enter/Space) and persists the choice", as
   await expect(page.locator("html")).toHaveClass(/dark/);
 });
 
-// Regression for DECISIONS.md (judging panel round 4): the nav CTA button's
-// focus ring was correctly defined but animated in over the Button
-// component's own 150ms transition, unlike every other focusable element on
-// the site (which render their ring instantly) — a keyboard user tabbing
-// faster than that would see no ring at all on this component's buttons.
-// Checked with NO wait after focusing, specifically to catch the delay
-// coming back.
+// Regression: the nav CTA button's focus ring was correctly defined but
+// animated in over the Button component's own 150ms transition, unlike
+// every other focusable element on the site (which render their ring
+// instantly) — a keyboard user tabbing faster than that would see no ring
+// at all on this component's buttons. Checked with NO wait after focusing,
+// specifically to catch the delay coming back.
 test("a Button component's focus ring renders instantly, with no transition delay", async ({ page }) => {
   await page.goto("/");
   const button = page.getByRole("link", { name: /add to your agent|install/i }).first();
@@ -94,11 +93,10 @@ test("a Button component's focus ring renders instantly, with no transition dela
   expect(boxShadow).not.toMatch(/^(none|rgba\(0, 0, 0, 0\) 0px 0px 0px 0px(, rgba\(0, 0, 0, 0\) 0px 0px 0px 0px)*)$/);
 });
 
-// Regression for DECISIONS.md (judging panel round 4): the header's
-// wordmark + theme-toggle + CTA cluster overflowed the page's horizontal
-// scroll width at narrow phone widths (measured: 9px at 375px, 64px at
-// 320px) once the nav links row (already on its own line below sm:) no
-// longer shared space with them.
+// Regression: the header's wordmark + theme-toggle + CTA cluster overflowed
+// the page's horizontal scroll width at narrow phone widths (measured: 9px
+// at 375px, 64px at 320px) once the nav links row (already on its own line
+// below sm:) no longer shared space with them.
 for (const width of [320, 375]) {
   test(`no page-level horizontal overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });

@@ -2,20 +2,12 @@
 
 /**
  * /try — the playground that exercises every MCP tool without an agent,
- * calling the app's own /api/tools/{name} directly (research/R2-design-
- * system.md §3.4-3.10, §3.13-3.15, §5's /try wireframe, §6 Do/Don't rules).
+ * calling the app's own /api/tools/{name} directly.
  *
- * 11 tabs covering all 11 tools, one each. The wireframe named five (Search
- * roles / Timeline / Trial assessment / Job preview / Explain a rule); "Role
- * rubric" was added because get_role_rubric is one of the tool files this
- * page was explicitly scoped to call; "Readiness brief" / "Verify GitHub" /
- * "Consented card" were added after the spec §6 judging panel (round 1)
- * found those 3 tools had no UI path anywhere in /try (DECISIONS.md D-026);
- * "Company profile" / "Fit debrief" were added as dedicated tabs after
- * rounds 1 and 3, independently, kept flagging those 2 tools' embedded-only
- * entry points (a dialog, and the Job Preview debrief step — both of which
- * still exist too) as "no UI entry point" against the README's "try every
- * tool directly" claim (DECISIONS.md D-029).
+ * One tab per tool. "Company profile" and "Fit debrief" have dedicated tabs
+ * even though both are also reachable from embedded entry points (a dialog,
+ * and the Job Preview debrief step — both of which still exist too), so
+ * every tool can be tried directly.
  */
 
 import * as React from "react";
@@ -64,6 +56,7 @@ import {
 
 import { useToolCall } from "@/lib/use-tool-call";
 import { cn } from "@/lib/cn";
+import { MCP_URL } from "@/lib/constants";
 import { fillCardTemplate, parseCard } from "@/lib/card-template";
 import { FIT_TAGS, FIT_TAG_LABELS } from "@/data/fit-tags";
 import type {
@@ -116,23 +109,10 @@ import type {
   VerifySignedAttestationOutput,
 } from "@/lib/try-tool-types";
 
-// Found live via the spec §6 judging panel (DECISIONS.md): 4 of 5 fresh
-// judges independently flagged that /try — explicitly positioned by the
-// README as "try every tool directly, no agent handy" — only had reachable
-// UI for 6 of 11 tools. readiness_brief, verify_evidence, and
-// prepare_consented_card had NO UI path at all and were added as 3 tabs in
-// round 1. get_company_profile and fit_debrief were already reachable via
-// embedded flows (a dialog, and the job-preview debrief step) and were left
-// as-is at the time — but rounds 1 AND 3, independently, with fresh judges
-// each time, kept flagging those same 2 tools as having "no UI entry
-// point," reading the README's "try every tool DIRECTLY" literally. Rather
-// than keep re-litigating that reading, both now also get their own
-// dedicated tab — the embedded entry points still exist too, unchanged.
-// prepare_signed_attestation / contribute_anonymous_signal /
-// get_aggregated_signal added as 3 more tabs after the spec §6 judging
-// panel round 7 (3 of 5 fresh judges independently): these 3 newest tools
-// (Clearance Lens v2) had no UI path in /try at all, directly contradicting
-// the README's "Try every tool directly at /try" claim (DECISIONS.md).
+// Every registered tool has a tab here, so each can be tried directly with
+// no agent. get_company_profile and fit_debrief are also reachable via
+// embedded flows (a dialog, and the job-preview debrief step); their own
+// tabs exist so a reader looking for each tool finds it.
 const TAB_DEFS = [
   { id: "search", label: "Search roles" },
   { id: "timeline", label: "Timeline" },
@@ -154,8 +134,7 @@ const TAB_DEFS = [
 
 type TabId = (typeof TAB_DEFS)[number]["id"];
 
-// Found live via the spec §6 judging panel round 2 (DECISIONS.md): the
-// homepage's own per-tool "Try it" buttons (components/tool-card.tsx) link
+// The homepage's own per-tool "Try it" buttons (components/tool-card.tsx) link
 // to /try?tool=<registry-tool-name> for all 11 tools — confirmed real,
 // not a judge's misreading — but this page never read that query param at
 // all, so every one of those links silently landed on the default Search
@@ -215,8 +194,7 @@ function LabeledSwitch({
 }) {
   return (
     <div className={cn(filterFieldClass, "flex-row items-center justify-between gap-3 rounded-sm border border-neutral-7 bg-neutral-1 px-3 py-2")}>
-      {/* Found live via the spec §6 judging panel (DECISIONS.md): this
-          switch's accessible name computed as the bare string "on" (the
+      {/* This switch's accessible name once computed as the bare string "on" (the
           default value of Radix's internal hidden bubble-input, not this
           label's text) despite the <label htmlFor> association — a real
           browser doesn't apply the native <label for> algorithm the same
@@ -848,10 +826,9 @@ function JobPreviewTab() {
 // fit_debrief's own tool description says it works "from run_job_preview OR
 // YOUR OWN REFLECTION" — it was never meant to require a completed preview
 // first. This tab lets it run standalone, as its own dedicated entry point.
-// Previously only reachable via the Job Preview tab's debrief step — found
-// live via the spec §6 judging panel (rounds 1 and 3, independently, as
-// "no UI entry point for this tool"). That embedded entry point still
-// exists in JobPreviewTab too; this doesn't replace it.
+// Previously only reachable via the Job Preview tab's debrief step. That
+// embedded entry point still exists in JobPreviewTab too; this doesn't
+// replace it.
 function FitDebriefTab() {
   const fit = useToolCall<FitDebriefInput, FitDebriefOutput>("fit_debrief");
   const [selectedRole, setSelectedRole] = React.useState<PickedRole | null>(null);
@@ -1265,8 +1242,8 @@ function VerifyEvidenceTab() {
 /* Consented card                                                           */
 /* ------------------------------------------------------------------------ */
 
-/** Renders a filled intro card as formatted text — round 9 found raw
- *  markdown (literal ** and #) shown to people. Values are text nodes only. */
+/** Renders a filled intro card as formatted text, never raw markdown
+ *  (literal ** and #). Values are text nodes only. */
 function CardPreview({ markdown }: { markdown: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-md bg-neutral-2 p-4 text-sm leading-[1.5] text-neutral-12">
@@ -1331,7 +1308,7 @@ function ConsentedCardTab() {
     setFields((prev) => ({ ...prev, [key]: value || undefined }));
   }
 
-  // D-047: only the NAMES of the filled-in fields are sent; the values stay
+  // Only the NAMES of the filled-in fields are sent; the values stay
   // in this browser and are filled into the returned template right here —
   // exactly what a user's own agent does locally.
   const highlights = highlightsDraft
@@ -1374,7 +1351,7 @@ function ConsentedCardTab() {
 
       {selectedRole && (
         <DisclaimerBanner>
-          What you type stays in this browser. Only the names of the fields you fill in are sent, so Clearance Lens
+          What you type stays in this browser. Only the names of the fields you fill in are sent, so cleared
           never sees your answers — and nothing is ever auto-shared or submitted on your behalf.
         </DisclaimerBanner>
       )}
@@ -1442,6 +1419,15 @@ function ConsentedCardTab() {
               className="w-full rounded-sm border border-neutral-7 bg-neutral-1 px-3 py-2 text-sm text-neutral-12 focus-visible:outline-none focus-visible:border-accent-8 focus-visible:ring-2 focus-visible:ring-accent-8"
             />
           </div>
+          <div className={filterFieldClass}>
+            <FieldLabel htmlFor="card-statement">Signed statement key fingerprint (optional)</FieldLabel>
+            <Input
+              id="card-statement"
+              placeholder="16 characters, from the Signed attestation tab"
+              maxLength={16}
+              onChange={(e) => updateField("signed_statement_key_fingerprint", e.target.value)}
+            />
+          </div>
           <Button type="submit" className="self-start" disabled={approvedFields.length === 0}>
             Build card
           </Button>
@@ -1473,6 +1459,16 @@ function ConsentedCardTab() {
               {data.applyLink.label} →
             </a>
           )}
+          {data.howToApply?.applicationUrl && (
+            <a
+              href={data.howToApply.applicationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-accent-11 hover:text-accent-10"
+            >
+              {data.company}&rsquo;s application page →
+            </a>
+          )}
           <div className="flex flex-wrap items-center gap-2 border-t border-neutral-6 pt-4">
             <span className="text-xs text-neutral-10">Sources:</span>
             {data.sources.map((s, i) => (
@@ -1490,10 +1486,8 @@ function ConsentedCardTab() {
 /* Company profile                                                         */
 /* ------------------------------------------------------------------------ */
 
-// Previously only reachable via a dialog opened from a Search roles result
-// — found live via the spec §6 judging panel (rounds 1 and 3, independently,
-// as "no UI entry point for this tool"). That dialog entry point (below)
-// still exists too; this adds a standalone way in for anyone who already
+// Previously only reachable via a dialog opened from a Search roles result.
+// That dialog entry point (below) still exists too; this adds a standalone way in for anyone who already
 // has a company slug (e.g. from a prior search, or from /sources).
 function CompanyProfileTab() {
   const { data, error, loading, call, reset } = useToolCall<CompanyProfileInput, CompanyProfileOutput>(
@@ -1590,9 +1584,7 @@ function CompanyProfileDialog({ slug, onClose }: { slug: string | null; onClose:
 /* Signed attestation                                                       */
 /* ------------------------------------------------------------------------ */
 
-// Added after the spec §6 judging panel round 7 (candidate_user,
-// product_designer, trust_skeptic, independently): no UI entry point at
-// all for this tool. This tool's whole design assumes the CALLER's own
+// This tool's whole design assumes the CALLER's own
 // agent generates a keypair and signs locally (never this server) — /try
 // has no agent, so this does the identical thing directly in the browser
 // via the Web Crypto API's native Ed25519 support, to show the real
@@ -1665,7 +1657,7 @@ function SignedAttestationTab() {
         This tool is built for YOUR agent to generate a keypair and sign locally — never sending a private key
         anywhere. Since /try has no agent, this page does the identical thing directly in your browser instead, so
         you can see the real mechanism work end to end. The private key generated below never leaves this browser
-        tab and is never sent to Clearance Lens.
+        tab and is never sent to cleared.
       </DisclaimerBanner>
 
       {!keyPair && !cryptoError && (
@@ -1770,16 +1762,12 @@ function SignedAttestationTab() {
 /* Contribute anonymous signal                                              */
 /* ------------------------------------------------------------------------ */
 
-// Added after the spec §6 judging panel round 7 (candidate_user,
-// product_designer, trust_skeptic, independently): no UI entry point at
-// all for this tool, despite the README's "try every tool directly" claim.
 function ContributeSignalTab() {
   const { data, error, loading, call, reset } = useToolCall<ContributeAnonymousSignalInput, ContributeAnonymousSignalOutput>(
     "contribute_anonymous_signal",
   );
   const [selectedRole, setSelectedRole] = React.useState<PickedRole | null>(null);
   const [clearanceLevel, setClearanceLevel] = React.useState<AttestationClearanceLevel | "">("");
-  const [citizenshipStatus, setCitizenshipStatus] = React.useState<AttestationCitizenshipStatus | "">("");
   const [experience, setExperience] = React.useState<SignalExperienceBucket | "">("");
 
   function handleSubmit(e: React.FormEvent) {
@@ -1789,13 +1777,12 @@ function ContributeSignalTab() {
       role_id: selectedRole.id,
       contribution: {
         clearance_level: clearanceLevel || undefined,
-        citizenship_status: citizenshipStatus || undefined,
         years_experience_bucket: experience || undefined,
       },
     });
   }
 
-  const hasAnyField = clearanceLevel || citizenshipStatus || experience;
+  const hasAnyField = clearanceLevel || experience;
 
   return (
     <div className="flex flex-col gap-6">
@@ -1811,7 +1798,7 @@ function ContributeSignalTab() {
 
       {selectedRole && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-lg border border-neutral-6 bg-neutral-2 p-4">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="signal-clearance">Clearance level</FieldLabel>
               <Select
@@ -1825,20 +1812,6 @@ function ContributeSignalTab() {
                 <option value="secret">Secret</option>
                 <option value="ts">Top Secret</option>
                 <option value="ts_sci">Top Secret/SCI</option>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="signal-citizenship">Citizenship status</FieldLabel>
-              <Select
-                id="signal-citizenship"
-                value={citizenshipStatus}
-                onChange={(e) => setCitizenshipStatus(e.target.value as AttestationCitizenshipStatus | "")}
-              >
-                <option value="">Prefer not to say</option>
-                <option value="us_citizen">U.S. citizen</option>
-                <option value="green_card">Green card holder</option>
-                <option value="other_protected_individual">Other protected individual</option>
-                <option value="not_us_person">Not a U.S. person</option>
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -1893,9 +1866,6 @@ function ContributeSignalTab() {
 /* Aggregated signal                                                         */
 /* ------------------------------------------------------------------------ */
 
-// Added after the spec §6 judging panel round 7 (candidate_user,
-// product_designer, trust_skeptic, independently): no UI entry point at
-// all for this tool.
 function AggregateSignalTab() {
   const { data, error, loading, call, reset } = useToolCall<GetAggregatedSignalInput, GetAggregatedSignalOutput>(
     "get_aggregated_signal",
@@ -1922,10 +1892,6 @@ function AggregateSignalTab() {
     secret: "Secret",
     ts: "Top Secret",
     ts_sci: "Top Secret/SCI",
-    us_citizen: "U.S. citizen",
-    green_card: "Green card holder",
-    other_protected_individual: "Other protected individual",
-    not_us_person: "Not a U.S. person",
     "0-2": "0-2 years",
     "3-5": "3-5 years",
     "6-10": "6-10 years",
@@ -1976,11 +1942,14 @@ function AggregateSignalTab() {
           )}
           {data.meetsFloor && data.percentages && (
             <div className="flex flex-col gap-3">
-              <p className="text-xs text-neutral-10">{data.totalContributions} anonymous contributions</p>
+              <p className="text-xs text-neutral-10">
+                {data.totalContributionsBand
+                  ? `${data.totalContributionsBand.atLeast}–${data.totalContributionsBand.fewerThan - 1} anonymous contributions (updated in steps of ${data.releaseStep}; percentages to the nearest ${data.percentStep})`
+                  : "Anonymous contributions"}
+              </p>
               {(
                 [
                   ["Clearance level", data.percentages.clearanceLevel],
-                  ["Citizenship status", data.percentages.citizenshipStatus],
                   ["Years of experience", data.percentages.yearsExperience],
                 ] as const
               ).map(([label, breakdown]) =>
@@ -2019,7 +1988,7 @@ function AggregateSignalTab() {
 /* ------------------------------------------------------------------------ */
 
 // A role-side prep artifact for a startup's own human panel — never takes
-// or shows anything about a candidate (DECISIONS.md). Mirrors the Trial
+// or shows anything about a candidate. Mirrors the Trial
 // assessment tab's shape: pick a live role, pick a length, get a
 // posting-traced structure.
 function InterviewGuideTab() {
@@ -2214,8 +2183,18 @@ function VerifyAttestationTab() {
                   <span className="font-medium text-neutral-12">{CLAIM_KEY_LABEL[k] ?? k}</span>: {CLAIM_VALUE_LABEL[v] ?? v}
                 </li>
               ))}
-              {data.issuedAt && <li>Signed {data.issuedAt}</li>}
+              {data.issuedAt && <li>Signer&rsquo;s stated time: {data.issuedAt} (not proven by the signature)</li>}
             </ul>
+          )}
+          {data.statedTimeCheck && (
+            <p
+              className={cn(
+                "text-sm",
+                data.statedTimeCheck.isOld || data.statedTimeCheck.isInFuture ? "text-danger-11" : "text-neutral-11",
+              )}
+            >
+              {data.statedTimeCheck.note}
+            </p>
           )}
           <p className="font-mono text-xs text-neutral-10">Key fingerprint: {data.keyFingerprint}</p>
           <p className="text-[0.8125rem] leading-[1.4] text-neutral-10">{data.whatThisDoesNotProve}</p>
@@ -2242,21 +2221,13 @@ function TryPageInner() {
   const toolParam = useSearchParams().get("tool");
   const initialTab = React.useMemo(() => tabFromToolParam(toolParam), [toolParam]);
   const [profileSlug, setProfileSlug] = React.useState<string | null>(null);
-  // Controlled, with a belt-and-suspenders onClick on each trigger below —
-  // found live via the spec §6 judging panel (rounds 1, 3, and 4, each with
-  // fresh judges): a bare synthetic click() (no pointerdown/mousedown
-  // first) doesn't reach whatever internal event Radix Tabs' own activation
-  // listens on, so some browser-automation tools that only dispatch a bare
-  // 'click' never switch panels, while a real user/mouse/touch/keyboard
-  // interaction and this project's own Playwright suite always do — this
-  // was independently re-confirmed as a tooling artifact, not a product
-  // bug, every round a judge happened to drive the page with REAL Playwright
-  // instead (round 3's product_designer; round 4's product_designer and
-  // candidate_user both explicitly switched to a self-driven Playwright
-  // script after a lesser tool reported "0 interactive elements"). Still,
-  // this one judge-tooling gap has now cost the hard-constraint cap 3
-  // rounds running — an explicit onClick that directly sets the active tab
-  // fires on ANY click event, bare or full sequence, with zero downside for
+  // Controlled, with a belt-and-suspenders onClick on each trigger below: a
+  // bare synthetic click() (no pointerdown/mousedown first) doesn't reach
+  // whatever internal event Radix Tabs' own activation listens on, so some
+  // browser-automation tools that only dispatch a bare 'click' never switch
+  // panels, while a real user/mouse/touch/keyboard interaction and this
+  // project's own Playwright suite always do. An explicit onClick that
+  // directly sets the active tab fires on ANY click event, bare or full sequence, with zero downside for
   // real users (Radix's own onValueChange still fires too; both set the
   // same value, which React no-ops on the second call).
   const [activeTab, setActiveTab] = React.useState<TabId>(initialTab);
@@ -2282,13 +2253,12 @@ function TryPageInner() {
           {/* The tab strip holds 11 tools and overflows well before mobile/
            * tablet widths. The native scrollbar is hidden ([scrollbar-width:
            * none]) for a cleaner look, but that removed the ONLY visual cue
-           * that more tabs exist off-screen, leaving no affordance at all —
-           * found live via the spec §6 judging panel round 3 (measured: only
-           * 3 of 9 tabs visible at 390px, ~6-7 at 820px, with no arrow or
-           * partial-tab peek). A fixed edge mask-image signals "there's more
+           * that more tabs exist off-screen, leaving no affordance at all
+           * (measured: only 3 of 9 tabs visible at 390px, ~6-7 at 820px,
+           * with no arrow or partial-tab peek). A fixed edge mask-image signals "there's more
            * here, scroll" at both ends regardless of scroll position — the
            * standard, JS-free fix for this pattern. */}
-          {/* Round 9 (product_designer): 16 tabs in one horizontal strip is the
+          {/* 16 tabs in one horizontal strip is the
            * only navigation on a phone. Below `sm`, a labeled native select
            * drives the same state; the strip takes over from `sm` up. */}
           <div className="flex flex-col gap-1.5 sm:hidden">
@@ -2314,8 +2284,8 @@ function TryPageInner() {
             ))}
           </TabsPrimitive.List>
 
-          {/* Each panel gets a visually-hidden <h2> — found via Lighthouse
-              (DECISIONS.md): the page went straight from its one <h1> to
+          {/* Each panel gets a visually-hidden <h2> — found via Lighthouse:
+              the page went straight from its one <h1> to
               <h3>s inside tab content (role cards, rubric titles) with no
               <h2> anywhere, an invalid heading order for screen-reader/
               structural navigation even though nothing here is visually
@@ -2406,7 +2376,7 @@ function TryPageIntro() {
         </p>
         <h1 className="text-[1.875rem] font-semibold leading-[1.25] text-neutral-12">Try every tool, live</h1>
         <p className="max-w-2xl text-[1.0625rem] leading-[1.6] text-neutral-11">
-          Each tab below calls Clearance Lens&rsquo;s real API directly — the same tools your agent would call, no
+          Each tab below calls cleared&rsquo;s real API directly — the same tools your agent would call, no
           LLM key needed here.
         </p>
       </div>
@@ -2418,8 +2388,7 @@ function TryPageIntro() {
   );
 }
 
-/** Found live via the spec §6 judging panel (round 7, then again in round 8,
- * recruiter_user both times): this Suspense boundary's fallback used to be
+/** This Suspense boundary's fallback used to be
  * `null`, and it wraps the WHOLE page (TryPageInner reads useSearchParams,
  * which requires the boundary) — so the server rendered no body content at
  * all, and a visitor saw a blank, control-free page until JavaScript
@@ -2442,7 +2411,7 @@ function TryPageFallback() {
           <noscript>
             <p className="text-sm text-neutral-11">
               This playground needs JavaScript to call each tool. Every tool listed above is also available to your own
-              AI agent at the MCP endpoint, https://clearance-lens.vercel.app/mcp — no JavaScript or browser required.
+              AI agent at the MCP endpoint, {MCP_URL} — no JavaScript or browser required.
             </p>
           </noscript>
         </div>

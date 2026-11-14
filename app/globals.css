@@ -2,8 +2,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Design tokens per research/R2-design-system.md §2.1. Values are exact
- * conversions from the oklch() triples specified there (computed via the
+ * Design tokens. Values are exact conversions from the design system's
+ * oklch() triples (computed via the
  * CSS Color 4 OKLab matrices, contrast-checked against WCAG 2.2 AA) — not
  * eyeballed. Four hues total, ever: neutral, accent, plus success/caution/
  * danger for the three-tone aligned/mixed/unclear status system.
@@ -190,7 +190,7 @@
   }
 }
 
-/* Respect prefers-reduced-motion globally (Do/Don't #1) */
+/* Respect prefers-reduced-motion globally */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

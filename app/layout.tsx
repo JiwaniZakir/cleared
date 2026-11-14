@@ -8,22 +8,22 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Clearance Lens",
-    template: "%s · Clearance Lens",
+    default: "cleared",
+    template: "%s · cleared",
   },
   description:
-    "A stateless MCP server that helps you pursue US defense-tech roles from inside your own AI agent — eligibility checklists, timeline estimates, trial work samples, and realistic job previews. No account, no PII.",
+    "A remote MCP server that helps you pursue US defense-tech roles from inside your own AI agent — eligibility checklists, timeline estimates, trial work samples, and realistic job previews. No account, no PII.",
   openGraph: {
-    title: "Clearance Lens",
+    title: "cleared",
     description:
       "Pursue defense-tech roles from inside your own agent. Your agent reasons privately on rubrics, timelines, and trial work — we never see your answers.",
     url: SITE_URL,
-    siteName: "Clearance Lens",
+    siteName: "cleared",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Clearance Lens",
+    title: "cleared",
     description: "Pursue defense-tech roles from inside your own agent.",
   },
 };

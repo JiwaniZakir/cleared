@@ -69,12 +69,22 @@ export interface SearchDefenseRolesInput {
   itar_only?: boolean;
   location?: string;
   remote?: boolean;
+  level?: string[];
+  min_experience?: string[];
+  employment_type?: string[];
+  company?: string;
+  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
 export interface SearchDefenseRolesOutput {
   roles: RoleResult[];
-  rolesScanned: number;
+  /** Replaces rolesScanned. */
+  matchedTotal: number;
+  examined: { from: number; to: number; count: number };
+  nextCursor: string | null;
+  requirementSignalsCheckedCount: number;
   note: string;
   sources: SourceRef[];
   disclaimer: string;
@@ -167,7 +177,7 @@ export interface JobPreviewScene {
   title: string;
   setup: string;
   choices: JobPreviewSceneChoice[];
-  whatRealTeamsReportByChoice: Record<string, string>;
+  possibleOutcomeByChoice: Record<string, string>;
   requiresStatedRationale: boolean;
   debriefPrompts: string[];
 }
@@ -353,7 +363,7 @@ export interface VerifyEvidenceOutput {
     profileUrl: string;
     bio: string | null;
     publicRepoCount: number;
-    // Nullable since D-032: GitLab's and Cosign's public APIs don't expose
+    // Nullable: GitLab's and Cosign's public APIs don't expose
     // these at all (see lib/tools/verify-evidence.ts).
     followers: number | null;
     accountCreatedAt: string | null;
@@ -376,9 +386,10 @@ export interface ConsentedFields {
   github_username?: string;
   availability?: string;
   notes?: string;
+  signed_statement_key_fingerprint?: string;
 }
 
-/** D-047: the server receives field NAMES only; values stay local. */
+/** The server receives field NAMES only; values stay local. */
 export type CardFieldName = keyof ConsentedFields;
 
 export interface PrepareConsentedCardInput {
@@ -402,6 +413,7 @@ export interface PrepareConsentedCardOutput {
   instructionsForAgent: string;
   notVerifiedNote: string;
   applyLink: { url: string; label: string } | null;
+  howToApply: { listingUrl: string; applicationUrl: string | null; kind: string | null; note: string };
   sources: SourceRef[];
   disclaimer: string;
 }
@@ -449,9 +461,9 @@ export interface PrepareSignedAttestationOutput {
 
 export type SignalExperienceBucket = "0-2" | "3-5" | "6-10" | "10+";
 
+/** No citizenship bucket: the pool stopped collecting it. */
 export interface SignalContributionFields {
   clearance_level?: AttestationClearanceLevel;
-  citizenship_status?: AttestationCitizenshipStatus;
   years_experience_bucket?: SignalExperienceBucket;
 }
 
@@ -479,12 +491,14 @@ export interface GetAggregatedSignalInput {
 
 export interface GetAggregatedSignalOutput {
   scope: { type: "role" | "company"; label: string };
-  /** Null until at least 5 people have contributed (D-048). */
-  totalContributions: number | null;
+  /** Null until at least 5 people have contributed; a multiple of 5 after. */
+  contributionsReflected: number | null;
+  totalContributionsBand: { atLeast: number; fewerThan: number } | null;
+  releaseStep: number;
+  percentStep: number;
   meetsFloor: boolean;
   percentages: {
     clearanceLevel: Record<string, number> | null;
-    citizenshipStatus: Record<string, number> | null;
     yearsExperience: Record<string, number> | null;
   } | null;
   sources: SourceRef[];
@@ -539,6 +553,7 @@ export interface VerifySignedAttestationOutput {
   signatureValid: boolean;
   claims: { clearance_level?: string; citizenship_status?: string; available_from?: string } | null;
   issuedAt: string | null;
+  statedTimeCheck: { ageDays: number | null; thresholdDays: number; isOld: boolean; isInFuture: boolean; note: string } | null;
   keyFingerprint: string;
   whatThisProves: string;
   whatThisDoesNotProve: string;

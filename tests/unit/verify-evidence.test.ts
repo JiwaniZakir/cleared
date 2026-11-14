@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 
 // parseGitHubUsername is kept as the REAL implementation (via importActual)
-// alongside the mocked getPublicSignalSummary -- it's a pure format-check
-// util the input schema's own .refine() now calls directly (DECISIONS.md),
-// so mocking it away would make every input look invalid regardless of
-// content, which is exactly the bug this file's own new tests check for.
+// alongside the mocked getPublicSignalSummary -- it's a pure format-check util
+// the input schema's own .refine() now calls directly, so mocking it away would
+// make every input look invalid regardless of content, which is exactly the bug
+// this file's own new tests check for.
 vi.mock("@/lib/github/client", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/github/client")>()),
   getPublicSignalSummary: vi.fn(),
@@ -63,11 +63,10 @@ describe("verify_evidence", () => {
     expect(result.disclaimer).toMatch(/not a verification of employment/i);
   });
 
-  // Regression for DECISIONS.md (judging panel round 2): this tool's
-  // disclaimer used to include a sentence about "fit" reflecting "criteria
-  // the company has published" -- a non-sequitur copy-pasted from
-  // get_company_profile's own, unrelated design; verify_evidence has no
-  // concept of "fit" or "criteria" at all.
+  // Regression: this tool's disclaimer used to include a sentence about "fit"
+  // reflecting "criteria the company has published" -- a non-sequitur
+  // copy-pasted from get_company_profile's own, unrelated design;
+  // verify_evidence has no concept of "fit" or "criteria" at all.
   it("does not include get_company_profile's unrelated 'fit'/criteria sentence", async () => {
     vi.mocked(getPublicSignalSummary).mockResolvedValueOnce({
       login: "u",
@@ -86,13 +85,12 @@ describe("verify_evidence", () => {
     expect(result.disclaimer.toLowerCase()).not.toContain("criteria");
   });
 
-  // Regression for DECISIONS.md (judging panel round 1): a syntactically
-  // invalid username/URL used to reach the handler, throw a plain Error
-  // from parseGitHubUsername, and fall through callTool()'s generic
-  // catch-all as a misleading "Something went wrong, please try again" --
-  // wrong, since retrying the identical invalid input will always fail
-  // the same way. It must now fail zod validation directly, with a
-  // specific, actionable invalid_input message, before the handler runs.
+  // Regression: a syntactically invalid username/URL used to reach the handler,
+  // throw a plain Error from parseGitHubUsername, and fall through callTool()'s
+  // generic catch-all as a misleading "Something went wrong, please try again"
+  // -- wrong, since retrying the identical invalid input will always fail the
+  // same way. It must now fail zod validation directly, with a specific,
+  // actionable invalid_input message, before the handler runs.
   describe("input format validation (at the zod schema layer, not the handler)", () => {
     it("rejects a syntactically invalid value with a specific, actionable message", () => {
       const parsed = verifyEvidenceTool.inputSchema.safeParse({ github_username_or_url: "this is not valid" });
@@ -120,7 +118,7 @@ describe("verify_evidence", () => {
     });
   });
 
-  // Clearance Lens v2: GitLab is only used when a gitlab.com URL is given
+  // v2: GitLab is only used when a gitlab.com URL is given
   // explicitly, so every existing (bare-username, github.com-URL) call is
   // unaffected -- this block is entirely new behavior.
   describe("GitLab path (only activated by an explicit gitlab.com URL)", () => {
@@ -189,9 +187,9 @@ describe("verify_evidence", () => {
     });
   });
 
-  // Clearance Lens v2 (D-032/D-035/D-036): Cosign is a third, consent-only
-  // evidence source -- never the referral/ranking mechanism that was
-  // explicitly declined. Only activated by an explicit cosign.co URL.
+  // v2: Cosign is a third, consent-only evidence source -- never the
+  // referral/ranking mechanism that was explicitly declined. Only activated by
+  // an explicit cosign.co URL.
   describe("Cosign path (only activated by an explicit cosign.co URL)", () => {
     it("routes a cosign.co URL to Cosign and reports platform:'cosign'", async () => {
       vi.mocked(getCosignPublicProfile).mockResolvedValueOnce({
