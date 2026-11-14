@@ -2,6 +2,8 @@
 
 A connector for the AI agent you already use. Add it to Grok Bot or Muse, and your agent finds defense-technology roles in the a16z speedrun Talent Network, checks each role's visa, export-control and clearance rules against what you tell it, and lets you try the work before you apply.
 
+**[Documentation](https://cleared-c13c54dd.mintlify.site)**
+
 ## Add it
 
 Paste this into your agent's chat:
@@ -10,7 +12,7 @@ Paste this into your agent's chat:
 Add this MCP server: https://cleared-mcp.vercel.app/mcp
 ```
 
-No account and no key. Any client that supports remote MCP servers over Streamable HTTP takes the same URL. Steps for each client are in the [quickstart](docs/quickstart.mdx).
+No account and no key. Any client that supports remote MCP servers over Streamable HTTP takes the same URL. Steps for each client are in the [quickstart](https://cleared-c13c54dd.mintlify.site/quickstart).
 
 ## What it does today
 
@@ -21,17 +23,17 @@ No account and no key. Any client that supports remote MCP servers over Streamab
 | **Try the work** | `run_job_preview`, `build_trial_assessment` and `fit_debrief` give a simulated first week and a task built from the posting. |
 | **Share what you choose** | `verify_evidence` and `prepare_consented_card` prepare evidence and a card that you send yourself. |
 
-There are 16 tools in all; see the [reference](docs/reference/tools.mdx). You can try them without an agent at [/try](https://cleared-mcp.vercel.app/try).
+There are 16 tools in all; see the [reference](https://cleared-c13c54dd.mintlify.site/reference/tools). You can try them without an agent at [/try](https://cleared-mcp.vercel.app/try).
 
 ## Not built yet
 
-Sending applications straight into a company's hiring pipeline, review by the company's agents, and interview scheduling are designed but not built. See the [roadmap](docs/roadmap.mdx).
+Sending applications straight into a company's hiring pipeline, review by the company's agents, and interview scheduling are designed but not built. See the [roadmap](https://cleared-c13c54dd.mintlify.site/roadmap).
 
 ## Limits
 
 - Checks compare postings with what you tell your agent. No status or clearance is verified, and nothing here is legal advice.
 - The server never asks for SSNs, dates of birth, ID numbers or clearance records, and a guard rejects them if they are sent.
-- More in [privacy and safety](docs/privacy-and-safety.mdx).
+- More in [privacy and safety](https://cleared-c13c54dd.mintlify.site/privacy-and-safety).
 
 ## Develop
 
