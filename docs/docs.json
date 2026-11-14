@@ -3,6 +3,7 @@
   "theme": "mint",
   "name": "cleared",
   "description": "A remote MCP server that lets your own AI agent find defense and space roles in the a16z speedrun Talent Network and explain the rule behind each requirement, with sources.",
+  "favicon": "/favicon.svg",
   "colors": {
     "primary": "#7436D4",
     "light": "#A162FF",
@@ -12,26 +13,44 @@
     "groups": [
       {
         "group": "Get started",
-        "pages": ["index", "quickstart", "how-it-works"]
+        "pages": [
+          "index",
+          "quickstart",
+          "how-it-works"
+        ]
       },
       {
         "group": "Reference",
-        "pages": ["reference/tools", "rules-and-sources"]
+        "pages": [
+          "reference/tools",
+          "rules-and-sources"
+        ]
       },
       {
         "group": "Under the hood",
-        "pages": ["privacy-and-safety", "architecture"]
+        "pages": [
+          "privacy-and-safety",
+          "architecture"
+        ]
       },
       {
         "group": "Project",
-        "pages": ["roadmap"]
+        "pages": [
+          "roadmap"
+        ]
       }
     ]
   },
   "navbar": {
     "links": [
-      { "label": "Playground", "href": "https://cleared-mcp.vercel.app/try" },
-      { "label": "GitHub", "href": "https://github.com/JiwaniZakir/cleared" }
+      {
+        "label": "Playground",
+        "href": "https://cleared-mcp.vercel.app/try"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/JiwaniZakir/cleared"
+      }
     ]
   }
 }
