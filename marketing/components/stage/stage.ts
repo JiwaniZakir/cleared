@@ -214,6 +214,17 @@ export function mountStage(canvas: HTMLCanvasElement): () => void {
         .map(([name, box]) => `${name} (${round(box)}; the phone ${round([pl, pt, pr, pb])})`);
     },
   });
+  // For the checks: the wall's tiles as drawn (their boxes, each with its outline) and the height its marks are drawn at, in pixels.
+  Object.defineProperty(report, "wall", {
+    enumerable: true,
+    get() {
+      const wall = set.wall();
+      if (!set.group.visible || !wall.tiles.length) return null;
+      const boxes = wall.tiles.map((tile) => drawnBox(tile).map((v) => Math.round(v)));
+      const tall = boxes[0][3] - boxes[0][1];
+      return { boxes, mark: Math.round(((wall.markH * tall) / (wall.tileH + 6)) * 10) / 10 };
+    },
+  });
   (window as unknown as { __stage?: typeof report }).__stage = report;
 
   const draw = (time: number) => {
@@ -318,7 +329,8 @@ export function mountStage(canvas: HTMLCanvasElement): () => void {
       set.update(S, day);
     }
     // (Not down a narrow window: there its orbit runs behind the night's card.)
-    satellite.visible = live.sky > 0.004 && live.set.geometry?.axis !== "y";
+    // (The layout's own breakpoint, the stylesheet's 1024 px: the set's axis runs across at both sizes.)
+    satellite.visible = live.sky > 0.004 && width >= 1024;
     kit.fade(1);
     const n = live.night;
     const centreY = n.apex + n.radius;

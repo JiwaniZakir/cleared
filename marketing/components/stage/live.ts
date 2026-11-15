@@ -83,7 +83,8 @@ export const live = {
       checks: [0, 0, 0, 0],
       tokens: [0, 1, 2, 3, 4].map(() => ({ u: -9, held: 0 })),
       ticks: [0, 0, 0],
-      outline: -1,
+      ring: 0,
+      wallGrow: 0,
       replies: [-1, -1, -1],
       comets: 0,
       traffic: 0,
@@ -172,9 +173,11 @@ export type SetState = {
   tokens: { u: number; held: number }[];
   /** The three tiles a role lands on: 1 once it has (the tile lights and takes a tick at its corner). */
   ticks: number[];
-  /** At night: which of the three replying tiles shows its outline lit just now (-1: none). */
-  outline: number;
-  /** At night: up to three replies, each from its own tile (1.2) into the lower lane and back to you (0). */
+  /** At night: the wall's outlines, all nine together, brightening as the notification lands (0..1, on its own clock). */
+  ring: number;
+  /** How far the set has gone into the night's wide shot (0..1): the wall is enlarged with it, so its marks stay large enough to read. */
+  wallGrow: number;
+  /** At night: up to three replies, each out of the wall at the lanes' end (1) and back along the lower lane to you (0). No company's tile is singled out. */
   replies: number[];
   /** Agent traffic: how strong the comets are, and where along the lanes they have got to (scroll-driven, wraps). */
   comets: number;

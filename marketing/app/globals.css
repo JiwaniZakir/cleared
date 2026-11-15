@@ -373,7 +373,8 @@ html[data-mode="3d"] [data-step][data-on] { opacity: 1; translate: none; filter:
 .night__sat { position: absolute; left: 0; top: 0; width: 60px; height: 1px; }
 @media (min-width: 1024px) {
   .night__phone { display: none; }
-  .night .cards { top: 53%; }
+  /* (Higher than the stops' cards: the companies' wall, enlarged at night so its marks can be read, runs on under it.) */
+  .night .cards { top: 44%; }
   .night__horizon { top: 80%; }
   .night__orbit { top: 15%; }
   .night__sat { width: 110px; }

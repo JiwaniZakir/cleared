@@ -85,6 +85,11 @@ let darkTarget = 0;
 let sweepFrom = 0;
 let sweepWay = 1;
 let sweepNow = 1;
+/** At night, the wall's one shared brightening as the notification lands: when it started, how far it has got, and whether the notification was in. */
+let ringFrom = 0;
+let ringNow = 1;
+let rang = false;
+const RING_MS = 1100;
 let sweptAt = -2;
 /**
  * The shot the camera holds along the journey (a stop, and down a narrow window stop 02's beat, as stop * 3 +
@@ -495,7 +500,8 @@ function compute() {
   const since = Math.round(lockMinutes) - 187;
   const ago = q < landed + 0.04 || since < 2 ? "now" : since < 60 ? `${since}m ago` : `${Math.floor(since / 60)}h ago`;
   let screen: ScreenState;
-  if (inNight && going <= 0) screen = q < 0.03 ? applyScreen(0) : lockScreen(lockMinutes, q >= landed ? 1 : 0.3, q >= landed ? 1 : 0, ago);
+  // (The night's first moment, before the dusk, is still stop 05's picture, as it was left.)
+  if (inNight && going <= 0) screen = q < 0.03 ? applyScreen(0, !wide) : lockScreen(lockMinutes, q >= landed ? 1 : 0.3, q >= landed ? 1 : 0, ago);
   else if (inNight || going > 0 || (start && y >= start.top - live.h)) {
     // Dawn, and on the way out: the night's last screen stays (you wake up to the request). Across a wide window,
     // once the phone has crossed to the close's place, it shows cleared connected: never an earlier step.
@@ -571,7 +577,7 @@ function compute() {
     S.coupling = { u: -9, lock: 0 };
     S.comets = 0;
     S.ticks = [0, 0, 0];
-    S.outline = -1;
+    S.ring = 0;
     S.cut = -9;
     S.from = null;
     // The five roles. The last two are the ones that ask for a U.S. person: they stop at Export control.
@@ -644,17 +650,35 @@ function compute() {
         S.comets = 0;
       }
     } else if (inNight) {
-      // 06: the whole bridge at night. Replies leave different tiles over the hours; one of them is yours.
+      // 06: the whole bridge at night. Replies come out of the wall over the hours (never from one company's
+      // tile: the notification names none); the last is yours, and lands as the notification.
       S.lit = [1, 1, 1, 1];
       S.checks = [1, 1, 1, 1];
       const starts = [0.2, 0.36, 0.5];
-      S.replies = starts.map((at, i) => {
+      S.replies = starts.map((at) => {
         const u = lin(q, at - 0.14, at);
-        if (u > 0 && u < 1) S.outline = i;
-        return u > 0 && u < 1 ? 1.2 - u * 1.2 : -1;
+        return u > 0 && u < 1 ? 1 - u : -1;
       });
       S.glow = [0, 1, 2, 3].map((i) => Math.max(...S.replies.map((u) => (u < 0 ? 0 : bump(lin(u, paneU[i] - 0.07, paneU[i] + 0.07))))));
+      // (Down a narrow window, the night's first moment is still 05's picture: the wall alone under the phone.)
+      if (!wide && q < 0.03) {
+        S.lanes = 0;
+        S.comets = 0;
+        S.ticks = [1, 0, 0];
+      }
     }
+    // As the notification lands, the wall's nine outlines brighten together, once, on their own clock (a scroll
+    // that stops never holds them half-lit).
+    const notified = inNight && going <= 0 && q >= landed;
+    if (notified && !rang) {
+      ringFrom = performance.now();
+      request();
+    }
+    rang = notified;
+    S.ring = ringNow < 1 ? bump(ringNow) : 0;
+    if (ringNow < 1) busy = true;
+    // In the night's wide shot the wall is enlarged as the set draws back, so its marks stay large enough to read.
+    S.wallGrow = nightSet;
 
     /*
      * Where the whole set stands. In the wide shot, exactly on its labels. Then the camera travels along it:
@@ -795,7 +819,8 @@ function compute() {
 
     // Down a narrow window the checks step back while the companies are the subject.
     // While the companies are the subject the checks step back (across a wide window they would stand cut by the window's edge, behind the phone).
-    S.layer *= toward("layer", station === 4 ? 0 : 1, 420);
+    // (And down a narrow window they stay back through the night's first moment, while the set still stands as at 05.)
+    S.layer *= toward("layer", station === 4 || (!wide && inNight && q < 0.03) ? 0 : 1, 420);
     // 02 frames the three legal panes, and 03 and 04 the Vetting pane alone: nothing of the others half in the
     // picture, under the card, or behind the phone.
     S.only = station === 1 ? 4 : station === 2 || station === 3 ? 3 : -1;
@@ -928,6 +953,12 @@ function frame(time: number) {
   if (sweepNow < 1 || sweepFrom) {
     sweepNow = sweepFrom ? clamp((time - sweepFrom) / 700) : 1;
     if (sweepNow >= 1) sweepFrom = 0;
+    else moving = true;
+  }
+  // The wall's one brightening at night: RING_MS.
+  if (ringNow < 1 || ringFrom) {
+    ringNow = ringFrom ? clamp((time - ringFrom) / RING_MS) : 1;
+    if (ringNow >= 1) ringFrom = 0;
     else moving = true;
   }
   // The pointer's pull, eased.

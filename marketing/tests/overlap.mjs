@@ -5,7 +5,8 @@
 //   b. the stage is settled: the phone is not between two screens, the night is not half-way, the pane that
 //      crosses the lens between stops is not in the picture;
 //   c. the phone's screen is never the wordless picture, and the companies' tiles carry their marks or none
-//      (never a half-faded mark, never a tile shown with its mark missing);
+//      (never a half-faded mark, never a tile shown with its mark missing); at night the wall in the picture
+//      carries all its marks, drawn 11 px tall or more; and no card, nor the header, stands over a tile with its mark;
 //   d. no visible text is under 12 px: the page's own, and the type on the phone's screen as it stands on the page;
 //   e. down a narrow window no card stands over the phone's top (its status bar and first lines), and nothing on
 //      the phone's screen runs past its bubble or the screen's edge;
@@ -120,6 +121,35 @@ for (const [name, viewport, dpr] of VIEWS) {
         }
         if (stage.tiles.marks > 0.02 && stage.tiles.marks < 0.98) fail(at, "c", `the tiles' marks are half-faded (${stage.tiles.marks.toFixed(2)})`);
         if (stage.tiles.marks >= 0.98 && !stage.tiles.ready) fail(at, "c", "the tiles are shown with a mark missing");
+        const inView = (stage.wall?.boxes ?? []).filter(([l, t, r, b]) => r > 0 && l < viewport.width && b > 0 && t < viewport.height);
+        if (stage.tiles.night && inView.length) {
+          if (stage.tiles.marks < 0.98) fail(at, "c", `the night's wall is in the picture without its marks (${stage.tiles.marks.toFixed(2)})`);
+          else if (stage.wall.mark < 11) fail(at, "c", `the night's marks are drawn ${stage.wall.mark} px tall`);
+        }
+        if (stage.tiles.marks >= 0.98 && inView.length) {
+          const over = await page.evaluate((boxes) => {
+            const found = [];
+            const header = document.querySelector("[data-header]")?.getBoundingClientRect().bottom ?? 0;
+            const cards = [...document.querySelectorAll(".card")].filter((card) => {
+              let opacity = 1;
+              for (let e = card; e; e = e.parentElement) {
+                const cs = getComputedStyle(e);
+                if (cs.display === "none" || cs.visibility === "hidden") opacity = 0;
+                opacity *= Number(cs.opacity);
+              }
+              return opacity > 0.1;
+            });
+            boxes.forEach(([l, t, r, b], i) => {
+              if (t < header - 1 && b > header) found.push(`tile ${i} stands under the header`);
+              for (const card of cards) {
+                const c = card.getBoundingClientRect();
+                if (r > c.left + 1 && l < c.right - 1 && b > c.top + 1 && t < c.bottom - 1) found.push(`tile ${i} stands under "${card.querySelector("h3")?.textContent?.slice(0, 24)}"`);
+              }
+            });
+            return found;
+          }, inView);
+          for (const detail of over) fail(at, "c", detail);
+        }
       }
     }
     const runs = await page.evaluate(readText);

@@ -29,13 +29,17 @@ const PRISM = ["#a162ff", "#56faf7", "#f8dcbb"] as const;
 /** Each pane's own light, by its place along the bridge. */
 const TINTS = [0.6, 0.2, 0.2, 0.6].map((far, i) => new THREE.Color(PRISM[1]).lerp(new THREE.Color(i < 2 ? PRISM[0] : PRISM[2]), far));
 const WHITE = new THREE.Color("#ffffff");
-const NIGHT_TILE = new THREE.Color("#3b3760");
-const NIGHT_GLOW = new THREE.Color("#b7a6ff");
+/** At night a tile is dark glass: the ground its mark is read on, whatever the sky behind it is doing. */
+const NIGHT_TILE = new THREE.Color("#0f0d1c");
 const BLACK = new THREE.Color("#000000");
-/** Which tile each of the night's three replies comes from. */
-const NIGHT_TILES = [1, 5, 7];
-/** The page's one ink, for the companies' marks. */
-const INK = "#000000";
+/** The page's one ink, for the companies' marks by day; and the one light ink they are drawn in at night. */
+const INK = new THREE.Color("#000000");
+const NIGHT_INK = new THREE.Color("#efeaff");
+/** At night the outlines are dim, all alike; as the notification lands they brighten together, once. */
+const RING_DIM = new THREE.Color("#6d64a8");
+const RING_LIT = new THREE.Color("#e4dcff");
+/** A mark is drawn only at this height on the page or more (smaller, it cannot be made out). */
+const MARK_MIN = 11;
 const NIGHT_FROST = new THREE.Color("#5b6f9c");
 const UP = new THREE.Vector3(0, 1, 0);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -52,6 +56,8 @@ export type BridgeSet = {
   emit(on: boolean): void;
   /** For the checks: how much of the tiles' marks is showing (0: none, 1: all; between: fading), and whether every mark has been drawn. */
   report(): { marks: number; ready: boolean };
+  /** For the checks: the wall's tiles as they stand, a tile's height and the height its mark is drawn at, in the set's own pixels. */
+  wall(): { tiles: THREE.Object3D[]; tileH: number; markH: number };
   /** For the checks: every piece of the set that is drawn just now, by name (not the rail, the comets or the connector, which meet the phone by design). */
   pieces(): [string, THREE.Object3D][];
   dispose(): void;
@@ -296,9 +302,12 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
   const pool = new THREE.Group();
   group.add(pool);
   type Tile = { mesh: THREE.Mesh; home: THREE.Vector3; phase: number; w: number; h: number; outline: THREE.Mesh };
-  // At night the wall is outlines: each tile a dim ring, and the one a reply leaves lit.
-  const outlineMaterial = keep(new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false, transparent: true }));
-  const dimOutline = keep(new THREE.MeshBasicMaterial({ color: "#6d64a8", toneMapped: false, transparent: true }));
+  // At night the wall is outlines, each with its company's mark in a light ink: nine rings alike, never one singled out.
+  const nightOutline = keep(new THREE.MeshBasicMaterial({ color: RING_DIM, toneMapped: false, transparent: true }));
+  /** The wall's size in its own pixels, whether it grows from its edge on the lanes' side, and where the fan's lines end on it. */
+  let wallW = 0;
+  let wallFromLeft = true;
+  let fanEnds: { tile: number; dx: number; dy: number }[] = [];
   let tiles: Tile[] = [];
   /** The companies' marks, loaded once from this site. */
   const images = new Map<string, HTMLImageElement>();
@@ -328,7 +337,7 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
         // No mark to show: the company's name in type, its capitals about as tall as the marks' letters.
         const type = typeFor(markH);
         ctx.font = `${type.weight} ${type.size * K}px ${family}`;
-        ctx.fillStyle = INK;
+        ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
         ctx.textBaseline = "alphabetic";
         if ("letterSpacing" in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${(-0.02 * type.size * K).toFixed(1)}px`;
@@ -344,13 +353,14 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
       }
       sctx.clearRect(0, 0, cw, ch);
       sctx.drawImage(image, cw / 2 + fit.file.x * K, ch / 2 + fit.file.y * K, fit.file.w * K, fit.file.h * K);
-      // In the ink: every pixel black, at the file's own alpha (its faintest, a ground of 1/255, left out; a
-      // lighter second tone raised to solid, as the rest of the mark).
+      // In one colour: every pixel white, at the file's own alpha (its faintest, a ground of 1/255, left out; a
+      // lighter second tone raised to solid, as the rest of the mark). The material's colour is the ink: the
+      // page's by day, a light one at night.
       const data = sctx.getImageData(0, 0, cw, ch);
       const px = data.data;
       const solid = fit.mark.solid * fit.mark.weight;
       for (let k = 0; k < px.length; k += 4) {
-        px[k] = px[k + 1] = px[k + 2] = 0;
+        px[k] = px[k + 1] = px[k + 2] = 255;
         px[k + 3] = px[k + 3] < 6 ? 0 : Math.min(255, px[k + 3] * solid);
       }
       sctx.putImageData(data, 0, 0);
@@ -384,7 +394,7 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
   const fan = new THREE.LineSegments(keep(new THREE.BufferGeometry()), fanMaterial);
   fan.layers.set(UNMIRRORED);
   group.add(fan);
-  // At night a reply is a comet: out of a tile, down to the lanes and back along the lower one.
+  // At night a reply is a comet: out of the wall at the lanes' end and back along the lower lane.
   const replyComets = [0, 1, 2].map(() => {
     const comet = new THREE.Mesh(flat, streak);
     comet.layers.set(UNMIRRORED);
@@ -394,7 +404,6 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
   });
 
   let geo: SetGeometry | null = null;
-  let glow = 0;
   const held = new THREE.Color();
   const heldGlow = new THREE.Color();
   let start = new THREE.Vector3();
@@ -587,8 +596,8 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
         // (Not mirrored in the floor: no dark tiles under the horizon at night.)
         mesh.layers.set(UNMIRRORED);
         mesh.layers.enable(EMIT);
-        // Its outline, lit at night while a reply is leaving it.
-        const outline = new THREE.Mesh(i === 0 ? ringGeometry : ringGeometry.clone(), outlineMaterial);
+        // Its outline: the day's rim, or the night's ring.
+        const outline = new THREE.Mesh(i === 0 ? ringGeometry : ringGeometry.clone(), nightOutline);
         outline.position.z = 0.3;
         outline.visible = false;
         outline.layers.set(UNMIRRORED);
@@ -607,15 +616,16 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
       });
       loadMarks(names);
       paintWall();
-      // The lanes fan out into the wall: a hairline from their end to each tile on their side.
-      const lines: number[] = [];
-      const from = along(1, 0);
+      wallW = Math.max(...tiles.map((tile) => tile.home.x + tile.w / 2)) - Math.min(...tiles.map((tile) => tile.home.x - tile.w / 2));
+      wallFromLeft = fromLeft;
+      // The lanes fan out into the wall: a hairline from their end to each tile on their side (placed as the wall stands, in `update`).
+      fanEnds = [];
       tiles.forEach((tile, i) => {
         const cell = order.indexOf(i);
         const near = fromLeft ? cell % columns === 0 : cell < columns;
-        if (near) lines.push(from.x, from.y, 0, poolAt.x + tile.home.x - (fromLeft ? tile.w / 2 : 0), poolAt.y + tile.home.y + (fromLeft ? 0 : tile.h / 2), tile.home.z);
+        if (near) fanEnds.push({ tile: i, dx: fromLeft ? -tile.w / 2 : 0, dy: fromLeft ? 0 : tile.h / 2 });
       });
-      fan.geometry.setAttribute("position", new THREE.Float32BufferAttribute(lines, 3));
+      fan.geometry.setAttribute("position", new THREE.Float32BufferAttribute(new Array(fanEnds.length * 6).fill(0), 3));
     },
 
     update(s, day) {
@@ -764,42 +774,62 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
         token.face.color.set(held ? "#a9a7b4" : "#ffffff");
         token.face.opacity = held ? 0.62 : 1;
       });
-      // At night the replies are comets: each out of its own tile, onto the rail and back to you.
+      // At night the replies are comets: each out of the wall at the lanes' end, along the rail and back to you.
+      // (Out of the wall as a whole: no company's tile is singled out as the one that wrote.)
       replyComets.forEach((comet, i) => {
         const u = s.replies[i] ?? -1;
         comet.visible = u >= 0;
         if (!comet.visible) return;
-        const at = path(u, 0, NIGHT_TILES[i], spot);
-        const ahead = path(Math.max(0, u - 0.02), 0, NIGHT_TILES[i], new THREE.Vector3());
+        const at = along(u, 0, spot);
+        const ahead = along(Math.max(0, u - 0.02), 0, new THREE.Vector3());
         comet.position.set(at.x, at.y, at.z + 2);
         comet.rotation.z = Math.atan2(ahead.y - at.y, ahead.x - at.x);
-        comet.scale.set(tail * 1.5 * clamp(Math.min(u, 1.2 - u) * 10), Math.max(4, tail / 16), 1);
+        comet.scale.set(tail * 1.5 * clamp(Math.min(u, 1 - u) * 10), Math.max(4, tail / 16), 1);
       });
 
       /* The pool: it comes and goes as one body, and drifts as one. */
       const settle = ease(s.pool);
       pool.visible = settle > 0.01;
-      pool.scale.setScalar(0.72 + 0.28 * settle);
+      // In the night's wide shot the set is small; the wall is enlarged with it, so its marks are drawn at
+      // MARK_MIN or more: about its edge on the lanes' side across a wide window (it grows away from the panes),
+      // about its middle down a narrow one.
+      const drawnAt = s.scale * markH;
+      // (Taken up early in the move into the shot, so a mark is never smaller than that on the way.)
+      const grow = lerp(1, Math.max(1, (MARK_MIN + 0.8) / Math.max(0.01, drawnAt)), clamp(s.wallGrow * 4));
+      const base = 0.72 + 0.28 * settle;
+      pool.scale.setScalar(base * grow);
+      pool.position.copy(poolAt);
+      if (wallFromLeft) pool.position.x += ((grow - 1) * base * wallW) / 2;
+      {
+        const at = fan.geometry.attributes.position as THREE.BufferAttribute;
+        const from = along(1, 0, spot);
+        fanEnds.forEach((end, n) => {
+          const tile = tiles[end.tile];
+          if (!tile) return;
+          at.setXYZ(n * 2, from.x, from.y, 0);
+          at.setXYZ(n * 2 + 1, pool.position.x + (tile.home.x + end.dx) * pool.scale.x, pool.position.y + (tile.home.y + end.dy) * pool.scale.x, tile.home.z);
+        });
+        at.needsUpdate = true;
+      }
       // Across a wide window it sways a little as it drifts; down a narrow one the picture is flat, and so is the wall.
       pool.rotation.y = x ? Math.sin(s.traffic * 1.3) * 0.04 : 0;
-      // By day white tiles with the companies' marks; at night outlines only.
-      tileMaterial.opacity = settle * 0.8 * clamp(day * 2 - 1);
+      // By day white tiles with the companies' marks in the page's ink; at night dark tiles in their outlines, the marks in a light ink.
+      tileMaterial.opacity = settle * (day >= 0.5 ? 0.8 * (day * 2 - 1) : 0.9 * (1 - day * 2));
       tileMaterial.emissiveIntensity = lerp(0.3, 0.32, day);
       dayRim.opacity = settle * 0.95 * clamp(day * 2 - 1);
       tileMaterial.color.copy(NIGHT_TILE).lerp(WHITE, day);
-      tileMaterial.emissive.copy(NIGHT_GLOW).lerp(WHITE, day);
-      glow = night * settle;
-      // The marks are there while they are large enough to make out; smaller than that, and at night, the tiles are plain.
-      nameMaterial.opacity = ease(clamp((s.scale * markH - 11) / 0.5)) * settle * day;
+      tileMaterial.emissive.copy(BLACK).lerp(WHITE, day);
+      // The marks are there while they are large enough to make out (smaller than that, the tiles are plain), by day and by night.
+      nameMaterial.opacity = ease(clamp((drawnAt * grow - MARK_MIN) / 0.5)) * settle;
+      nameMaterial.color.copy(INK).lerp(NIGHT_INK, night);
+      nightOutline.color.copy(RING_DIM).lerp(RING_LIT, s.ring);
       // (It holds still: turned, it would reach the words over and under the wall.)
-      tiles.forEach((tile, i) => {
-        // A tile stays in its place in the wall (a landing is its tick, at its corner); at night the one a reply is leaving shows its outline.
-        // (No drift: the rows stay level.)
-        const replying = s.outline >= 0 && NIGHT_TILES[s.outline] === i ? 1 : 0;
+      tiles.forEach((tile) => {
+        // A tile stays in its place in the wall (a landing is its tick, at its corner). (No drift: the rows stay level.)
         tile.mesh.position.set(tile.home.x, tile.home.y, tile.home.z);
         tile.mesh.scale.setScalar(1);
         tile.outline.visible = true;
-        tile.outline.material = night > 0.5 ? (replying ? outlineMaterial : dimOutline) : dayRim;
+        tile.outline.material = night > 0.5 ? nightOutline : dayRim;
       });
       tileChecks.forEach((check, n) => {
         const tile = tiles[LANDS[n]];
@@ -829,14 +859,18 @@ export function buildSet(changed: () => void = () => {}): BridgeSet {
       return { marks: pool.visible ? nameMaterial.opacity : 0, ready: drawn };
     },
 
+    wall() {
+      return { tiles: pool.visible ? tiles.map((tile) => tile.mesh) : [], tileH: tiles[0]?.h ?? 0, markH };
+    },
+
     emit(on) {
       for (const pane of panes) pane.edge.color.copy(on ? pane.light : pane.shown);
-      // The tiles give off light only at night.
+      // The tiles give off no light (at night their outlines do, on their own): a lit fill would read as a bar of light.
       if (on) {
         held.copy(tileMaterial.color);
         heldGlow.copy(tileMaterial.emissive);
         tileMaterial.color.copy(BLACK);
-        tileMaterial.emissive.copy(NIGHT_GLOW).multiplyScalar(glow * 0.55);
+        tileMaterial.emissive.copy(BLACK);
         tileMaterial.envMapIntensity = 0;
       } else {
         tileMaterial.color.copy(held);

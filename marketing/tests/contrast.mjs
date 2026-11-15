@@ -11,6 +11,10 @@
 // gradient's weakest stop. Moments are `chapter@t` as in tests/shots.mjs; the default set walks the turn
 // to night and back in small steps, because that is where a fixed header or a pinned line can be caught
 // over the wrong ground.
+//
+// The companies' marks on the night's wall are drawn on the stage, not set as text: at each moment of the night
+// each tile's middle is read off the same picture, its lightest pixels (the mark's ink) against its median (the
+// ground between the strokes), and held to the text rule, 4.5:1.
 import { chromium } from "@playwright/test";
 
 const [base, ...flags] = process.argv.slice(2);
@@ -48,6 +52,8 @@ const load = async (png) =>
 let lowest = { ratio: Infinity };
 const failures = [];
 let runs = 0;
+let marksMeasured = 0;
+let lowestMark = { ratio: Infinity };
 
 for (const [name, viewport, dpr] of VIEWS) {
   const page = await browser.newPage({ viewport, deviceScaleFactor: dpr });
@@ -98,6 +104,43 @@ for (const [name, viewport, dpr] of VIEWS) {
     await load(await page.screenshot());
     await style.evaluate((el) => el.remove());
 
+    // The night's wall: each tile's mark, read off the same picture.
+    const wall = await page.evaluate(() => {
+      const s = window.__stage;
+      return s?.tiles?.night && s.tiles.marks >= 0.98 && s.wall ? s.wall.boxes : null;
+    });
+    if (wall) {
+      const marks = await decoder.evaluate(
+        ({ boxes, dpr }) => {
+          const lum = (r, g, b) => {
+            const f = (c) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+            return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+          };
+          return boxes.map(([l, t, r, b], i) => {
+            // The tile's middle, inside its outline: where the mark is, with the ground about it.
+            const w = r - l;
+            const h = b - t;
+            const x = Math.round((l + w * 0.1) * dpr);
+            const y = Math.round((t + h * 0.24) * dpr);
+            const data = globalThis.shot.getImageData(x, y, Math.max(1, Math.round(w * 0.8 * dpr)), Math.max(1, Math.round(h * 0.52 * dpr))).data;
+            const values = [];
+            for (let k = 0; k < data.length; k += 4) values.push(lum(data[k], data[k + 1], data[k + 2]));
+            values.sort((a, b) => a - b);
+            const ink = values[Math.floor(values.length * 0.985)];
+            const ground = values[Math.floor(values.length * 0.5)];
+            return { tile: i, ratio: (Math.max(ink, ground) + 0.05) / (Math.min(ink, ground) + 0.05) };
+          });
+        },
+        { boxes: wall, dpr },
+      );
+      for (const m of marks) {
+        marksMeasured++;
+        const where = `${name} ${moment.id}@${moment.t}`;
+        if (m.ratio < lowestMark.ratio) lowestMark = { ...m, where };
+        if (m.ratio < 4.5) failures.push(`${where}: the mark on night tile ${m.tile} is ${m.ratio.toFixed(2)}:1 (needs 4.5)`);
+      }
+    }
+
     const results = await decoder.evaluate(
       ({ texts, dpr }) => {
         const lum = (r, g, b) => {
@@ -147,5 +190,6 @@ for (const [name, viewport, dpr] of VIEWS) {
 
 await browser.close();
 console.log(`${runs} runs of text measured. Lowest: ${lowest.ratio.toFixed(2)}:1, "${lowest.text}" (${lowest.size}px) at ${lowest.where}, over ${lowest.behind}`);
+console.log(marksMeasured ? `${marksMeasured} marks on night tiles measured. Lowest: ${lowestMark.ratio.toFixed(2)}:1, tile ${lowestMark.tile} at ${lowestMark.where}` : "no marks on night tiles were in the picture");
 console.log(failures.length ? `${failures.length} below the rule:\n${[...new Set(failures)].join("\n")}` : "every run of text meets the rule");
 process.exit(failures.length ? 1 : 0);
